@@ -35,9 +35,9 @@ Everything marked ✅ was **exercised**, not just detected: a tool call returned
 | **21st MCP** (`https://21st.dev/api/mcp`) | project, `.mcp.json` (key via `API_KEY_21ST` env) | ✅ **verified 2026-10-06** | `get_usage` → authenticated, **free tier: 2 component retrievals/day, AI generation disabled**, search unmetered. `search("property search filter bar with price range")` → 5 real results. `21st.dev` is now allowed by egress. Key not present in repo or Claude config files. Usage rules: D-018 |
 | Supabase, Vercel | account connectors | available, **deliberately unused** | D-007; Vercel hosting is irrelevant to WordPress |
 | Framer | none | not configured | D-005: prototype-only, no integration needed now |
-| **Novamira** (`novamira-alaliah-trigonso`) | local Claude config only (`~/.claude.json`, mode 600; not in git) | ❌ **configured, not connecting** | 2026-10-06: proxy `@automattic/mcp-wordpress-remote` 0.4.0 starts; `tools/list` fails with `403 Host not in allowlist: alaliah.trigonsolutions.co` (egress, E4). Credentials not yet tested. Naming and safety: D-015 / D-016 |
-| Staging `alaliah.trigonsolutions.co` | n/a | ❌ **blocked by egress** | 403 at proxy. Needed for Novamira and staging browser QA (D-019) |
-| Production `alaliahinternational.com` | n/a | ❌ **blocked by egress** | 403 at proxy. Read-only comparison only (D-014). Same IP as staging (E1) |
+| **Novamira** (`novamira-alaliah-trigonso`) | local Claude config only (`~/.claude.json`, mode 600; not in git) | ✅ **verified 2026-10-06** | Novamira 1.12.7 via `@automattic/mcp-wordpress-remote` 0.4.0. 3 MCP tools (discover / get-info / execute ability) exposing ~40 abilities: `execute-php`, `run-wp-cli`, file read/write/edit/delete/list, Gutenberg queue, design library, skills, admin access links, WPForms readers. **Requires `NODE_USE_ENV_PROXY=1`** in the server env (Node `fetch` ignores `HTTPS_PROXY`). The session loads it at startup, so a session started before the egress change needs a restart. Limits: D-020 |
+| Staging `alaliah.trigonsolutions.co` | n/a | ✅ reachable | Allowlisted 2026-10-06. Audit: `docs/wordpress-environment-report.md` |
+| Production `alaliahinternational.com` | n/a | ✅ reachable (read-only) | Allowlisted 2026-10-06; `www.` still blocked. Same hosting account as staging (E1) |
 
 Project MCP servers show "pending approval" on first launch. Approve them once per machine.
 
@@ -117,14 +117,14 @@ All were discovered by the harness in-session (they appear in the available-skil
 ### Stage 02 (visual direction): READY
 Every capability Stage 02 needs is verified: brand rules, art-direction skills, research data, 21st and shadcn research, browser rendering and screenshots at all QA widths, accessibility scanning, and Figma (within Starter-plan limits).
 
-### Infrastructure track: NOT COMPLETE
-| Item | Blocker | Owner |
+### Infrastructure track: CONNECTED, NOT SAFE FOR MAJOR WORK
+| Item | Status | Owner |
 |---|---|---|
-| Novamira connection | Not installed/connected; staging host denied by egress (E4) | User / developer |
-| Staging environment audit | Needs Novamira | Claude, once connected (D-016) |
-| Staging browser QA | Staging host denied by egress | User: allow `alaliah.trigonsolutions.co` |
-| Production read-only comparison | Production host denied by egress | User: allow `alaliahinternational.com` |
-| Backup verification | Not visible from here (E3) | User / host |
-| Host isolation | Shared IP with production (E1) | User / host |
+| Novamira connection | ✅ verified | |
+| Staging environment audit | ✅ done: `wordpress-environment-report.md` | |
+| Staging browser QA | ✅ host reachable; harness ready | |
+| Host isolation | ❌ same account and `open_basedir` as production (E1) | Host / developer |
+| Restorable backup | ❌ local-only, restore untested (E3) | Owner / host |
+| Staging hygiene | ⚠ real SMTP config, no HTTP auth, env type `production` (E2) | Approval needed |
 
 The infrastructure track blocks **Stage 03** (the content model and templates depend on what staging contains), not Stage 02. Q3/Q4 (CRM feed, inventory) also block Stage 03.

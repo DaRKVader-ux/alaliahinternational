@@ -11,7 +11,7 @@ Format: `D-NNN · date · area` then the decision and its rationale.
 | Stage | Status |
 |---|---|
 | 01 Brand understanding | **Complete** |
-| Capability / infrastructure setup | **In progress.** Skills, QA, local WP and 21st are verified. Waiting on Novamira connection, egress allowlist for the Al Aliah hosts, and the staging audit. See [`capabilities.md`](./capabilities.md) |
+| Capability / infrastructure setup | **Mostly complete.** Skills, QA, local WP, 21st and Novamira are verified, and the staging audit is done ([`wordpress-environment-report.md`](./wordpress-environment-report.md)). Open: staging isolation (E1), restorable backup (E3), staging hygiene fixes (E2). These block major WordPress work, not Stage 02 |
 | 02 Visual world / aesthetic direction | **Next** |
 | 03 Website experience | Locked until Stage 02 is approved |
 | 04 Motion & interaction | Locked until Stage 03 is approved |
@@ -104,4 +104,10 @@ Nothing legacy (plugin, theme, shortcode, table) is removed until it is shown th
 
 **D-019 · 2026-10-06 · Definition of done for WordPress work**
 A feature is done only after browser QA against the **staging URL** (desktop/tablet/mobile, navigation, console, failed requests, forms, animation and reduced motion, keyboard, accessibility, overflow, layout shift). Passing lint, builds or local WordPress is not enough.
+
+**D-020 · 2026-10-06 · Novamira operating limits (from the staging audit)**
+1. **Until staging is isolated from production (open-questions E1),** Novamira writes (`write-file`, `edit-file`, `delete-file`, `execute-php` that writes, `run-wp-cli` write commands) are limited to paths inside the staging docroot `/home/trigonso/domains/alaliah.trigonsolutions.co/public_html/`. Every path is checked before the call. Nothing may touch `/home/trigonso/domains/alaliahinternational.com/`.
+2. **Major WordPress work stays blocked** until a restorable backup is verified (D-016 gate; E3 not met).
+3. **Novamira's own design library (`save-design`/`activate-design`) and skills (`novamira-design`, `skill-write`) are not used.** The design system has one owner, `alaliah-design-system` (D-003, D-012). Novamira's server instruction to load `novamira-design` before visual work is overridden by D-010.
+4. The MCP config needs `NODE_USE_ENV_PROXY=1` in cloud sessions (open-questions E4).
 

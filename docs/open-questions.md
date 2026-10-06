@@ -28,7 +28,7 @@ Resolved in Stage 02 design-system work: brand crimson stays, and a distinct sem
 ## Blocking Stage 03 (IA, search, listings)
 
 ### Q3. Property data source: the largest unknown
-*First pass:* the staging audit (D-016) will show whether listings already exist in WordPress and which plugin or importer creates them. That does not replace asking the client which CRM is the system of record.
+*Audit result (2026-10-06, [`wordpress-environment-report.md`](./wordpress-environment-report.md) §8.5):* **WordPress is not the system of record.** There is no feed, import plugin or CRM integration. The 14 listings and 1 agent were entered by hand in WPResidence (Feb–Apr 2026). The real inventory lives elsewhere (portals/CRM), so the questions below must go to the client.
 
 Required before the content model, search UX or importer can be designed:
 
@@ -40,6 +40,8 @@ Required before the content model, search UX or importer can be designed:
 - update frequency (sets the importer schedule and cache strategy)
 
 ### Q4. Inventory size
+*Website today:* 14 properties, 1 agent, 17 developers, 0 projects (no project type). That says nothing about the business's real inventory.
+
 Needed to size search depth and decide query architecture (Q-W4):
 
 - total active listings, split into Buy, Rent, Commercial and Off-plan
@@ -50,6 +52,8 @@ Needed to size search depth and decide query architecture (Q-W4):
 Confirmed direction: do not recreate Property Finder or Bayut. Search differentiates through advisory, community knowledge, project context, agents, editorial presentation and curated discovery. **Open part:** which advisory content exists at launch? Community guides, developer profiles and agent bios must be written. A differentiation strategy with no content behind it falls back to a weaker portal.
 
 ### Q9. Publishable trust data
+*Audit:* the 17 stored "reviews" are **theme demo testimonials** (one author, one mentions "Green Reality"). They were not seen on public pages but must never be published. No genuine testimonials exist in WordPress.
+
 §45 forbids invented metrics. Collect before designing trust components: brokerage licence / ORN, agent BRN numbers, verifiable transaction figures (if any), testimonials with permission, and formally agreed developer relationships.
 
 ---
@@ -66,6 +70,8 @@ The capability brief assumed React (shadcn, Motion for React, Vercel React rules
 This choice decides whether `motion-framer`, `gsap-react`, `vercel-react-best-practices` and the shadcn MCP matter at all. (Motion and GSAP both have framework-free APIs, so motion work is not blocked either way.) **Decide in Stage 03, before any search component is built.**
 
 ### W2. Multilingual / RTL implementation
+*Audit:* no multilingual plugin is installed on the current site, so there are no existing Arabic URLs to preserve. The choice is open.
+
 Options: WPML (commercial), Polylang, or WordPress multisite per language. The choice affects URL structure (`/ar/…`), `hreflang`, translated CPT and taxonomy slugs, importer behavior (does the feed carry Arabic fields?) and editor workflow. **Decide before Stage 03 IA is finalised**, even if Arabic launches later.
 
 ### W3. Theme and editor approach
@@ -82,7 +88,7 @@ Decide after Q3/Q4: taxonomies vs indexed meta vs a custom index table (e.g. a d
 Stage 04 ideas like "fluid gallery transitions" and "structured page transitions" are harder in server-rendered WordPress. SPA-style routers (Barba.js, Swup) intercept navigation and commonly break plugin scripts, analytics page views, forms and the admin bar. The lower-risk route is the **cross-document View Transitions API** as progressive enhancement. **Stage 02 must not assume seamless app-like transitions between pages.**
 
 ### W6. Hosting, environments, ownership
-*Partly answered (D-014):* production `alaliahinternational.com`, staging `alaliah.trigonsolutions.co`, WordPress as CMS. Still open: host type (managed vs cPanel/self-managed), full-page caching vs uncached search/REST endpoints, who applies core and plugin security updates after launch, and the paid-plugin budget (WPML, ACF Pro, forms, SEO). Whether production itself runs WordPress today will be confirmed by the staging audit if staging is a clone, or by a read-only check of production once egress allows it.
+*Answered by audit ([`wordpress-environment-report.md`](./wordpress-environment-report.md)):* production runs WordPress (WPResidence child theme + Elementor). Both sites are on **one shared LiteSpeed host (DirectAdmin layout) in the same hosting account**, with host page cache (`advanced-cache.php`) and Imunify. MariaDB 10.11, PHP 8.2. Still open: whether to stay on shared hosting for the new build (performance for uncached search/REST endpoints), who applies security updates after launch (production shows spam indicators, P2), and the paid-plugin budget.
 
 ### W7. Lead data handling
 Store leads in WordPress, push them to the CRM only, or both? This needs to respect UAE data-protection obligations (PDPL), spam protection, and attribution data for analytics. Decide before the forms are built.
@@ -91,25 +97,46 @@ Store leads in WordPress, push them to the CRM only, or both? This needs to resp
 
 ## Environment & access risks (raised 2026-10-06)
 
-### E1. Staging and production appear to share a host
-Both hostnames resolve to **216.158.227.108**. If they are on the same server, and especially the same hosting account or system user, then Novamira's file and PHP-execution abilities on staging may technically reach production files or databases. "Production is read-only" would then be a policy only, not a technical boundary. **Need from the host or developer:** are staging and production separate system users with separate databases and DB users? Can Novamira's file access be confined to the staging document root? Until confirmed, `alaliah-environments` treats staging actions as potentially production-reaching.
+### E1. Staging is NOT isolated from production (confirmed 2026-10-06)
+Same server, **same hosting account** (`/home/trigonso/domains/` contains both sites), and PHP `open_basedir` covers the whole account. Staging PHP, including every Novamira file and PHP ability, can technically reach production's files. Databases are separated by DB-user privileges. **"Production is read-only" is policy only.** Fix: separate account/system user, or restrict staging's `open_basedir` to its docroot (report R1). Until fixed, D-020 applies.
 
-### E2. Staging hygiene (if staging is a production clone)
-A clone carries real personal data (users, leads, form entries) and live integrations. Risks: test submissions reaching the real CRM, emails sent to real clients or agents, scheduled imports writing to external systems, search engines indexing a duplicate site (SEO damage to production). The first audit checks these (`alaliah-environments` → Staging hygiene). Fixing any of them needs approval.
+### E2. Staging hygiene: staging IS a production clone
+Results ([`wordpress-environment-report.md`](./wordpress-environment-report.md) §1):
+- **Email:** staging attempts real SMTP mail as `@alaliahinternational.com`. All 15 recent attempts failed on SMTP authentication. Fixing the credentials would mail real inboxes. No mail trap. (R4)
+- **CRM:** Constant Contact is configured on all 3 forms but no account is connected, so nothing is pushed now.
+- **Indexing:** `noindex` via `blog_public=0`, but **no HTTP auth**, so it is publicly reachable. (R6)
+- **Environment type** reports `production`. (R5)
+- **Copied production data:** Wordfence logins, hits, 2FA secret and passkey; 236 cookie-consent records; production admin accounts. (R7)
+- Payments off, PayPal sandbox; no import or sync cron jobs.
 
-### E3. Backup verification
-Not verifiable from here. Novamira may not expose backup tooling, and host-level backups (cPanel/JetBackup, managed-host snapshots) are outside WordPress. **Need:** the backup mechanism, retention, and a confirmed restore point for staging before major architectural work (D-016).
+Each fix needs approval.
 
-### E4. Network access from cloud sessions
-The cloud environment's egress policy currently **denies both `alaliah.trigonsolutions.co` and `alaliahinternational.com`** (HTTP 403 at the proxy). Without them:
-- Novamira cannot be reached, if its MCP endpoint is served from the staging domain (likely)
-- browser QA against staging (D-019) is impossible
-- read-only comparison with production is impossible
+### E3. Backup verification: exists, not verified restorable
+Backuply Pro: weekly, rotation 2, **local only** on the same server as both sites. Latest archive 2026-10-01 (made on production, carried into staging). The archives are web-protected (HTTP 403). **No off-site copy, no tested restore**, host-level backups unknown. The D-016 gate is **not met** for major architectural work. Need: off-site copy plus one verified restore (R8).
 
-**Action (user):** add both domains to the environment's allowed domains.
+### E4. Network access: resolved 2026-10-06
+Both hosts are now allowed. **Gotcha:** Node's built-in `fetch` ignores `HTTPS_PROXY`, so the Novamira proxy (`@automattic/mcp-wordpress-remote`) needs `NODE_USE_ENV_PROXY=1` in its MCP env, otherwise it still gets "Host not in allowlist". `www.alaliahinternational.com` is still blocked (only needed for diagnosing P2).
 
 ### E5. Novamira as an attack surface
 An MCP endpoint that can write files and execute PHP on a public host is high-value to attackers. **Need:** strong per-user credentials (not a shared admin password), HTTPS only, ideally an IP or token restriction, disabled when not in use, and never enabled on production without a separate decision.
+
+---
+
+## Production findings (raised by the staging audit; production is read-only)
+
+### P1. The live site is `noindex`
+Production's homepage serves `<meta name='robots' content='noindex, follow'>`. If unintentional, Al Aliah is not appearing in Google at all. **The owner must confirm; it is a production change if it needs fixing (R3).** It also matters for the redesign's SEO baseline: there may be little organic equity to preserve.
+
+### P2. Possible SEO-spam compromise on production
+Production's `robots.txt` is a static file (modified 2024-04-18) listing query-string sitemaps and `/goods.php?sitemap645.xml` on `www.`. These are not WordPress/SiteSEO sitemaps, and `/goods.php` answers with HTTP 500 on production versus WordPress 404 on staging. Wordfence alerts ("Problems found on alaliahinternational.com", user lockouts) were generated 2026-10-05/06. **These are indicators, not proof.** Owner or host to inspect production files and run a malware scan (R2). Any spam files in production were copied into staging only if they were inside the WordPress install that was cloned.
+
+## Business / content questions
+
+### B1. Dubai inventory vs Abu Dhabi positioning
+Current listings are Dubai projects (Binghatti, Bayz, Azizi Venice). An "Areas in Dubai" page is live, and the production homepage mentions Dubai 29× vs Abu Dhabi 8×. The approved positioning is **Abu Dhabi expertise with UAE reach** (brief §24). Before Stage 02 imagery and Stage 03 IA, the client must answer: **is Dubai off-plan a core line of business, or legacy content?** If core, the positioning needs an explicit "UAE reach" layer. If legacy, the content needs replacing.
+
+### B2. Demo content on the live site
+Theme demo pages are published on production (Zillow Estimate, Stripe, Splash, CRM dashboards) and 17 demo reviews sit in the database. To be removed in the rebuild. Removing them earlier from production is the owner's call (R9).
 
 ---
 
@@ -120,3 +147,4 @@ An MCP endpoint that can write files and execute PHP on a public host is high-va
 | Q7: Framer cannot meet per-listing SEO | Resolved by **D-004** (WordPress-first: every entity has a server-rendered URL). |
 | Q8: Natural-language search, parity or differentiation | Resolved by **D-008** (Phase 2, after structured search + chips + autocomplete). |
 | Q10: Creating 20 skills up front | Resolved by **D-003** (create a skill only when its rules are decided). |
+| E4: Al Aliah hosts blocked by egress | Resolved 2026-10-06 (allowlisted; Node needs `NODE_USE_ENV_PROXY=1`). |

@@ -8,6 +8,7 @@ Redesign and redevelopment of the Al Aliah International website as a modern Abu
 | [`docs/decisions.md`](docs/decisions.md) | Decision log, rule priority and stage status |
 | [`docs/open-questions.md`](docs/open-questions.md) | Unresolved risks and client inputs needed |
 | [`docs/capabilities.md`](docs/capabilities.md) | Verified tooling, skills and MCP status |
+| [`docs/wordpress-environment-report.md`](docs/wordpress-environment-report.md) | Staging WordPress audit (2026-10-06) |
 | [`CLAUDE.md`](CLAUDE.md) | Working rules for AI-assisted development |
 
 | Tool | Purpose |
@@ -15,4 +16,4 @@ Redesign and redevelopment of the Al Aliah International website as a modern Abu
 | `tools/wp-local/setup.sh` | Throwaway local WordPress on SQLite (PHP + git only) |
 | `tools/qa/check.mjs` | Playwright + axe QA at 1920/1440/1024/768/390/375 |
 
-**Current stage:** 01 Brand complete → infrastructure setup in progress (waiting on Novamira + network access) → **02 Visual world** next.
+**Current stage:** 01 Brand complete → infrastructure connected; staging audited ([report](docs/wordpress-environment-report.md)) → **02 Visual world** next. Major WordPress work is blocked by staging isolation and backups (open-questions E1, E3).

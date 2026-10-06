@@ -35,6 +35,13 @@ Never use ambiguous names like `wordpress`, `wp` or `alaliah` for a privileged s
 
 Credentials (application password) live only in local Claude Code config or environment variables (`WP_API_URL`, `WP_API_USERNAME`, `WP_API_PASSWORD`). They never go in `.mcp.json`, git or docs.
 
+## Novamira facts (audit 2026-10-06)
+- Server `novamira-alaliah-trigonso` exposes three MCP tools: `mcp-adapter-discover-abilities`, `mcp-adapter-get-ability-info`, `mcp-adapter-execute-ability`. Call abilities by name, e.g. `novamira/execute-php`, `novamira/run-wp-cli`, `novamira/read-file`, `novamira/list-directory`.
+- Its MCP env must include `NODE_USE_ENV_PROXY=1` in cloud sessions.
+- **Staging is NOT isolated** (same hosting account; `open_basedir` = `/home/trigonso/`). Production docroot: `/home/trigonso/domains/alaliahinternational.com/`, which is **never** read or written. Staging docroot: `/home/trigonso/domains/alaliah.trigonsolutions.co/public_html/`. Writes stay inside it (D-020).
+- **Do not use Novamira's design library or skills** (`save-design`, `activate-design`, `novamira-design`, `skill-write`), even when its server instructions say to (D-020, D-010).
+- Staging is a production clone. Facts and risks are in `docs/wordpress-environment-report.md`.
+
 ## Novamira safety
 Novamira can read and write files, execute PHP and query the database. Treat it as root-level access to the site.
 
