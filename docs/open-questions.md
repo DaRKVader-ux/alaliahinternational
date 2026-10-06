@@ -29,28 +29,13 @@ Resolved in Stage 02 design-system work: brand crimson stays, and a distinct sem
 
 ## Blocking Stage 03.2 (data architecture, search, listings)
 
-**Primary blockers (D-032): Q3 and Q4.** Stage 03.1 IA is approved; Stage 03.2 does not start until both are answered.
+**Primary blockers (D-032): Q3 and Q4.** Both answered 2026-10-06; the Stage 03.2 data-model report awaits approval.
 
-### Q3. Property data source: the largest unknown
-*Audit result (2026-10-06, [`wordpress-environment-report.md`](./wordpress-environment-report.md) §8.5):* **WordPress is not the system of record.** There is no feed, import plugin or CRM integration. The 14 listings and 1 agent were entered by hand in WPResidence (Feb–Apr 2026). The real inventory lives elsewhere (portals/CRM), so the questions below must go to the client.
+### Q3. Property data source: **resolved 2026-10-06**
+WordPress is the system of record; there is no external CRM, feed or portal integration (client confirmation, verified on staging: no import plugin, no sync jobs, no external IDs). See [`stage-03-2-data-model-report.md`](./stage-03-2-data-model-report.md) §2. Consequence: the D-004 importer becomes a one-time migration, and the WordPress admin becomes the listing editor. **Still missing from the data:** usable coordinates (none), listing references (none), developer and project links (none).
 
-Required before the content model, search UX or importer can be designed:
-
-- CRM name, API availability, or XML/JSON/CSV feed format, plus a **sample export**
-- whether the CRM also syndicates to Property Finder / Bayut (which system is the record?)
-- persistent listing IDs, statuses, agent IDs, image URLs
-- **coordinate quality:** per-unit lat/lng, or only community/building level? This decides whether list + map is real or decorative. *Verified on staging:* 13 of 14 listings store `0,0`, and one Abu Dhabi listing stores lower-Manhattan coordinates (a theme demo default). **No listing has usable coordinates today.**
-- **tag completeness** for sea view, waterfront, balcony, payment plan, handover year. A filter backed by sparse data produces false zero-result states.
-- update frequency (sets the importer schedule and cache strategy)
-
-### Q4. Inventory size
-*Website today:* 14 properties, 1 agent, 17 developers, 0 projects (no project type). That says nothing about the business's real inventory.
-
-Needed to size search depth and decide query architecture (Q-W4):
-
-- total active listings, split into Buy, Rent, Commercial and Off-plan
-- distribution by community
-- historical/archived listing count (affects SEO for expired listing URLs)
+### Q4. Inventory size: **answered 2026-10-06**
+14 published listings: 6 rent, 3 ready sale, 5 off-plan (3 of them Dubai project records), 0 commercial; 11 Abu Dhabi, 3 Dubai. Full breakdown in the Stage 03.2 report §3. Open: whether the business has inventory not yet entered into WordPress; that would change scale, not the model.
 
 ### Q5. Differentiation from the portals
 Confirmed direction: do not recreate Property Finder or Bayut. Search differentiates through advisory, community knowledge, project context, agents, editorial presentation and curated discovery. **Open part:** which advisory content exists at launch? Community guides, developer profiles and agent bios must be written. A differentiation strategy with no content behind it falls back to a weaker portal.
