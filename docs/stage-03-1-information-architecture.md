@@ -1,50 +1,53 @@
 # Stage 03.1: Information Architecture
 
-**Status:** revision 2, presented 2026-10-06 for approval. Reworked around the client's preferred primary navigation (D-031). Structure only: no page layouts, no wireframes, no WordPress work.
-**Inputs:** master brief §18, §31–45; D-004 (WordPress-first), D-006, D-008, D-031; `alaliah-design-system` (intensity levels); open questions Q3, Q4, Q5, Q9, Q11, W2, W9, B1.
+**Status:** **approved 2026-10-06** (D-032), revision 3 with the approval adjustments applied. Structure only: no page layouts, no wireframes, no WordPress work.
+**Next:** Stage 03.2 (data architecture) waits on Q3 and Q4: the listing source and approximate inventory size.
+**Inputs:** master brief §18, §31–45; D-004 (WordPress-first), D-006, D-008, D-031, D-032; `alaliah-design-system` (intensity levels); open questions Q3, Q4, Q5, Q9, Q11, W2, W9, B1.
 
 ---
 
-## 0. Assumptions (Stage 03 is formally blocked on client inputs)
+## 0. Assumptions
 
-The open-questions log lists Q3, Q4 and W2 as blocking IA. Rather than stall, this IA rests on stated assumptions. Each row says what changes if the assumption is wrong.
+The IA is approved on these assumptions. Q3 and Q4 are the blockers for Stage 03.2, not for this IA. W2 (multilingual plugin) and Q9 (licence numbers) do not block it either. Each row says what changes if the assumption is wrong.
 
 | # | Assumption | Source | If wrong |
 |---|---|---|---|
 | A1 | Inventory comes from a CRM or portal feed with persistent IDs; WordPress is not the record (Q3) | Staging audit | Manual entry only: drop importer-dependent features (live counts, auto-expiry); the IA holds |
 | A2 | Hundreds, not tens of thousands, of active listings (Q4) | Business size | Larger: indexable landing thresholds and search storage change (W4, D-006); the IA holds |
-| A3 | Abu Dhabi leads; Dubai is a real but secondary line (B1, partly answered by D-031) | Navigation instruction; inventory 11 of 14 Abu Dhabi | If Dubai becomes equal: the Area model already supports it; only ordering and the home page change |
-| A4 | English first, Arabic later, in subdirectory `/ar/` (W2) | Brief §43 | Multisite or domain per language: URL prefix changes; slugs and templates do not |
+| A3 | Abu Dhabi leads for now; Dubai is an active area. Final weighting depends on B1 | D-032; inventory 11 of 14 Abu Dhabi | If the weighting changes: the Area model already supports it; only ordering, defaults and the home page change |
+| A4 | English first, Arabic-ready by construction, in subdirectory `/ar/`. Plugin choice (WPML or Polylang) deferred to implementation planning (W2) | Brief §43, D-032 | Multisite or domain per language: URL prefix changes; slugs and templates do not |
 | A5 | Listing coordinates arrive at least at community level (Q3) | Staging has none usable | None at all: maps run at community level only (already the fallback) |
-| A6 | No verified trust data at launch: no licence numbers on file, no genuine reviews, no third-party developer ratings (Q9, Q11) | Audit | When verified, they fill the modules defined here; until then those modules are absent, not empty |
+| A6 | Licence, ORN and BRN numbers are required verified content for implementation, not an IA blocker (Q9). No genuine reviews or external developer ratings exist yet (Q11) | Audit, D-032 | When verified, they fill the modules defined here; until then those modules are absent, not empty |
 
-## 1. Navigation model (D-031)
+## 1. Navigation model (D-031, D-032)
+
+Property intent comes first so it stays immediately accessible. About Us sits last by position, not by importance: the advisory brand is carried by the Areas, Developers and Off-plan content, not by menu order.
 
 ### Primary navigation
 | Order | Label | Opens | Purpose |
 |---|---|---|---|
-| 1 | **About Us** | Panel: About Al Aliah, Our team, Services (Sell, Lease, Property management), Insights, Careers (only if real) | Company, people, services and advice |
-| 2 | **Buy** | Panel: property types, top Abu Dhabi communities, "Ready to move in", "Commercial for sale", **"Sell your property"** | Sale search; sellers enter here too |
-| 3 | **Rent** | Panel: property types, top communities, "Furnished", "Commercial for rent", **"Lease your property"**, **"Property management"** | Rental search; landlords enter here too |
-| 4 | **Off-plan** | Panel: projects by handover year, featured developers, **"Investing in off-plan"** (the Invest guides) | Projects and investors |
-| 5 | **Areas** | Panel with two columns: **Abu Dhabi** (communities with live listing counts) and **Dubai** (communities where Al Aliah has inventory) | Place-led discovery |
-| 6 | **Developers** | Link to the archive, titled "All Developers" | Developer discovery |
+| 1 | **Buy** | Panel: property types, top Abu Dhabi communities, "Ready to move in", "Commercial for sale", **"Sell your property"** | Sale search; sellers enter here too |
+| 2 | **Rent** | Panel: property types, top communities, "Furnished", "Commercial for rent", **"Lease your property"**, **"Property management"** | Rental search; landlords enter here too |
+| 3 | **Off-plan** | Panel: projects by handover year, featured developers, **"Investing in off-plan"** (the Invest guides) | Projects and investors |
+| 4 | **Areas** | Panel with two columns: **Abu Dhabi** first (communities with live listing counts), then **Dubai** (communities with live inventory) | Place-led discovery |
+| 5 | **Developers** | Link to the archive, titled "All Developers" | Developer discovery |
+| 6 | **About Us** | Panel: About Al Aliah, Our team, **Services** (Sell, Lease, **Property management**), Insights, Careers (only if real) | Company, people, services and advice |
 
-**Header CTA: Contact.** A solid **ink** button, always visible, including on mobile. It is not crimson: the design system allows one crimson fill per view, and that belongs to the page's primary action (the hero search, "Request a viewing"). Two crimson fills in one view would weaken both. Contact opens `/contact/`, which offers phone, WhatsApp, email and an enquiry form, in that order.
+**Header CTA: Contact.** A solid **ink** button, global and always visible, including on mobile. Crimson stays reserved for each page's contextual primary action ("Search", "Request a viewing") and for selected and active states. Contact opens `/contact/` with phone, WhatsApp, email and an enquiry form, in that order.
 
 **Utility bar:** shortlist (count), language (العربية), phone and WhatsApp, and "List your property" as an ink outline.
 
-**Where the removed items went:**
-| Former top-level item | Now reached from |
+**Property management stays on conversion paths.** It appears in About Us › Services, in the footer, in the Rent panel next to "Lease your property", and inside the landlord journey (the Lease page and the "List your property" flow, which offers management as an option).
+
+**Where the former top-level items went:**
+| Former item | Now reached from |
 |---|---|
 | Communities | **Areas**, as the community level inside each emirate |
 | Invest | Off-plan panel ("Investing in off-plan") and the footer; `/invest/` stays a hub |
-| Owners (Sell, Lease, Property management) | Buy and Rent panels (by intent), About Us › Services, utility "List your property" |
+| Owners (Sell, Lease, Property management) | Buy and Rent panels (by intent), About Us › Services, the footer, utility "List your property" |
 | Insights | About Us panel, the footer, and related-insight modules on Area, Project and Developer pages |
 
-**Order: one recommendation, not applied.** The order above is the client's. Putting About Us first is the conventional agency pattern that the brief moves away from (§3–4: "a property advisory and discovery brand, not an agency"), and in English a user's eye lands on the first items. Recommended alternative: **Buy, Rent, Off-plan, Areas, Developers, About Us**. Both work technically; this is a positioning choice for the client.
-
-**Mobile:** one menu sheet in the same order, with search as its first element and Contact pinned in the header bar beside the menu button. Arabic labels need a native editor's sign-off; drafts for length testing: من نحن، شراء، إيجار، على الخارطة، المناطق، المطورون.
+**Mobile:** one menu sheet in the same order, with search as its first element and Contact pinned in the header bar beside the menu button. Arabic labels need a native editor's sign-off; drafts for length testing: شراء، إيجار، على الخارطة، المناطق، المطورون، من نحن.
 
 ## 2. Sitemap and templates
 
@@ -52,12 +55,6 @@ The intensity level comes from `alaliah-design-system`. Phase 1 is launch; Phase
 
 ```
 Home ............................................. Immersive
-├─ About Us   /about/ ............................ Editorial
-│   ├─ Team   /team/ › Agent /team/{slug}/ ....... Editorial
-│   ├─ Services: Sell /services/sell/ · Lease /services/lease/
-│   │           Property management /services/property-management/ ... Editorial
-│   ├─ Insights /insights/ › Article /insights/{slug}/ ............. Editorial
-│   └─ Careers /careers/ (only if real) .......... Editorial
 ├─ Buy        /properties-for-sale/ .............. Functional  (list + map)
 │   └─ landings /properties-for-sale/{location}/{type}/
 ├─ Rent       /properties-for-rent/ .............. Functional
@@ -70,6 +67,12 @@ Home ............................................. Immersive
 │   └─ Community /areas/{emirate}/{community}/ ... Immersive story → Editorial body → listings
 ├─ Developers /developers/ "All Developers" ...... Functional  (directory)
 │   └─ Developer /developers/{slug}/ ............. Editorial
+├─ About Us   /about/ ............................ Editorial
+│   ├─ Team   /team/ › Agent /team/{slug}/ ....... Editorial
+│   ├─ Services: Sell /services/sell/ · Lease /services/lease/
+│   │           Property management /services/property-management/ ... Editorial
+│   ├─ Insights /insights/ › Article /insights/{slug}/ ............. Editorial
+│   └─ Careers /careers/ (only if real) .......... Editorial
 ├─ Property   /property/{slug}-{ref}/ ............ Editorial   (Room index when photos are tagged)
 ├─ Contact    /contact/ .......................... Functional  (header CTA)
 ├─ List your property /list-your-property/ ....... Functional  (stepped flow)
@@ -131,7 +134,7 @@ insight (CPT) ── topic; related areas, projects, developers
 - **Each entry:**
   - logo and name;
   - areas;
-  - "Projects with Al Aliah: n" and "Homes listed: n", counted live from our own data and labelled as such.
+  - "Projects with Al Aliah: n" and "Homes listed: n", **derived** from Project and Property records and labelled as such. Neither the counts nor the areas are ever typed by hand.
 - **Never shown:** company-wide project counts, units delivered or founding years, unless sourced on the developer page.
 - A developer with no live projects or listings stays reachable, marked "No current listings", for SEO continuity.
 
@@ -140,26 +143,29 @@ Modules in reading order. A module with no legitimate data is **omitted**, never
 
 | Module | Content | Data rule |
 |---|---|---|
-| Identity | Logo, name, emirates active (from our data) | Logo supplied or approved by the developer |
+| Identity | Logo, name, emirates active (derived from projects and properties) | Logo supplied or approved by the developer |
 | About | 80–150 words | Facts drawn from the developer's official material, with the source recorded in admin; written in Al Aliah's voice; no superlatives |
-| Rating and reviews | Score, review count, source name, date retrieved, link | **Only from a named, verifiable source** (see below). Absent when none exists |
+| Rating and reviews | Score, review count, source name, date retrieved, link | **Only from an independent external source**, clearly attributed (see below). Omitted when none exists |
 | Projects | Cards of this developer's projects, newest handover first | Live from Project records |
 | Homes listed | Site select cards filtered to this developer | Live from Property records (derived developer) |
 | Areas | Areas where this developer has projects or listings, with a mini map | Derived |
 | Insights | Articles tagged to this developer | Shown only when at least one exists |
 | Contact | "Ask an advisor about {developer}" | A lead with the developer as context |
 
-### Ratings and reviews: what counts as legitimate (Q11)
-- **Allowed:**
-  - an independent third-party source with a public method (for example, a public review platform's aggregate), shown with source name, review count, date and a link, under that platform's licence terms;
-  - an official regulator rating, if one exists and is published.
+### Ratings and reviews: what counts as legitimate (D-032, Q11)
+- **Allowed:** ratings or reviews from a legitimate **independent external** source, clearly attributed: source name, score, review count, retrieval date and a link, under that source's licence terms. An official regulator rating, if one is published, qualifies.
 - **Not allowed:**
-  - Al Aliah's own rating of a developer. A brokerage that sells a developer's units has a conflict of interest, and the rating could strain developer relationships;
+  - any Al Aliah numerical rating of a developer;
   - unattributed stars;
   - reviews copied without licence;
-  - "average" ratings computed from a handful of comments.
-- **Stored with:** source, URL, score, count, retrieved date. The score goes stale after 90 days and is hidden until refreshed.
-- **At launch:** assume none (A6). The page is complete without this module.
+  - scores computed from a handful of comments.
+- **Stored with each rating:** source, source URL, score, review count, retrieved date, and the **refresh policy** for that source.
+- **Freshness is set per source, not by one fixed rule:**
+  - a source with a stable API or published update cycle is refreshed on that cycle;
+  - a manually checked source records its check date and is suppressed when an editor can no longer verify it.
+
+  Whatever the source, a rating whose source can no longer be reached or confirmed is hidden, not shown stale.
+- **No legitimate source:** the module is omitted and the page reads complete without it. At launch, assume none (A6).
 
 ## 5. URL model
 
@@ -260,10 +266,10 @@ Modules in reading order. A module with no legitimate data is **omitted**, never
 Each carries its context (listing, project or developer ref, agent, page). Storage is W7.
 
 ## 9. Trust placement (substantiated data only, Q9 and Q11)
-- Brokerage licence and ORN: in the footer and on Contact and About Us.
+- Brokerage licence and ORN: in the footer and on Contact and About Us. Required verified content for implementation; not an IA blocker (D-032).
 - Agent BRN and languages: on agent cards and listings.
 - Developer relationships ("Authorised agent for …"): only where formally agreed and documented.
-- Developer ratings: only per §4.
+- Developer ratings: only per §4; never an Al Aliah score.
 - Testimonials: none until genuine and permitted. The 17 stored demo reviews are never published.
 - Metrics: only when verified. Live counts from our own feed ("Homes listed: 12") are allowed, because they are true and labelled.
 
@@ -271,11 +277,11 @@ Each carries its context (listing, project or developer ref, agent, page). Stora
 
 | Decision | Risk the check caught | Answer |
 |---|---|---|
-| Client navigation with About Us first | Reads as an agency site (question 5, differentiation) | Order kept as instructed; alternative recommended in §1 for the client to decide |
-| Dubai under Areas | Dilutes the Abu Dhabi position (questions 1–2) | Abu Dhabi listed first and the default everywhere; Dubai imagery only on Dubai pages (D-031) |
+| Property intent first, About Us last | Could be read as weakening the advisory brand (question 1) | The advisory brand lives in Areas, Developers and Off-plan content, not menu position (D-032) |
+| Dubai under Areas | Dilutes the Abu Dhabi position or drifts into Dubai-luxury clichés (questions 1–2) | Abu Dhabi leads for now; Dubai appears where contextually relevant, never as skyline or luxury cliché; final weighting per B1 (D-032) |
 | Owners, Invest and Communities leave the top level | Sellers, landlords and investors lose an entry point (question 3) | Placed by intent in the Buy, Rent and Off-plan panels, plus "List your property" in the utility bar |
 | Contact as header CTA | Competes with each page's primary action | Ink, not crimson |
-| Developer ratings | Invented or conflicted data (question 4, never invent) | Third-party or regulator source only; omitted otherwise |
+| Developer ratings | Invented or conflicted data (question 4, never invent) | Independent external source only, attributed, freshness per source; omitted otherwise |
 | Derived developer on properties | Data drift between project and property | One source of truth; stored only when there is no project |
 | Path-based landings | Thousands of thin pages (question 8) | Indexable only with 3+ listings |
 
@@ -285,18 +291,18 @@ Each carries its context (listing, project or developer ref, agent, page). Stora
 3. **03.4 Template structures:** module order per template at its intensity level (structure diagrams, not visual layouts), editor approach (W3).
 4. **03.5 Lead flows and forms:** steps, validation, routing (W7).
 
-## 12. Approval requested
-- The navigation as instructed, with Contact as an ink header CTA, and the placement of the former top-level items.
-- The navigation order: as given, or the recommended Buy-first order.
-- The four separate entities and the derived-relationship rules in §3.
-- The Developer archive and page modules, and the ratings rule (§4).
-- The URL model: nested `/areas/{emirate}/{community}/`, flat `/projects/` and `/developers/`, `/property/{slug}-{ref}/`, English slugs under `/ar/`, the 90-day expiry rule.
-- Facet tiers with the 80% coverage rule and the 3-listing indexation threshold.
+## 12. Approval record (D-032)
+Approved, with these adjustments applied in this revision:
+- **Navigation:** Buy, Rent, Off-plan, Areas, Developers, About Us; Contact as a separate ink header CTA.
+- **Market positioning:** Abu Dhabi leads for now, and Dubai may appear where contextually relevant. Final weighting depends on B1.
+- **Developers:** the Developer → Projects → Properties → Areas model with reverse linking. Archive counts and areas are derived.
+- **Ratings:** external, attributed and stored with source, count and retrieval date; freshness per source; no Al Aliah ratings.
+- **Property management:** in About Us › Services, the footer and the landlord journeys.
+- **Multilingual:** English and Arabic-ready; plugin choice deferred to implementation planning (W2 does not block 03.1).
+- **Licence information:** required verified content later; not an IA blocker.
 
-**Client inputs that would firm this up:**
-- Q3: CRM or feed name plus a sample export.
-- Q4: active listing counts by purpose and area.
-- B1: which Dubai communities and lines (sale, rent, off-plan) are active.
-- W2: multilingual plugin preference.
-- Q9: licence, ORN and BRN numbers.
-- Q11: any developer rating source the client considers legitimate.
+**Blockers before Stage 03.2 (data architecture):**
+- **Q3:** the listing source. CRM or feed name, plus a sample export.
+- **Q4:** approximate inventory size, by purpose and area.
+
+Stage 03.2 does not start until both are known.

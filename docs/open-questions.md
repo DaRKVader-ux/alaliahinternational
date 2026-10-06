@@ -27,7 +27,9 @@ Resolved in Stage 02 design-system work: brand crimson stays, and a distinct sem
 
 ---
 
-## Blocking Stage 03 (IA, search, listings)
+## Blocking Stage 03.2 (data architecture, search, listings)
+
+**Primary blockers (D-032): Q3 and Q4.** Stage 03.1 IA is approved; Stage 03.2 does not start until both are answered.
 
 ### Q3. Property data source: the largest unknown
 *Audit result (2026-10-06, [`wordpress-environment-report.md`](./wordpress-environment-report.md) §8.5):* **WordPress is not the system of record.** There is no feed, import plugin or CRM integration. The 14 listings and 1 agent were entered by hand in WPResidence (Feb–Apr 2026). The real inventory lives elsewhere (portals/CRM), so the questions below must go to the client.
@@ -56,10 +58,10 @@ Confirmed direction: do not recreate Property Finder or Bayut. Search differenti
 ### Q9. Publishable trust data
 *Audit:* the 17 stored "reviews" are **theme demo testimonials** (one author, one mentions "Green Reality"). They were not seen on public pages but must never be published. No genuine testimonials exist in WordPress.
 
-§45 forbids invented metrics. Collect before designing trust components: brokerage licence / ORN, agent BRN numbers, verifiable transaction figures (if any), testimonials with permission, and formally agreed developer relationships.
+§45 forbids invented metrics. Collect before implementing trust components: brokerage licence / ORN, agent BRN numbers, verifiable transaction figures (if any), testimonials with permission, and formally agreed developer relationships. *D-032:* required verified content for implementation; **not a blocker** for IA or Stage 03 design.
 
 ### Q11. Developer ratings and reviews
-The Developer page (Stage 03.1 §4) has a ratings module that is shown only with legitimate data: an independent third-party aggregate with a public method (source, count, date and link, under that platform's licence terms), or an official regulator rating if one is published. Al Aliah's own rating of a developer is excluded because of the conflict of interest. **Needed from the client:** whether any such source exists that they consider legitimate, and whether they are comfortable showing third-party scores next to developers they work with. Until then the module is omitted.
+The Developer page (Stage 03.1 §4) has a ratings module that is shown only with legitimate data: an independent external source, clearly attributed and stored with source, review count and retrieval date (D-032). Freshness follows each source's reliability, not a fixed expiry. Al Aliah never rates developers numerically. **Needed from the client:** whether any such source exists that they consider legitimate, and whether they are comfortable showing third-party scores next to developers they work with. Until then the module is omitted.
 
 ---
 
@@ -77,7 +79,7 @@ This choice decides whether `motion-framer`, `gsap-react`, `vercel-react-best-pr
 ### W2. Multilingual / RTL implementation
 *Audit:* no multilingual plugin is installed on the current site, so there are no existing Arabic URLs to preserve. The choice is open.
 
-Options: WPML (commercial), Polylang, or WordPress multisite per language. The choice affects URL structure (`/ar/…`), `hreflang`, translated CPT and taxonomy slugs, importer behavior (does the feed carry Arabic fields?) and editor workflow. **Decide before Stage 03 IA is finalised**, even if Arabic launches later.
+Options: WPML (commercial), Polylang, or WordPress multisite per language. The choice affects URL structure (`/ar/…`), `hreflang`, translated CPT and taxonomy slugs, importer behavior (does the feed carry Arabic fields?) and editor workflow. **Deferred to implementation planning (D-032).** It does not block Stage 03: the IA is Arabic-ready by construction (`/ar/` subdirectory, logical CSS, translatable slugs).
 
 ### W3. Theme and editor approach
 *Foundation resolved by D-026: Option C (fully custom theme).* Still open: the **editor approach** inside it (block theme with custom blocks/patterns vs hybrid with a locked editor), decided in Stage 03.
@@ -150,8 +152,8 @@ Production's `robots.txt` is a static file (modified 2024-04-18) listing query-s
 ## Business / content questions
 
 ### B1. Dubai presentation vs Abu Dhabi positioning
-*Partly answered by D-031 (2026-10-06):* Dubai is an active **secondary** area in the navigation (Areas › Dubai). Abu Dhabi leads: first in order, default in search and maps, and the only market in brand-level imagery. The inventory is Abu Dhabi-led (11 of 14 listings; 3 Dubai off-plan projects).
-**Still open:** which Dubai communities and which lines (sale, rent, off-plan) are active, and whether the existing "Areas in Dubai" page content is kept or rewritten.
+*Partly answered by D-031 and D-032 (2026-10-06):* Dubai is an active area in the navigation (Areas › Dubai) and may appear where contextually relevant. Abu Dhabi leads **for now**: first in order and the default in search and maps. The inventory is Abu Dhabi-led (11 of 14 listings; 3 Dubai off-plan projects).
+**Still open:** the final Abu Dhabi versus Dubai weighting, which Dubai communities and lines (sale, rent, off-plan) are active, and whether the existing "Areas in Dubai" page content is kept or rewritten.
 
 ### B2. Demo content on the live site
 Theme demo pages are published on production (Zillow Estimate, Stripe, Splash, CRM dashboards) and 17 demo reviews sit in the database. To be removed in the rebuild. Removing them earlier from production is the owner's call (R9).

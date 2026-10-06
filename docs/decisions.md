@@ -13,7 +13,7 @@ Format: `D-NNN · date · area` then the decision and its rationale.
 | 01 Brand understanding | **Complete** |
 | Capability / infrastructure setup | **Mostly complete.** Skills, QA, local WP, 21st and Novamira are verified, and the staging audit is done ([`wordpress-environment-report.md`](./wordpress-environment-report.md)). Open: staging isolation (E1), restorable backup (E3), staging hygiene fixes (E2). These block major WordPress work, not Stage 02 |
 | 02 Visual world / aesthetic direction | **Complete.** Redline approved (D-027, D-028); 02.5b refinements approved (D-029); final refinement 02.5c completed ([`stage-02-5c-final-refinement.md`](./stage-02-5c-final-refinement.md)) with T5 type as the working system (D-030). `alaliah-design-system` is active |
-| 03 Website experience | **In progress.** 03.1 information architecture, revision 2 (client navigation, D-031) presented ([`stage-03-1-information-architecture.md`](./stage-03-1-information-architecture.md)); awaiting approval |
+| 03 Website experience | **In progress.** 03.1 information architecture **approved** (D-032, [`stage-03-1-information-architecture.md`](./stage-03-1-information-architecture.md)). **03.2 data architecture is blocked on Q3 (listing source) and Q4 (inventory size)** |
 | 04 Motion & interaction | Locked until Stage 03 is approved |
 | 05 Implementation | Locked until Stage 04 is approved. No production theme or plugin is built before then; architecture is set by D-021 – D-025 |
 
@@ -179,3 +179,13 @@ Approved from 02.5b: the three intensity levels (Functional, Editorial, Immersiv
 - **Entities:** Developer, Project, Property and Area stay separate. The spine is Developer → Projects → Properties → Areas, with reverse links from properties and projects to their developer and area.
 - **Developer pages** show only legitimate data: no invented ratings, reviews, project counts or company facts.
 - **Dubai scope (partly answers B1):** Dubai is an active secondary area. Abu Dhabi stays the lead market: listed first, the default in search and maps, and the only market in brand-level imagery. Dubai imagery and references appear only on Dubai area pages and Dubai listings. This narrows the earlier "Abu Dhabi, not Dubai" non-negotiable; it does not remove it.
+
+**D-032 · 2026-10-06 · Stage 03.1 approved, with adjustments (supersedes parts of D-031)**
+- **Navigation order:** Buy, Rent, Off-plan, Areas (Abu Dhabi, Dubai), Developers, About Us. Contact is a separate global header CTA in **ink**; crimson stays for contextual primary actions and selected or active states. Property intent comes first so it stays immediately accessible; About Us appearing later does not weaken the advisory brand.
+- **Market positioning:** Abu Dhabi remains the lead market for now. The D-031 rule limiting brand imagery to Abu Dhabi is **removed**: Dubai may appear where contextually relevant. Dubai imagery must not push the brand into generic Dubai-luxury clichés. Final Abu Dhabi versus Dubai weighting depends on B1.
+- **Developers:** the Developer → Projects → Properties → Areas model and reverse linking are approved. Archive counts and areas are derived from project and property data, never entered by hand.
+- **Developer ratings:** no Al Aliah numerical ratings of developers. External ratings or reviews only from a legitimate independent source, clearly attributed, stored with source, review count and retrieval date. No fixed expiry: refresh or suppress stale data according to the source's reliability. The module is omitted where no legitimate source exists.
+- **Property management:** stays in About Us › Services, the footer and the owner/landlord journeys; never hidden from conversion paths.
+- **Multilingual:** the architecture stays English/Arabic-ready; WPML vs Polylang is deferred to implementation planning. W2 does not block Stage 03.1.
+- **Licence information:** ORN, BRN and licence numbers are required verified content for implementation, not blockers for IA approval.
+- **Gate:** Q3 and Q4 are the primary blockers before Stage 03.2 data architecture is finalised.

@@ -52,7 +52,10 @@ Tone reference: "Abu Dhabi property, clearly understood." / "Local expertise for
 | Contact / support | Friendly, direct |
 
 ## Place
-Own **Abu Dhabi** (Abu Dhabi expertise with UAE reach). **Never use Dubai imagery or landmarks for Abu Dhabi content.**
+Own **Abu Dhabi** (Abu Dhabi expertise with UAE reach). Abu Dhabi is the lead market for now; the final Abu Dhabi versus Dubai weighting depends on open-questions B1.
+- **Never use Dubai imagery or landmarks for Abu Dhabi content.**
+- Dubai may appear where contextually relevant: Dubai area pages, Dubai listings and projects, and UAE-wide content (D-032).
+- Dubai content follows the same visual rules as everything else: real places and homes, no skyline-and-supercar luxury clichés, no gold or night-glamour treatments.
 
 ## Truthfulness rules (hard)
 - Never invent metrics, transaction counts, awards, testimonials, licence numbers or client names.

@@ -85,7 +85,7 @@ Never changes across levels: tokens, type families, crimson-as-signal, the card,
 | `error` | #9A4A00 | Validation, with icon and text; never crimson | 6.3 on paper |
 | `success` | #2B6A4A | Confirmation | 6.4 on paper |
 
-**Crimson budget:** about 1–3% of a light viewport, and at most one crimson *fill* per view (the primary action). Selection uses outlines and tints.
+**Crimson budget:** about 1–3% of a light viewport, and at most one crimson *fill* per view: the page's contextual primary action. Selection uses outlines and tints. The global header Contact CTA is a solid **ink** button, never crimson (D-032).
 
 ## Photography tiers
 | Tier | Source | Allowed |
