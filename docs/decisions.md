@@ -12,8 +12,8 @@ Format: `D-NNN · date · area` then the decision and its rationale.
 |---|---|
 | 01 Brand understanding | **Complete** |
 | Capability / infrastructure setup | **Mostly complete.** Skills, QA, local WP, 21st and Novamira are verified, and the staging audit is done ([`wordpress-environment-report.md`](./wordpress-environment-report.md)). Open: staging isolation (E1), restorable backup (E3), staging hygiene fixes (E2). These block major WordPress work, not Stage 02 |
-| 02 Visual world / aesthetic direction | **Redline 02.5 approved** as the primary direction (D-028). Stage 02.5b system refinement presented 2026-10-06 ([`stage-02-5b-refinement.md`](./stage-02-5b-refinement.md)); awaiting approval. `alaliah-design-system` is created on approval from 02.5 + 02.5b |
-| 03 Website experience | Locked until Stage 02 is approved |
+| 02 Visual world / aesthetic direction | **Complete.** Redline approved (D-027, D-028); 02.5b refinements approved (D-029); final refinement 02.5c completed ([`stage-02-5c-final-refinement.md`](./stage-02-5c-final-refinement.md)) with T5 type as the working system (D-030). `alaliah-design-system` is active |
+| 03 Website experience | **In progress.** 03.1 information architecture presented ([`stage-03-1-information-architecture.md`](./stage-03-1-information-architecture.md)); awaiting approval |
 | 04 Motion & interaction | Locked until Stage 03 is approved |
 | 05 Implementation | Locked until Stage 04 is approved. No production theme or plugin is built before then; architecture is set by D-021 – D-025 |
 
@@ -164,3 +164,12 @@ Crimson stays a controlled signal (selection, focus, navigation, primary action)
 
 **D-028 · 2026-10-06 · Redline 02.5 approved; one refinement pass before Stage 03**
 The corrected Redline (D-027, `stage-02-5-redline.md`) is approved as the primary design direction. Before Stage 03, one system-refinement pass (02.5b) covers typography, hierarchy moments, the signature card, map art direction, the property-detail signature, the community emotional layer and three intensity levels, without redesigning Redline. The 02.5b proposals (including the T1 type pairing and the intensity levels) are not decisions until approved.
+
+**D-029 · 2026-10-06 · Stage 02.5b approvals**
+Approved from 02.5b: the three intensity levels (Functional, Editorial, Immersive); the Site select interaction model with a separate Shortlist control and two-way map sync; the Room index as an **optional** enhanced-gallery mode (only when every photo carries a room tag); the community-story rules; the overall map direction. Not approved: T1 (Anybody) as the production type system. One final refinement pass (02.5c) was required for typography, card identity and map art direction.
+
+**D-030 · 2026-10-06 · Stage 02.5c: working type system, card identity, map cartography; Stage 02 closed**
+- **Type:** T5 (Sofia Sans Extra Condensed display, Sofia Sans text and labels; Reem Kufi and Noto Kufi Arabic) is the working system for Stages 03–04, chosen on measured long-name behaviour. It stays provisional: the production face is a Stage 05 licence decision, and T4 (Mona Sans) is the fallback. The name-fit rule applies whatever the face.
+- **Card:** the Site select card gains a price plate, a site strip and a redline drawn around the *community* (not the card edge), plus the plot-marker shortlist symbol.
+- **Map:** the Redline cartography (layer order, coastal shelf, road and label hierarchies, constant-size symbols) is the art direction for the MapLibre style.
+- Stage 02 is complete. `alaliah-design-system` is created from 02.5, 02.5b and 02.5c and owns these rules (D-003).

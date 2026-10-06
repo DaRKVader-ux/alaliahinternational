@@ -12,6 +12,8 @@ Redesign and redevelopment of the Al Aliah International website as a modern Abu
 | [`docs/stage-02-visual-directions.md`](docs/stage-02-visual-directions.md) | Stage 02: three visual directions + recommendation ([specimens](docs/stage-02/visual-directions.html)) |
 | [`docs/stage-02-5-redline.md`](docs/stage-02-5-redline.md) | Stage 02.5: Redline corrected + design-system study ([specimen](docs/stage-02-5/redline.html)) |
 | [`docs/stage-02-5b-refinement.md`](docs/stage-02-5b-refinement.md) | Stage 02.5b: Redline system refinement ([specimen](docs/stage-02-5b/system.html)) |
+| [`docs/stage-02-5c-final-refinement.md`](docs/stage-02-5c-final-refinement.md) | Stage 02.5c: type, card and map final refinement ([specimen](docs/stage-02-5c/final.html)) |
+| [`docs/stage-03-1-information-architecture.md`](docs/stage-03-1-information-architecture.md) | Stage 03.1: information architecture |
 | [`CLAUDE.md`](CLAUDE.md) | Working rules for AI-assisted development |
 
 | Tool | Purpose |
@@ -19,4 +21,4 @@ Redesign and redevelopment of the Al Aliah International website as a modern Abu
 | `tools/wp-local/setup.sh` | Throwaway local WordPress on SQLite (PHP + git only) |
 | `tools/qa/check.mjs` | Playwright + axe QA at 1920/1440/1024/768/390/375 |
 
-**Current stage:** **02.5b**: Redline 02.5 approved (D-028); system refinement awaiting approval before Stage 03. Major WordPress work is blocked by staging isolation and backups (open-questions E1, E3).
+**Current stage:** **03.1**: Stage 02 complete (Redline, D-030); information architecture awaiting approval. Major WordPress work is blocked by staging isolation and backups (open-questions E1, E3).

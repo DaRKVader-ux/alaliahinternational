@@ -1,0 +1,692 @@
+<title>Redline Final Refinement</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anybody:wdth,wght@50..150,300..900&family=Mona+Sans:wdth,wght@75..125,200..900&family=Sofia+Sans+Extra+Condensed:wght@300..900&family=Sofia+Sans:wght@300..900&family=Reem+Kufi:wght@400..700&family=Noto+Kufi+Arabic:wght@400..800&display=swap">
+<style>
+:root {
+  --sheet: #F2F4F4; --paper: #FFFFFF; --ink: #14191E; --ink-2: #4A545C; --ink-3: #5F6A72; --line: #CDD3D7;
+  --crimson: #B0122C; --crimson-tint: #F6E0E4; --shade: #0F1E25; --on-shade: #E8EEEF; --on-shade-2: #A9B8BE;
+  /* cartographic tokens */
+  --m-water: #D6E3E7; --m-shelf: #C7D7DC; --m-shelf-2: #CEDDE1; --m-water-label: #3E5C66;
+  --m-land: #F2F4F4; --m-coast: #AEBBC1; --m-open: #E6EBEA; --m-fabric: #DCE2E4;
+  --m-road: #FFFFFF; --m-road-casing: #C5CED2;
+  --f-ar-display: "Reem Kufi", "Noto Kufi Arabic", Tahoma, sans-serif;
+  --f-ar: "Noto Kufi Arabic", Tahoma, sans-serif;
+  --ease: cubic-bezier(.22,.7,.2,1);
+  color-scheme: light;
+}
+/* Type systems: one set of roles, three candidate families */
+[data-type="t1"] { --fd: "Anybody"; --fd-st: 58%; --fd-w: 700; --ft: "Anybody"; --ft-st: 100%; --fl: "Anybody"; --fl-st: 120%; --fl-ls: 0 }
+[data-type="t4"] { --fd: "Mona Sans"; --fd-st: 75%; --fd-w: 760; --ft: "Mona Sans"; --ft-st: 100%; --fl: "Mona Sans"; --fl-st: 118%; --fl-ls: 0 }
+[data-type="t5"] { --fd: "Sofia Sans Extra Condensed"; --fd-st: 100%; --fd-w: 760; --ft: "Sofia Sans"; --ft-st: 100%; --fl: "Sofia Sans"; --fl-st: 100%; --fl-ls: 0.03em }
+* { box-sizing: border-box }
+html { scroll-padding-top: 72px }
+body { margin: 0; background: var(--sheet); color: var(--ink); -webkit-font-smoothing: antialiased }
+#root { font: 400 17px/1.55 var(--ft), "Helvetica Neue", Arial, sans-serif; font-stretch: var(--ft-st); font-variant-numeric: lining-nums }
+button { font-family: inherit }
+h1, h2, h3, h4, p { margin: 0 }
+h1, h2, h3 { text-wrap: balance }
+img { display: block; max-width: 100% }
+a { color: inherit }
+:focus-visible { outline: 3px solid var(--crimson); outline-offset: 3px }
+.wrap { max-width: 1248px; margin-inline: auto; padding-inline: clamp(16px, 4vw, 32px) }
+.d, .num { font-family: var(--fd), "Arial Narrow", sans-serif; font-stretch: var(--fd-st); font-weight: var(--fd-w); line-height: .88; letter-spacing: -0.005em }
+.lbl { font-family: var(--fl), sans-serif; font-stretch: var(--fl-st); letter-spacing: var(--fl-ls) }
+.num { font-variant-numeric: tabular-nums lining-nums }
+.note { font-size: 0.84rem; color: var(--ink-3) }
+.vh { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap }
+
+.bar { position: sticky; top: 0; z-index: 40; background: color-mix(in srgb, var(--sheet) 92%, transparent); backdrop-filter: blur(8px); border-block-end: 1px solid var(--line) }
+.bar .wrap { display: flex; align-items: center; gap: 16px; min-height: 56px; flex-wrap: wrap; padding-block: 6px }
+.brand { font-family: var(--fd), sans-serif; font-stretch: var(--fd-st); font-weight: var(--fd-w); font-size: 1.25rem; text-decoration: none }
+.brand span { font-family: var(--ft), sans-serif; font-stretch: 100%; font-weight: 400; color: var(--ink-3); font-size: 0.82rem; margin-inline-start: 8px }
+.bar nav { display: flex; gap: 2px; margin-inline-start: auto }
+.bar nav a { text-decoration: none; padding: 6px 9px; font-size: 0.9rem; color: var(--ink-2) }
+.bar nav a:hover { color: var(--ink) }
+
+.intro { padding-block: clamp(56px, 8vw, 104px) 24px; display: grid; gap: 22px }
+.intro h1 { font-size: clamp(3.4rem, 9vw, 7.5rem) }
+.intro .sub { max-width: 64ch; font-size: 1.12rem; color: var(--ink-2) }
+.status { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; max-width: 980px }
+.status div { background: var(--paper); padding: 18px 20px; display: grid; gap: 8px; align-content: start }
+.status h2 { font-size: 0.82rem; font-weight: 500; color: var(--ink-3) }
+.status ul { margin: 0; padding-inline-start: 18px; display: grid; gap: 4px; font-size: 0.95rem }
+
+section.s { padding-block: clamp(64px, 9vw, 120px) }
+section.s + section.s { border-block-start: 1px solid var(--line) }
+.s-head { display: grid; gap: 12px; margin-block-end: 32px; max-width: 70ch }
+.s-head .k { font-size: 0.8rem; color: var(--ink-3) }
+.s-head h2 { font-size: clamp(2.8rem, 6vw, 4.6rem) }
+.s-head p { color: var(--ink-2) }
+
+/* ---------- 1. Type ---------- */
+.switch { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--ink-3); margin-block-end: 18px }
+.switch button { border: 0; background: var(--paper); padding: 10px 16px; cursor: pointer; font: inherit; font-size: 0.92rem; min-height: 44px; text-align: start }
+.switch button + button { border-inline-start: 1px solid var(--ink-3) }
+.switch button[aria-pressed="true"] { background: var(--ink); color: var(--paper) }
+.switch small { display: block; font-size: 0.74rem; opacity: .8 }
+.board { display: grid; gap: 16px }
+.slot { background: var(--paper); padding: 22px 24px 24px; display: grid; gap: 14px; container-type: inline-size }
+.slot > .lbl:first-child { font-size: 0.78rem; color: var(--ink-3) }
+.slot.statement { background: var(--shade); color: var(--on-shade); padding: clamp(24px, 4vw, 48px) }
+.slot.statement > .lbl:first-child { color: var(--on-shade-2) }
+.pair-row { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 16px }
+/* the name-fit rule */
+.nm { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 6px 24px }
+.nm .en { text-wrap: balance; overflow-wrap: normal; font-size: var(--sz) }
+.nm .ar { font-family: var(--f-ar-display); font-weight: 700; font-size: calc(var(--sz) * .42); line-height: 1.5; text-align: end; white-space: nowrap; padding-block-end: .08em }
+.nm.n3 .en { font-size: calc(var(--sz) * .8) }
+.nm.ar-long { grid-template-columns: minmax(0, 1fr) }
+.nm.ar-long .ar { justify-self: end }
+.statement .nm { --sz: clamp(3.6rem, 12.5cqi, 10rem) }
+.statement .nm .ar { color: var(--on-shade-2) }
+.heading .nm { --sz: clamp(2.6rem, 9cqi, 4.5rem); border-block-end: 2px solid var(--ink); padding-block-end: 10px }
+.heading p { color: var(--ink-2); max-width: 52ch }
+.labels { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 0.8rem; color: var(--ink-3) }
+.labels b { color: var(--ink); font-weight: 600 }
+.func .price { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap }
+.func .price b { font-size: 2.1rem }
+.func .price span { font-size: 0.76rem; color: var(--ink-3) }
+.func h3 { font-size: 1rem; font-weight: 600; line-height: 1.3 }
+.func .place { display: flex; justify-content: space-between; gap: 10px; font-size: 0.88rem; color: var(--ink-2); border-block-end: 1px solid var(--line); padding-block-end: 8px }
+.func .place [lang="ar"] { font-family: var(--f-ar); color: var(--ink-3) }
+.func .mapl { display: flex; gap: 14px; align-items: center; background: var(--m-water); padding: 14px; font-size: 0.8rem }
+.func .mapl svg { width: 100%; max-width: 260px; height: auto }
+
+.ladder { margin-block-start: 28px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px }
+.ladder .col { background: var(--paper); padding: 18px; display: grid; gap: 4px; align-content: start; container-type: inline-size }
+.ladder h3 { font-size: 0.86rem; font-weight: 600; margin-block-end: 8px }
+.ladder .row { display: grid; gap: 2px; padding-block: 10px; border-block-start: 1px solid var(--line) }
+.ladder .row .nm { --sz: clamp(2rem, 13cqi, 3.2rem) }
+.ladder .row .meta { font-size: 0.72rem; color: var(--ink-3) }
+.ladder .row .meta.bad { color: var(--crimson); font-weight: 600 }
+.ladder [data-sys="t1"] { --fd: "Anybody"; --fd-st: 58%; --fd-w: 700 }
+.ladder [data-sys="t4"] { --fd: "Mona Sans"; --fd-st: 75%; --fd-w: 760 }
+.ladder [data-sys="t5"] { --fd: "Sofia Sans Extra Condensed"; --fd-st: 100%; --fd-w: 760 }
+.rule { margin-block-start: 16px; background: var(--paper); padding: 20px 24px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; font-size: 0.9rem; color: var(--ink-2) }
+.rule b { display: block; color: var(--ink); font-size: 0.95rem; margin-block-end: 4px }
+.verdict { margin-block-start: 16px; border-inline-start: 4px solid var(--crimson); background: var(--paper); padding: 18px 22px; display: grid; gap: 8px; max-width: 90ch }
+.verdict h3 { font-size: 1.05rem }
+.verdict p { color: var(--ink-2) }
+
+/* ---------- 2. Card ---------- */
+.site { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 20px; align-items: start }
+.cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 18px }
+.sc { position: relative; background: var(--paper); display: grid; grid-template-rows: auto auto 1fr; transition: transform 240ms var(--ease), box-shadow 240ms var(--ease) }
+.sc:hover, .sc:focus-within, .sc.hot { transform: translateY(-4px); box-shadow: 0 22px 34px -26px rgba(15,30,37,.6) }
+.sc .ph { position: relative; aspect-ratio: 4 / 3 }
+.sc .ph .cut { position: absolute; inset: 0; overflow: hidden; clip-path: inset(0 0 0 0); transition: clip-path 320ms var(--ease); background: #DCE3E6 }
+.sc:hover .ph .cut, .sc:focus-within .ph .cut, .sc.hot .ph .cut { clip-path: inset(10px 10px 0 10px) }
+.sc .ph img { width: 100%; height: 100%; object-fit: cover }
+.sc .purpose { position: absolute; inset-block-start: 10px; inset-inline-start: 10px; background: var(--paper); padding: 3px 8px; font-size: 0.72rem; z-index: 1; transition: inset 320ms var(--ease) }
+.sc:hover .purpose, .sc:focus-within .purpose, .sc.hot .purpose { inset-block-start: 20px; inset-inline-start: 20px }
+.sc .render { position: absolute; inset-block-end: 44px; inset-inline-end: 10px; background: rgba(20,25,30,.78); color: #fff; padding: 2px 8px; font-size: 0.7rem }
+.sc .mark { position: absolute; inset-block-start: 10px; inset-inline-end: 10px; width: 18px; height: 18px; background: var(--crimson); border: 3px solid #fff; box-shadow: 0 0 0 1px rgba(20,25,30,.25); transform: scale(0); transition: transform 200ms var(--ease); z-index: 1 }
+.sc.is-short .mark { transform: scale(1) }
+.sc .plate { position: absolute; inset-inline-start: 0; inset-block-end: -26px; background: var(--paper); padding: 10px 16px 4px; display: flex; align-items: baseline; gap: 8px; z-index: 2 }
+.sc .plate b { font-size: 2.35rem }
+.sc .plate span { font-size: 0.72rem; color: var(--ink-3) }
+.sc .bd { padding: 38px 16px 0; display: grid; gap: 4px }
+.sc h3 { font-size: 1rem; font-weight: 600; line-height: 1.3 }
+.sc h3 a { text-decoration: none }
+.sc h3 a::after { content: ""; position: absolute; inset: 0; z-index: 1 }
+.sc h3 a:focus-visible { outline: none }
+.sc:has(h3 a:focus-visible) { outline: 3px solid var(--crimson); outline-offset: 3px }
+.sc .strip { position: relative; height: 66px; margin-block-start: 12px; background: var(--m-water); overflow: hidden }
+.sc .strip svg { position: absolute; inset: 0; width: 100%; height: 100% }
+.sc .strip .lk { position: absolute; inset-inline: 12px; inset-block-end: 6px; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; pointer-events: none }
+.sc .strip .lk .en { font-size: 1.3rem; line-height: 1; text-shadow: 0 0 3px var(--m-land), 0 0 3px var(--m-land), 0 0 6px var(--m-land) }
+.sc .strip .lk .ar { font-family: var(--f-ar-display); font-weight: 700; font-size: 0.86rem; color: var(--ink-2); text-shadow: 0 0 3px var(--m-land), 0 0 6px var(--m-land) }
+.sc .facts { display: flex; gap: 18px; margin: 12px 0 0; padding: 0 16px }
+.sc .facts div { display: flex; align-items: baseline; gap: 5px }
+.sc .facts dd { margin: 0; font-size: 1.45rem }
+.sc .facts dt { font-size: 0.72rem; color: var(--ink-3) }
+.sc .facts .na dd { font-family: inherit; font-size: 0.82rem; font-weight: 400; color: var(--ink-3) }
+.sc .ft { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 16px 14px; margin-block-start: 6px }
+.sc .sec { font-size: 0.8rem; color: var(--ink-2); opacity: 0; transition: opacity 200ms }
+.sc:hover .sec, .sc:focus-within .sec, .sc.hot .sec, .sc.is-short .sec { opacity: 1 }
+.sc.is-short .sec { color: var(--crimson); font-weight: 600 }
+.sl { position: relative; z-index: 2; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; border: 1px solid var(--line); background: var(--paper); font: 600 0.84rem var(--ft), sans-serif; cursor: pointer; flex: 0 0 auto }
+.sl::before { content: ""; width: 10px; height: 10px; border: 2px solid var(--ink) }
+.sl:hover { border-color: var(--ink) }
+.sl[aria-pressed="true"] { border-color: var(--crimson); color: var(--crimson) }
+.sl[aria-pressed="true"]::before { background: var(--crimson); border-color: var(--crimson) }
+.anat { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-block-start: 28px }
+.anat div { background: var(--paper); padding: 16px 18px; font-size: 0.88rem; color: var(--ink-2) }
+.anat b { display: block; color: var(--ink); margin-block-end: 4px }
+.site-map { position: sticky; top: 72px; display: grid; gap: 8px }
+.tray { position: sticky; bottom: 12px; z-index: 5; grid-column: 1 / -1; margin-block-start: 6px; background: var(--ink); color: var(--paper); display: flex; align-items: center; gap: 12px; padding: 10px 12px; flex-wrap: wrap; opacity: 0; transform: translateY(8px); pointer-events: none; transition: opacity 200ms, transform 200ms var(--ease) }
+.tray.on { opacity: 1; transform: none; pointer-events: auto }
+.tray .n { background: var(--crimson); min-width: 28px; height: 28px; display: grid; place-items: center; font-weight: 700 }
+.tray .t { display: flex; gap: 4px }
+.tray .t img { width: 48px; height: 36px; object-fit: cover }
+.tray button { margin-inline-start: auto; background: transparent; color: var(--paper); border: 1px solid var(--paper); min-height: 44px; padding: 0 14px; font: inherit; cursor: pointer }
+
+/* ---------- 3. Map ---------- */
+.map { position: relative; background: var(--m-water); overflow: hidden; aspect-ratio: 10 / 7 }
+.map > svg { position: absolute; inset: 0; width: 100%; height: 100% }
+.map .attr { position: absolute; inset-inline-end: 6px; inset-block-end: 4px; font-size: 0.68rem; color: var(--ink-3); background: rgba(242,244,244,.85); padding: 1px 6px }
+.m-shelf2 { fill: none; stroke: var(--m-shelf-2); stroke-width: 30; stroke-linejoin: round }
+.m-shelf { fill: none; stroke: var(--m-shelf); stroke-width: 12; stroke-linejoin: round }
+.m-land { fill: var(--m-land); stroke: var(--m-coast); stroke-width: 1; vector-effect: non-scaling-stroke }
+.m-open { fill: var(--m-open) }
+.m-fabric rect { fill: var(--m-fabric) }
+.m-road-c { fill: none; stroke: var(--m-road-casing); stroke-linecap: round; vector-effect: non-scaling-stroke }
+.m-road { fill: none; stroke: var(--m-road); stroke-linecap: round; vector-effect: non-scaling-stroke }
+.m-road-c.mw { stroke-width: 7 } .m-road.mw { stroke-width: 4.5 }
+.m-road-c.ar { stroke-width: 3.5 } .m-road.ar { stroke-width: 2 }
+.m-road.mn { stroke-width: 1 }
+.m-comm { fill: transparent; stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; cursor: pointer; transition: fill 160ms }
+.m-comm:hover, .m-comm.hot { fill: rgba(176, 18, 44, .06) }
+.m-red { fill: var(--crimson-tint); fill-opacity: 0; stroke: var(--crimson); stroke-width: calc(2.25px * var(--k, 1)); stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; pointer-events: none; transition: stroke-dashoffset 420ms var(--ease), fill-opacity 300ms 120ms }
+.m-red.on { stroke-dashoffset: 0; fill-opacity: .75 }
+.m-red.keep { stroke-dashoffset: 0; fill-opacity: .35 }
+.m-t { pointer-events: none; paint-order: stroke; stroke: var(--m-land); stroke-width: 3px; stroke-linejoin: round }
+.m-t.water { font: 400 13px var(--fl), sans-serif; font-stretch: 125%; letter-spacing: .02em; fill: var(--m-water-label); stroke: var(--m-water) }
+.m-t.ctx { font: 500 11.5px var(--fl), sans-serif; font-stretch: 118%; fill: var(--ink-3) }
+.m-t.comm { font: var(--fd-w) 15px var(--fd), sans-serif; font-stretch: var(--fd-st); fill: var(--ink) }
+.m-t.comm-ar { font: 700 10.5px var(--f-ar-display); fill: var(--ink-2) }
+.cl circle { fill: var(--ink); stroke: #fff; stroke-width: 2; transition: fill 160ms }
+.cl text { font: 700 11px var(--ft), sans-serif; fill: #fff; text-anchor: middle; dominant-baseline: central; pointer-events: none }
+.cl { cursor: pointer }
+.cl.hot circle, .cl:hover circle { fill: var(--crimson) }
+.cl.keep circle { fill: var(--crimson) }
+.plot { cursor: pointer; outline: none }
+.plot > rect { fill: var(--ink); stroke: #fff; stroke-width: 2; transition: fill 150ms }
+.plot.short > rect { fill: #fff; stroke: var(--crimson); stroke-width: 2.5 }
+.plot.act > rect, .plot:hover > rect, .plot:focus-visible > rect { fill: var(--crimson); stroke: #fff }
+.plot:focus-visible > rect { stroke: var(--ink); stroke-width: 3 }
+.plot .tag { opacity: 0; transition: opacity 150ms; pointer-events: none }
+.plot.act .tag, .plot:hover .tag, .plot:focus-visible .tag, .map[data-zoom="street"] .plot .tag { opacity: 1 }
+.plot .tag rect { fill: var(--paper); stroke: var(--ink); stroke-width: 1 }
+.plot.act .tag rect, .plot:hover .tag rect { stroke: var(--crimson) }
+.plot .tag text { font: var(--fd-w) 13px var(--fd), sans-serif; font-stretch: var(--fd-st); fill: var(--ink); dominant-baseline: central }
+.map .lyr-fabric, .map .lyr-minor, .map .lyr-plots, .map .comm-ar { opacity: 0; transition: opacity 300ms }
+.map[data-zoom="community"] .lyr-fabric, .map[data-zoom="street"] .lyr-fabric, .map[data-zoom="street"] .lyr-minor, .map[data-zoom="community"] .lyr-plots, .map[data-zoom="street"] .lyr-plots, .map[data-zoom="community"] .comm-ar, .map[data-zoom="street"] .comm-ar { opacity: 1 }
+.map[data-zoom="community"] .cl-raha, .map[data-zoom="street"] .cl-raha { display: none }
+.map.no-shelf .lyr-shelf, .map.no-open .lyr-open, .map.no-roads .lyr-roads, .map.no-comm .lyr-comm, .map.no-labels .lyr-labels, .map.no-listings .lyr-listings { display: none }
+.callout { position: absolute; z-index: 3; width: 184px; background: var(--paper); box-shadow: 0 16px 30px -18px rgba(15,30,37,.6); opacity: 0; transform: translate(14px, -50%) scale(.96); transform-origin: left center; transition: opacity 160ms, transform 200ms var(--ease); pointer-events: none }
+.callout.on { opacity: 1; transform: translate(14px, -50%) }
+.callout.flip { transform: translate(calc(-100% - 14px), -50%) scale(.96); transform-origin: right center }
+.callout.flip.on { transform: translate(calc(-100% - 14px), -50%) }
+.callout img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover }
+.callout div { padding: 6px 10px 8px; font-size: 0.78rem; display: grid }
+.callout b { font-size: 1.15rem }
+.carto { display: grid; grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); gap: 20px; align-items: start }
+.ctl { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin-block-end: 10px }
+.zoombar { display: inline-flex; border: 1px solid var(--ink-3) }
+.zoombar button { border: 0; background: var(--paper); padding: 0 14px; min-height: 44px; cursor: pointer; font: inherit; font-size: 0.92rem }
+.zoombar button + button { border-inline-start: 1px solid var(--ink-3) }
+.zoombar button[aria-pressed="true"] { background: var(--ink); color: var(--paper) }
+.layers { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 0.84rem }
+.layers legend { float: inline-start; margin-inline-end: 10px; color: var(--ink-3); font-size: 0.8rem; padding: 0 }
+.layers label { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; cursor: pointer }
+.layers input { accent-color: var(--ink); width: 16px; height: 16px }
+.spec { display: grid; gap: 14px }
+.spec section { background: var(--paper); padding: 16px 18px }
+.spec h3 { font-size: 0.95rem; margin-block-end: 10px }
+.spec ol, .spec ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px }
+.spec li { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; align-items: center; font-size: 0.84rem; color: var(--ink-2) }
+.spec li b { color: var(--ink); font-weight: 600; display: block }
+.spec li svg { width: 40px; height: 26px }
+.hier { display: grid; gap: 10px }
+.hier div { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 10px; border-block-end: 1px solid var(--line); padding-block-end: 8px; font-size: 0.8rem; color: var(--ink-3) }
+.ctab { width: 100%; border-collapse: collapse; font-size: 0.8rem }
+.ctab th, .ctab td { text-align: start; padding: 6px 4px; border-block-end: 1px solid var(--line) }
+.ctab th { font-weight: 600 }
+.ctab td:last-child { font-variant-numeric: tabular-nums; text-align: end }
+.ctab .sw { display: inline-block; width: 12px; height: 12px; vertical-align: -1px; margin-inline-end: 6px; border: 1px solid rgba(0,0,0,.15) }
+.symbols { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; margin-block-start: 20px }
+.symbols div { background: var(--paper); padding: 14px; display: grid; gap: 8px; justify-items: start; font-size: 0.8rem; color: var(--ink-2) }
+.symbols b { color: var(--ink) }
+.symbols svg { width: 100%; max-width: 120px; height: 46px; background: var(--m-land) }
+
+footer { background: var(--shade); color: var(--on-shade-2); padding-block: 40px; font-size: 0.88rem }
+footer .wrap { display: grid; gap: 6px }
+footer strong { color: var(--on-shade) }
+
+@media (max-width: 1080px) {
+  .site, .carto { grid-template-columns: 1fr }
+  .site-map { position: static; order: -1 }
+  .anat, .rule { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+  .symbols { grid-template-columns: repeat(3, minmax(0, 1fr)) }
+}
+@media (max-width: 900px) {
+  .ladder, .pair-row, .status { grid-template-columns: 1fr }
+}
+@media (max-width: 600px) {
+  .brand span { display: none }
+  .bar .wrap { gap: 0; padding-block: 8px 0 }
+  .bar nav { overflow-x: auto; margin-inline: -9px 0; width: calc(100% + 9px); scrollbar-width: none }
+  .bar nav a { flex: 0 0 auto }
+  .cards, .anat, .rule { grid-template-columns: 1fr }
+  .symbols { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+  .switch { display: grid; width: 100% }
+  .switch button + button { border-inline-start: 0; border-block-start: 1px solid var(--ink-3) }
+  .nm { grid-template-columns: 1fr }
+  .nm .ar { text-align: start }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0ms !important; animation: none !important }
+}
+</style>
+
+<div data-type="t5" id="root">
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="#top">Al Aliah International<span>Redline 02.5c, final refinement</span></a>
+    <nav aria-label="Refinement areas"><a href="#type">Type</a><a href="#card">Card</a><a href="#maps">Map</a></nav>
+  </div>
+</header>
+
+<main id="top">
+  <section class="intro wrap" aria-labelledby="h-intro">
+    <h1 class="d" id="h-intro">Redline, final pass</h1>
+    <p class="sub">Three targeted refinements before Stage 03: type that handles long names, a card that could only be Al Aliah's, and a map that reads as a cartographic system. Nothing else in the approved system changes.</p>
+    <div class="status">
+      <div><h2 class="lbl">Approved in 02.5b</h2><ul><li>Three intensity levels</li><li>Site select interaction, with a separate Shortlist</li><li>Room index, as an optional enhanced-gallery mode</li><li>Community-story rules</li><li>Overall map direction</li></ul></div>
+      <div><h2 class="lbl">Refined here</h2><ul><li>Display type: two alternatives tested against T1 on real long names</li><li>Site select card identity</li><li>Map art direction as a cartographic system</li></ul></div>
+    </div>
+  </section>
+
+  <!-- 1. Type -->
+  <section class="s" id="type" aria-labelledby="h-type">
+    <div class="wrap">
+      <div class="s-head"><span class="k lbl">1. Typography</span><h2 class="d" id="h-type">Long names, held</h2><p>Abu Dhabi place names run from "Yas Island" to "Mohammed Bin Zayed City". Two display systems are tested against T1 at real sizes in real slots. Switch the system to reset this page's own type too.</p></div>
+      <div class="switch" role="group" aria-label="Type system">
+        <button type="button" data-t="t1" aria-pressed="false">T1, Anybody<small>02.5b candidate</small></button>
+        <button type="button" data-t="t4" aria-pressed="false">T4, Mona Sans<small>Alternative</small></button>
+        <button type="button" data-t="t5" aria-pressed="true">T5, Sofia Sans<small>Recommended</small></button>
+      </div>
+      <div class="board">
+        <div class="slot statement"><span class="lbl">Immersive statement, full width</span>
+          <div class="nm" data-name="Mohammed Bin Zayed City"><span class="en d"></span><span class="ar" lang="ar" dir="rtl">مدينة محمد بن زايد</span></div>
+        </div>
+        <div class="pair-row">
+          <div class="slot heading"><span class="lbl">Editorial heading, half width</span>
+            <div class="nm" data-name="Saadiyat Cultural District"><span class="en d"></span><span class="ar" lang="ar" dir="rtl">المنطقة الثقافية في السعديات</span></div>
+            <p>Body text in the same family at normal width. Long community and project names are the hardest case for a compressed display face: they either wrap badly, shrink until they lose authority, or get squeezed past legibility.</p>
+            <div class="labels lbl"><span><b>4</b> communities</span><span>Updated 6 Oct 2026</span><span>Listing reference 31083</span></div>
+          </div>
+          <div class="slot func"><span class="lbl">Functional card and map label</span>
+            <div class="price"><b class="num">3,936,708</b><span class="lbl">AED, off-plan</span></div>
+            <h3>Four-bedroom townhouse with private pool</h3>
+            <div class="place"><span>Mohammed Bin Zayed City</span><span lang="ar" dir="rtl">مدينة محمد بن زايد</span></div>
+            <div class="mapl"><svg viewBox="0 0 260 60" role="img" aria-label="Map label sample"><rect width="260" height="60" fill="#F2F4F4"/><path d="M0 46 H260" stroke="#C5CED2" stroke-width="7"/><path d="M0 46 H260" stroke="#fff" stroke-width="4.5"/><text class="m-t comm" x="10" y="26">Al Reef Downtown</text><text class="m-t comm" x="150" y="26">Masdar City</text></svg></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ladder" aria-label="Ten real names under the fit rule">
+        <div class="col" data-sys="t1"><h3>T1, Anybody 58</h3></div>
+        <div class="col" data-sys="t4"><h3>T4, Mona Sans 75</h3></div>
+        <div class="col" data-sys="t5"><h3>T5, Sofia Sans Extra Condensed</h3></div>
+      </div>
+      <p class="note" style="margin-block-start:8px">Each column applies the same fit rule at the same slot width. "Overflows" marks a name the rule could not hold.</p>
+
+      <div class="rule">
+        <div><b>1. Bind particles</b>"Al", "Bin" and "Abu" never end a line: "Madinat / Al Riyad", not "Madinat Al / Riyad".</div>
+        <div><b>2. Balance two lines</b>A display name may take two balanced lines at full size. Never three.</div>
+        <div><b>3. Step down once</b>Names of 19 characters or more drop one scale step. No further.</div>
+        <div><b>4. Arabic rides the last line</b>The Arabic name sits on the final Latin baseline, end-aligned, at 0.42 of the Latin size. Arabic names over 14 characters take their own line below, still end-aligned.</div>
+      </div>
+
+      <div class="verdict">
+        <h3>Recommendation: T5, Sofia Sans, as the working type system for Stage 03</h3>
+        <p>Measured at 100 px, the ten names average 460 px wide in T1, 465 in T5 and 541 in T4. T1 and T5 hold all ten in one line at this slot (the two longest one step down); T4 has to break "Saadiyat Island" and "Madinat Al Riyad". So compression was never T1's problem. Character is: Anybody's compressed letterforms turn quirky over four words, and its normal width is not a calm reading face.</p>
+        <p>T5 keeps T1's compression and authority, reads plainly at length, and its text face is quiet. The cost: Sofia Sans has no extended width, so labels move from "extended" to normal width at a smaller size. Compressed still means place or figure; normal means reading and labels. T4 is the fallback if extended labels matter more than compression.</p>
+        <p>Not final for production: a licensed grotesk with a true compressed width (Stage 05, budget) can replace it without changing the roles.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Card -->
+  <section class="s" id="card" aria-labelledby="h-card">
+    <div class="wrap">
+      <div class="s-head"><span class="k lbl">2. Signature card</span><h2 class="d" id="h-card">Site select, refined</h2><p>The card carries its site. A site strip from the map sits inside every card, and hovering or focusing a card draws the redline around its community in the strip and on the map at the same moment. The card opens the listing; Shortlist is its own control.</p></div>
+      <div class="site">
+        <div class="cards" id="cards"></div>
+        <div class="site-map" role="group" aria-label="Map context for the cards">
+          <div class="map" id="site-map"></div>
+          <p class="note">Stylised geography. Pins sit at community level until listings carry real coordinates (open question Q3).</p>
+        </div>
+        <div class="tray" id="tray" aria-live="polite"><span class="n" id="tray-n">0</span><span id="tray-l">homes on your shortlist</span><span class="t" id="tray-t"></span><button type="button" id="tray-clear">Clear shortlist</button></div>
+      </div>
+      <p class="note" id="card-note" style="margin-block-start:10px">In production the card's title link opens the listing. Here it returns to this note.</p>
+      <div class="anat">
+        <div><b>Price plate</b>The price sits on a paper plate anchored across the photo's bottom edge: Redline's anchored information, set figure-first.</div>
+        <div><b>Site strip</b>A slice of the Redline map with the community outline and the plot marker, named in the mirror lockup. Every card shows where it is.</div>
+        <div><b>The redline</b>Hover or focus draws one crimson boundary around the community, in the strip and on the map together. Crimson marks the place, never the card's edge.</div>
+        <div><b>Plot marker</b>Shortlisting uses the map's own symbol: a crimson square on the photo, on the button and on the map.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Map -->
+  <section class="s" id="maps" aria-labelledby="h-map">
+    <div class="wrap">
+      <div class="s-head"><span class="k lbl">3. Map art direction</span><h2 class="d" id="h-map">A Redline cartography</h2><p>From schematic to system: a fixed layer order, a coastal shelf instead of flat water, a three-step road hierarchy, a three-step label hierarchy, and symbols that hold their size at every zoom. Production applies this as a MapLibre style on vector tiles.</p></div>
+      <div class="carto">
+        <div>
+          <div class="ctl">
+            <div class="zoombar" role="group" aria-label="Zoom level" id="zoombar"><button type="button" data-z="city" aria-pressed="true">City</button><button type="button" data-z="community" aria-pressed="false">Al Raha</button><button type="button" data-z="street" aria-pressed="false">Street</button></div>
+            <fieldset class="layers" id="layers"><legend>Layers</legend>
+              <label><input type="checkbox" data-l="shelf" checked>Shelf</label><label><input type="checkbox" data-l="open" checked>Open space</label><label><input type="checkbox" data-l="roads" checked>Roads</label><label><input type="checkbox" data-l="comm" checked>Communities</label><label><input type="checkbox" data-l="labels" checked>Labels</label><label><input type="checkbox" data-l="listings" checked>Listings</label>
+            </fieldset>
+          </div>
+          <div class="map" id="carto-map" data-zoom="city"></div>
+          <p class="note" style="margin-block-start:8px">Stylised geography for art direction: positions are approximate and not for navigation. Production geometry comes from the tile source (decision D-006).</p>
+        </div>
+        <div class="spec">
+          <section aria-labelledby="h-stack"><h3 id="h-stack">Layer order, bottom to top</h3>
+            <ol>
+              <li><svg viewBox="0 0 40 26" aria-hidden="true"><rect width="40" height="26" fill="#D6E3E7"/></svg><span><b>Water</b>Pale slate, flat</span></li>
+              <li><svg viewBox="0 0 40 26" aria-hidden="true"><rect width="40" height="26" fill="#D6E3E7"/><rect y="9" width="40" height="17" fill="#CEDDE1"/><rect y="14" width="40" height="12" fill="#C7D7DC"/><rect y="18" width="40" height="8" fill="#F2F4F4"/></svg><span><b>Coastal shelf</b>Two depth bands follow every coast</span></li>
+              <li><svg viewBox="0 0 40 26" aria-hidden="true"><rect width="40" height="26" fill="#F2F4F4" stroke="#AEBBC1"/></svg><span><b>Land</b>Sheet, with a hairline coast</span></li>
+              <li><svg viewBox="0 0 40 26" aria-hidden="true"><rect width="40" height="26" fill="#F2F4F4"/><rect x="6" y="5" width="28" height="16" fill="#E6EBEA"/></svg><span><b>Open space and fabric</b>Neutral tints, no green; building fabric from community zoom</span></li>
+              <li><svg viewBox="0 0 40 26" aria-hidden="true"><rect width="40" height="26" fill="#F2F4F4"/><path d="M0 9 H40" stroke="#C5CED2" stroke-width="7"/><path d="M0 9 H40" stroke="#fff" stroke-width="4.5"/><path d="M0 19 H40" stroke="#C5CED2" stroke-width="3.5"/><path d="M0 19 H40" stroke="#fff" stroke-width="2"/></svg><span><b>Roads</b>Motorway and arterial, cased in white; minor roads at street zoom</span></li>
+              <li><svg viewBox="0 0 40 26" aria-hidden="true"><rect width="40" height="26" fill="#F2F4F4"/><rect x="5" y="5" width="30" height="16" fill="none" stroke="#5F6A72" stroke-dasharray="3 3"/></svg><span><b>Communities</b>Dashed hairline; tint on hover</span></li>
+              <li><svg viewBox="0 0 40 26" aria-hidden="true"><rect width="40" height="26" fill="#F2F4F4"/><rect x="5" y="5" width="30" height="16" fill="#F6E0E4" stroke="#B0122C" stroke-width="2"/></svg><span><b>The redline</b>Active community: drawn crimson boundary with tint</span></li>
+              <li><svg viewBox="0 0 40 26" aria-hidden="true"><rect width="40" height="26" fill="#F2F4F4"/><circle cx="13" cy="13" r="9" fill="#14191E" stroke="#fff" stroke-width="2"/><rect x="25" y="8" width="10" height="10" fill="#B0122C" stroke="#fff" stroke-width="2"/></svg><span><b>Listings</b>Clusters and plots, constant size</span></li>
+              <li><svg viewBox="0 0 40 26" aria-hidden="true"><rect width="40" height="26" fill="#F2F4F4"/><text x="3" y="17" font-size="12" font-weight="700" fill="#14191E" font-family="Mona Sans" font-stretch="75%">Al Raha</text></svg><span><b>Labels</b>Always on top, with a land-coloured halo</span></li>
+            </ol>
+          </section>
+          <section aria-labelledby="h-hier"><h3 id="h-hier">Label hierarchy</h3>
+            <div class="hier">
+              <div><span class="d" style="font-size:1.2rem">Al Raha <span style="font-family:var(--f-ar-display);font-size:.8rem;color:var(--ink-2)">الراحة</span></span><span>Community, condensed, ink</span></div>
+              <div><span class="lbl" style="font-size:.9rem;color:var(--ink-3)">Abu Dhabi Island</span><span>District, extended, ink-3</span></div>
+              <div><span class="lbl" style="font-size:.9rem;color:var(--m-water-label);background:var(--m-water);padding:0 6px">Arabian Gulf</span><span>Water, extended, slate</span></div>
+            </div>
+          </section>
+          <section aria-labelledby="h-ctr"><h3 id="h-ctr">Measured contrast</h3>
+            <table class="ctab">
+              <thead><tr><th scope="col">Pair</th><th scope="col">Ratio</th></tr></thead>
+              <tbody>
+                <tr><td><span class="sw" style="background:#14191E"></span>Community label on land</td><td>16.0</td></tr>
+                <tr><td><span class="sw" style="background:#5F6A72"></span>District label on land</td><td>5.0</td></tr>
+                <tr><td><span class="sw" style="background:#3E5C66"></span>Water label on water</td><td>5.6</td></tr>
+                <tr><td><span class="sw" style="background:#B0122C"></span>Redline on land</td><td>6.4</td></tr>
+                <tr><td><span class="sw" style="background:#5F6A72"></span>Community outline on land</td><td>5.0</td></tr>
+                <tr><td><span class="sw" style="background:#14191E"></span>Plot marker on land</td><td>16.0</td></tr>
+              </tbody>
+            </table>
+            <p class="note" style="margin-block-start:8px">Fixes 02.5b: context labels there were #7E8A91, 3.2 to 1, below the 4.5 needed for text.</p>
+          </section>
+        </div>
+      </div>
+      <div class="symbols" aria-label="Symbol states">
+        <div><svg viewBox="0 0 120 46" aria-hidden="true"><circle cx="24" cy="23" r="10" fill="#14191E" stroke="#fff" stroke-width="2"/><text x="24" y="23" fill="#fff" font-size="11" font-weight="700" text-anchor="middle" dominant-baseline="central">1</text><circle cx="58" cy="23" r="13" fill="#14191E" stroke="#fff" stroke-width="2"/><text x="58" y="23" fill="#fff" font-size="11" font-weight="700" text-anchor="middle" dominant-baseline="central">4</text><circle cx="96" cy="23" r="16" fill="#14191E" stroke="#fff" stroke-width="2"/><text x="96" y="23" fill="#fff" font-size="11" font-weight="700" text-anchor="middle" dominant-baseline="central">12</text></svg><b>Clusters</b>1, 2 to 5, 6 or more</div>
+        <div><svg viewBox="0 0 120 46" aria-hidden="true"><circle cx="40" cy="23" r="13" fill="#B0122C" stroke="#fff" stroke-width="2"/><text x="40" y="23" fill="#fff" font-size="11" font-weight="700" text-anchor="middle" dominant-baseline="central">3</text></svg><b>Cluster, active</b>Hover, focus or shortlisted inside</div>
+        <div><svg viewBox="0 0 120 46" aria-hidden="true"><rect x="34" y="18" width="10" height="10" fill="#14191E" stroke="#fff" stroke-width="2"/></svg><b>Plot</b>A square for a plot</div>
+        <div><svg viewBox="0 0 120 46" aria-hidden="true"><rect x="14" y="18" width="10" height="10" fill="#B0122C" stroke="#fff" stroke-width="2"/><rect x="30" y="13" width="46" height="20" fill="#fff" stroke="#B0122C"/><text x="35" y="23" font-size="13" font-weight="760" dominant-baseline="central" font-family="Mona Sans" font-stretch="75%">220k</text></svg><b>Plot, active</b>Crimson with a price tag</div>
+        <div><svg viewBox="0 0 120 46" aria-hidden="true"><rect x="34" y="17" width="12" height="12" fill="#fff" stroke="#B0122C" stroke-width="2.5"/></svg><b>Plot, shortlisted</b>Crimson outline</div>
+        <div><svg viewBox="0 0 120 46" aria-hidden="true"><path d="M14 36 L22 10 L84 6 L104 34 Z" fill="#F6E0E4" stroke="#B0122C" stroke-width="2.25" stroke-linejoin="round"/></svg><b>Community, active</b>The redline, drawn</div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><strong>Stage 02.5c</strong>, final design-system refinement before Stage 03. Listing data and photos: Al Aliah staging, 6 Oct 2026. Map geometry is stylised.</p>
+    <p>Typefaces: Mona Sans, Sofia Sans, Anybody, Reem Kufi and Noto Kufi Arabic, all open licence via Google Fonts.</p>
+  </div>
+</footer>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var root = document.getElementById('root');
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var fmt = function (n) { return n.toLocaleString('en-US'); };
+
+  /* ---------- 1. Type ---------- */
+  /* Fit rule, as a server-side filter would apply it: bind particles, then class by length. */
+  function bind(n) { return n.replace(/\b(Al|Bin|Abu|Bani)\s/g, '$1 '); }
+  function cls(n) { return n.length >= 19 ? 'n3' : n.length >= 13 ? 'n2' : 'n1'; }
+  function arCls(a) { return a.length > 14 ? ' ar-long' : ''; }
+  function setName(el, n) { el.className = 'nm ' + cls(n) + arCls(el.querySelector('.ar').textContent); el.querySelector('.en').textContent = bind(n); }
+  document.querySelectorAll('.board .nm').forEach(function (el) { setName(el, el.dataset.name); });
+  var NAMES = [['Yas Island', 'جزيرة ياس'], ['Al Raha', 'الراحة'], ['Masdar City', 'مدينة مصدر'], ['Khalifa City', 'مدينة خليفة'], ['Al Reem Island', 'جزيرة الريم'], ['Saadiyat Island', 'جزيرة السعديات'], ['Al Reef Downtown', 'الريف'], ['Madinat Al Riyad', 'مدينة الرياض'], ['Mohammed Bin Zayed City', 'مدينة محمد بن زايد'], ['Saadiyat Cultural District', 'المنطقة الثقافية في السعديات']];
+  document.querySelectorAll('.ladder .col').forEach(function (col) {
+    col.insertAdjacentHTML('beforeend', NAMES.map(function (n) {
+      return '<div class="row"><div class="nm ' + cls(n[0]) + arCls(n[1]) + '"><span class="en d">' + esc(bind(n[0])) + '</span><span class="ar" lang="ar" dir="rtl">' + n[1] + '</span></div><span class="meta lbl"></span></div>';
+    }).join(''));
+  });
+  function measure() {
+    document.querySelectorAll('.ladder .row').forEach(function (r) {
+      var en = r.querySelector('.en'), lh = parseFloat(getComputedStyle(en).lineHeight) || parseFloat(getComputedStyle(en).fontSize) * .88;
+      var lines = Math.round(en.getBoundingClientRect().height / lh);
+      var over = en.scrollWidth > en.clientWidth + 1 || lines > 2;
+      var m = r.querySelector('.meta');
+      m.textContent = over ? 'Overflows' : (lines + (lines === 1 ? ' line' : ' lines') + (r.querySelector('.nm').classList.contains('n3') ? ', one step down' : ''));
+      m.classList.toggle('bad', over);
+    });
+  }
+  document.fonts && document.fonts.ready.then(measure);
+  window.addEventListener('resize', function () { clearTimeout(measure.t); measure.t = setTimeout(measure, 150); });
+  document.querySelector('.switch').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    root.dataset.type = b.dataset.t;
+    this.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+    setTimeout(measure, 60);
+  });
+
+  /* ---------- geography (stylised, 1000 x 700) ---------- */
+  var ISL = {
+    island: 'M70 318 C95 272 160 252 230 240 C300 228 360 222 410 236 C470 252 520 292 566 338 C602 374 628 410 618 436 C596 452 540 446 470 434 C390 420 300 408 220 392 C150 378 92 360 70 318 Z',
+    reem: 'M430 196 C462 180 516 182 548 204 C566 222 556 250 530 260 C496 270 456 262 436 242 C424 228 422 208 430 196 Z',
+    saadiyat: 'M552 118 C600 92 680 84 742 100 C770 110 772 140 748 158 C708 182 640 188 590 176 C556 166 538 140 552 118 Z',
+    yas: 'M786 158 C812 136 862 134 900 152 C930 170 934 214 914 244 C892 270 846 278 812 262 C786 246 774 206 786 158 Z',
+    hud: 'M150 420 C170 408 214 410 230 424 C226 440 190 448 160 440 C148 434 146 426 150 420 Z',
+    main: 'M-40 520 C90 506 170 494 250 488 C340 482 420 482 500 476 C570 470 620 456 652 430 C690 400 730 378 780 356 C840 330 920 306 1040 288 L1040 760 L-40 760 Z'
+  };
+  var OPEN = ['M470 330 C492 320 520 330 540 350 C546 366 530 376 512 372 C490 366 472 350 470 330 Z', 'M826 200 C846 190 872 196 884 214 C880 230 858 236 840 228 C828 222 822 210 826 200 Z', 'M610 640 C650 630 700 632 740 646 L742 700 L606 700 Z', 'M268 300 C290 292 312 300 318 316 C304 326 280 326 268 314 Z'];
+  var COMM = {
+    'Al Khalidiya':             { c: [150, 316], d: 'M118 300 L176 290 L184 328 L124 338 Z', lp: [152, 356, 'middle'], ar: 'الخالدية' },
+    'Al Reem Island':           { c: [492, 226], d: 'M452 206 C478 194 520 196 538 212 C546 232 532 248 506 252 C480 256 458 246 450 230 Z', lp: [492, 178, 'middle'], ar: 'جزيرة الريم' },
+    'Saadiyat Island':          { c: [652, 138], d: 'M572 126 C610 106 676 100 728 112 C748 120 746 140 728 152 C694 170 636 174 596 166 C574 158 564 140 572 126 Z', lp: [652, 74, 'middle'], ar: 'جزيرة السعديات' },
+    'Yas Island':               { c: [856, 206], d: 'M800 168 C822 150 864 148 892 162 C914 178 916 212 902 236 C884 258 848 264 822 252 C800 238 792 200 800 168 Z', lp: [858, 126, 'middle'], ar: 'جزيرة ياس' },
+    'Al Raha':                  { c: [804, 370], d: 'M738 384 C760 368 800 354 846 342 L866 338 L874 370 C836 382 790 396 750 406 Z', lp: [790, 340, 'middle'], ar: 'الراحة' },
+    'Khalifa City':             { c: [806, 462], d: 'M732 428 C780 420 836 414 872 418 L884 496 C838 506 780 510 742 508 Z', lp: [808, 530, 'middle'], ar: 'مدينة خليفة' },
+    'Masdar City':              { c: [918, 452], d: 'M898 434 L940 430 L944 470 L902 474 Z', lp: [920, 494, 'middle'], ar: 'مدينة مصدر' },
+    'Al Reef Downtown':         { c: [960, 344], d: 'M936 326 L982 320 L988 362 L942 368 Z', lp: [990, 392, 'end'], ar: 'الريف' },
+    'Mohammed Bin Zayed City':  { c: [606, 556], d: 'M540 524 C590 516 640 514 664 520 L672 590 C620 598 572 600 548 594 Z', lp: [606, 614, 'middle'], ar: 'مدينة محمد بن زايد' },
+    'Madinat Al Riyad':         { c: [612, 656], d: 'M552 630 L672 624 L678 682 L556 688 Z', lp: [690, 660, 'start'], ar: 'مدينة الرياض' }
+  };
+  var ROADS = {
+    mw: ['M300 238 C390 204 480 166 560 142 C640 120 700 112 744 122 C772 130 790 146 806 168 C840 200 872 226 884 256 C894 284 888 312 876 340 C866 380 860 420 862 470 C864 560 860 640 858 720',
+         'M150 330 C270 348 420 374 540 404 C590 416 626 430 660 440 C730 430 810 416 890 400 C940 390 990 382 1040 376',
+         'M-40 540 C120 524 300 512 470 506 C600 500 720 490 800 486 C900 482 970 476 1040 470'],
+    ar: ['M210 250 C240 300 260 350 280 396', 'M330 232 C350 300 370 360 392 414', 'M450 248 C462 300 480 360 504 426', 'M120 300 C250 290 380 290 520 306', 'M610 434 C612 470 608 510 606 600', 'M736 470 C800 466 860 462 930 456', 'M944 360 C948 400 946 430 940 452'],
+    mn: ['M752 392 L860 360', 'M748 380 L770 404', 'M772 372 L792 398', 'M796 364 L816 392', 'M820 356 L840 384', 'M844 348 L862 376']
+  };
+  /* listing data: staging listings, community-level positions */
+  var L = [
+    { id: 31521, t: "Five-bedroom villa with maid's room", a: 'Yas Island', p: 'rent', b: 5, ba: 6, s: 5948, pr: 420000, img: 'yas-street.jpg', xy: [860, 210] },
+    { id: 31571, t: 'Three-bedroom villa with courtyard', a: 'Al Raha', p: 'rent', b: 3, ba: 5, s: 1979, pr: 219999, img: 'raha-court.jpg', xy: [772, 386] },
+    { id: 30967, t: 'Furnished four-bedroom home with private pool', a: 'Al Raha', p: 'rent', b: 4, ba: 5, s: null, pr: 280000, img: 'raha4-living.jpg', xy: [806, 376] },
+    { id: 31094, t: 'Two-bedroom apartment with beach access', a: 'Al Raha', p: 'offplan', b: 2, ba: 3, s: 1157, pr: 3481025, img: 'raha-apt-render.jpg', render: true, xy: [842, 356] },
+    { id: 31495, t: 'Five-bedroom villa', a: 'Madinat Al Riyad', p: 'ready', b: 5, ba: 6, s: 11510, pr: 3800000, img: 'riyad-villa.jpg', xy: [612, 656] },
+    { id: 31013, t: 'Furnished one-bedroom at Marina Square', a: 'Al Reem Island', p: 'rent', b: 1, ba: 2, s: 915, pr: 105000, img: 'reem-living.jpg', xy: [492, 226] },
+    { id: 31082, t: 'Two-bedroom apartment', a: 'Al Reef Downtown', p: 'ready', b: 2, ba: 2, s: 1354, pr: 1170000, img: 'reef-apt.jpg', xy: [960, 344] },
+    { id: 31083, t: 'Four-bedroom townhouse with private pool', a: 'Khalifa City', p: 'offplan', b: 4, ba: 4, s: 4075, pr: 3936708, img: 'khalifa-render.jpg', render: true, xy: [806, 462] }
+  ];
+  var PUR = { rent: 'For rent', ready: 'Ready to buy', offplan: 'Off-plan' };
+  var short = function (n) { return n >= 1e6 ? (n / 1e6).toFixed(2).replace(/\.?0+$/, '') + 'm' : Math.round(n / 1000) + 'k'; };
+
+  function fabric() {
+    /* townhouse rows inside Al Raha, shown from community zoom */
+    var s = '<clipPath id="clip-raha"><path d="' + COMM['Al Raha'].d + '"/></clipPath><g class="m-fabric lyr-fabric" clip-path="url(#clip-raha)"><g transform="rotate(-16 804 372)">';
+    for (var r = 0; r < 12; r++) {
+      var y = 326 + r * 7.5 + (r % 2 ? -1.2 : 0);
+      for (var x = 716; x < 900; x += 3.4) { if (Math.floor((x - 716) / 3.4) % 9 === 8) continue; s += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="2.8" height="4.2"/>'; }
+    }
+    return s + '</g></g>';
+  }
+  function mapSVG(o) {
+    var land = Object.keys(ISL).map(function (k) { return ISL[k]; });
+    var s = '<svg viewBox="' + o.vb + '" role="' + (o.plots ? 'group' : 'img') + '" aria-label="' + esc(o.label) + '">';
+    s += '<g class="lyr-shelf">' + land.map(function (d) { return '<path class="m-shelf2" d="' + d + '"/>'; }).join('') + land.map(function (d) { return '<path class="m-shelf" d="' + d + '"/>'; }).join('') + '</g>';
+    s += '<g class="lyr-land">' + land.map(function (d) { return '<path class="m-land" d="' + d + '"/>'; }).join('') + '</g>';
+    s += '<g class="lyr-open">' + OPEN.map(function (d) { return '<path class="m-open" d="' + d + '"/>'; }).join('') + fabric() + '</g>';
+    s += '<g class="lyr-roads"><g class="lyr-minor">' + ROADS.mn.map(function (d) { return '<path class="m-road mn" d="' + d + '"/>'; }).join('') + '</g>';
+    ['ar', 'mw'].forEach(function (c) { s += ROADS[c].map(function (d) { return '<path class="m-road-c ' + c + '" d="' + d + '"/>'; }).join('') + ROADS[c].map(function (d) { return '<path class="m-road ' + c + '" d="' + d + '"/>'; }).join(''); });
+    s += '</g><g class="lyr-comm">';
+    Object.keys(COMM).forEach(function (k) { s += '<path class="m-comm" data-a="' + k + '" d="' + COMM[k].d + '"/>'; });
+    Object.keys(COMM).forEach(function (k) { s += '<path class="m-red" data-a="' + k + '" pathLength="1" d="' + COMM[k].d + '"/>'; });
+    s += '</g><g class="lyr-labels">';
+    if (o.water !== false) s += '<text class="m-t water" x="250" y="150" data-ax="250" data-ay="150">Arabian Gulf</text><text class="m-t ctx" x="330" y="352" data-ax="330" data-ay="352" text-anchor="middle">Abu Dhabi Island</text>';
+    Object.keys(COMM).forEach(function (k) {
+      var lp = COMM[k].lp;
+      s += '<g data-ax="' + lp[0] + '" data-ay="' + lp[1] + '"><text class="m-t comm" text-anchor="' + lp[2] + '" x="' + lp[0] + '" y="' + lp[1] + '">' + k + '</text>' +
+        '<text class="m-t comm-ar comm-ar" text-anchor="' + lp[2] + '" x="' + lp[0] + '" y="' + (lp[1] + 14) + '" lang="ar" direction="rtl">' + COMM[k].ar + '</text></g>';
+    });
+    s += '</g><g class="lyr-listings">';
+    var counts = {}; L.forEach(function (x) { counts[x.a] = (counts[x.a] || 0) + 1; });
+    Object.keys(counts).forEach(function (a) { var c = COMM[a].c, n = counts[a], r = n === 1 ? 10 : n <= 5 ? 13 : 16;
+      s += '<g class="cl' + (a === 'Al Raha' ? ' cl-raha' : '') + '" data-a="' + a + '" data-ax="' + c[0] + '" data-ay="' + c[1] + '"><circle cx="' + c[0] + '" cy="' + c[1] + '" r="' + r + '"/><text x="' + c[0] + '" y="' + c[1] + '">' + n + '</text></g>'; });
+    if (o.plots) {
+      s += '<g class="lyr-plots">';
+      L.filter(function (x) { return x.a === 'Al Raha'; }).forEach(function (x) {
+        s += '<g class="plot" tabindex="0" role="button" aria-pressed="false" data-id="' + x.id + '" data-ax="' + x.xy[0] + '" data-ay="' + x.xy[1] + '" aria-label="' + esc(x.t + ', AED ' + fmt(x.pr)) + '"><rect x="' + (x.xy[0] - 5) + '" y="' + (x.xy[1] - 5) + '" width="10" height="10"/>' +
+          '<g class="tag"><rect x="' + (x.xy[0] + 9) + '" y="' + (x.xy[1] - 10) + '" width="44" height="20"/><text x="' + (x.xy[0] + 14) + '" y="' + x.xy[1] + '">' + short(x.pr) + '</text></g></g>';
+      });
+      s += '</g>';
+    }
+    return s + '</g></svg>';
+  }
+  /* Geography zooms; symbols and labels keep their screen size. */
+  /* Symbol and label geometry is authored in screen pixels: k converts a pixel to the current map unit. */
+  function fitSymbols(svg) {
+    var w = svg.getBoundingClientRect().width || 1, k = +svg.getAttribute('viewBox').split(/[\s,]+/)[2] / w;
+    svg.style.setProperty('--k', k);
+    svg.querySelectorAll('[data-ax]').forEach(function (el) {
+      var x = el.dataset.ax, y = el.dataset.ay;
+      el.setAttribute('transform', 'translate(' + x + ' ' + y + ') scale(' + k + ') translate(' + -x + ' ' + -y + ')');
+    });
+  }
+  function tweenVB(svg, to, done) {
+    var from = svg.getAttribute('viewBox').split(/[\s,]+/).map(Number), end = to.split(' ').map(Number);
+    if (reduce) { svg.setAttribute('viewBox', to); fitSymbols(svg); if (done) done(); return; }
+    var t0 = performance.now(), dur = 900;
+    (function step(now) {
+      var p = Math.min(1, (now - t0) / dur), e = p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+      svg.setAttribute('viewBox', from.map(function (v, i) { return (v + (end[i] - v) * e).toFixed(2); }).join(' '));
+      fitSymbols(svg);
+      if (p < 1) requestAnimationFrame(step); else if (done) done();
+    })(t0);
+  }
+
+  /* ---------- 2. Site select ---------- */
+  var cardsEl = document.getElementById('cards'), siteMap = document.getElementById('site-map');
+  var CARDS = [L[0], L[1], L[4], L[7]];
+  var shortlist = [];
+  function strip(x) {
+    var c = COMM[x.a].c, w = 220, h = 50;
+    var vb = (c[0] - w * .62) + ' ' + (c[1] - h * .52) + ' ' + w + ' ' + h;
+    var land = Object.keys(ISL).map(function (k) { return ISL[k]; });
+    return '<svg viewBox="' + vb + '" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' +
+      land.map(function (d) { return '<path class="m-shelf" d="' + d + '"/>'; }).join('') +
+      land.map(function (d) { return '<path class="m-land" d="' + d + '"/>'; }).join('') +
+      ROADS.mw.map(function (d) { return '<path class="m-road-c mw" d="' + d + '"/><path class="m-road mw" d="' + d + '"/>'; }).join('') +
+      '<path class="m-comm" d="' + COMM[x.a].d + '"/><path class="m-red" pathLength="1" d="' + COMM[x.a].d + '"/>' +
+      '<rect class="pm" data-ax="' + x.xy[0] + '" data-ay="' + x.xy[1] + '" x="' + (x.xy[0] - 5) + '" y="' + (x.xy[1] - 5) + '" width="10" height="10" fill="#14191E" stroke="#fff" stroke-width="2"/></svg>';
+  }
+  function cardHTML(x) {
+    var rent = x.p === 'rent';
+    var psf = (!rent && x.s) ? 'AED ' + fmt(Math.round(x.pr / x.s)) + ' per sq ft' : (rent ? 'Annual rent' : '');
+    var facts = [[x.b, x.b === 1 ? 'bedroom' : 'bedrooms'], [x.ba, x.ba === 1 ? 'bathroom' : 'bathrooms']];
+    return '<article class="sc" data-id="' + x.id + '" data-a="' + esc(x.a) + '">' +
+      '<div class="ph"><div class="cut"><img src="img/' + x.img + '" alt="" width="700" height="525" loading="lazy"></div>' +
+      '<span class="purpose lbl">' + PUR[x.p] + '</span><span class="mark" aria-hidden="true"></span>' + (x.render ? '<span class="render lbl">Developer render</span>' : '') +
+      '<div class="plate"><b class="num">' + fmt(x.pr) + '</b><span class="lbl">AED' + (rent ? ' per year' : '') + '</span></div></div>' +
+      '<div class="bd"><h3><a href="#card-note">' + esc(x.t) + '</a></h3></div>' +
+      '<div><div class="strip">' + strip(x) + '<div class="lk"><span class="en d">' + esc(bind(x.a)) + '</span><span class="ar" lang="ar" dir="rtl">' + COMM[x.a].ar + '</span></div></div>' +
+      '<dl class="facts">' + facts.map(function (f) { return '<div><dd class="num">' + f[0] + '</dd><dt class="lbl">' + f[1] + '</dt></div>'; }).join('') +
+        (x.s ? '<div><dd class="num">' + fmt(x.s) + '</dd><dt class="lbl">sq ft</dt></div>' : '<div class="na"><dd>Area not listed</dd></div>') + '</dl>' +
+      '<div class="ft"><p class="sec" data-sec="' + esc(psf) + '">' + esc(psf) + '</p><button type="button" class="sl" aria-pressed="false" aria-label="Shortlist: ' + esc(x.t) + ', ' + esc(x.a) + '">Shortlist</button></div></div></article>';
+  }
+  cardsEl.innerHTML = CARDS.map(cardHTML).join('');
+  /* Frame each strip on its community: the outline sits above the name row, with room around it. */
+  function frameStrips() {
+    cardsEl.querySelectorAll('.strip svg').forEach(function (svg) {
+      var r = svg.getBoundingClientRect(); if (!r.width) return;
+      var bb = svg.querySelector('.m-comm').getBBox(), h = Math.max(bb.height * 1.9, 46), w = h * r.width / r.height;
+      svg.setAttribute('viewBox', [bb.x + bb.width / 2 - w * .5, bb.y + bb.height / 2 - h * .42, w, h].map(function (v) { return v.toFixed(1); }).join(' '));
+      fitSymbols(svg);
+    });
+  }
+  var SITE_VB = '440 60 560 392';
+  siteMap.innerHTML = mapSVG({ vb: SITE_VB, label: 'Map context for the listing cards', water: false }) + '<div class="callout" id="co" aria-hidden="true"><img alt=""><div><b class="num"></b><span></span></div></div><span class="attr">Stylised geography</span>';
+  var siteSvg = siteMap.querySelector('svg'); fitSymbols(siteSvg);
+  var co = document.getElementById('co');
+  function byId(id) { return L.filter(function (x) { return String(x.id) === String(id); })[0]; }
+  function syncHot(x) {
+    siteMap.querySelectorAll('.m-red').forEach(function (p) { p.classList.toggle('on', !!x && p.dataset.a === x.a); });
+    siteMap.querySelectorAll('.cl').forEach(function (g) { g.classList.toggle('hot', !!x && g.dataset.a === x.a); });
+    cardsEl.querySelectorAll('.sc').forEach(function (c) { c.querySelector('.strip .m-red').classList.toggle('on', !!x && c.dataset.id === String(x.id)); });
+    if (!x) { co.classList.remove('on'); return; }
+    var v = SITE_VB.split(' ').map(Number), c = COMM[x.a].c, lx = (c[0] - v[0]) / v[2], ly = (c[1] - v[1]) / v[3];
+    co.style.left = (lx * 100) + '%'; co.style.top = Math.min(78, Math.max(22, ly * 100)) + '%';
+    co.classList.toggle('flip', lx > .6);
+    co.querySelector('img').src = 'img/' + x.img; co.querySelector('b').textContent = fmt(x.pr) + ' AED'; co.querySelector('span').textContent = x.a;
+    co.classList.add('on');
+  }
+  function renderShort() {
+    var has = function (a) { return shortlist.some(function (x) { return x.a === a; }); };
+    siteMap.querySelectorAll('.m-red').forEach(function (p) { p.classList.toggle('keep', has(p.dataset.a)); });
+    siteMap.querySelectorAll('.cl').forEach(function (g) { g.classList.toggle('keep', has(g.dataset.a)); });
+    var tray = document.getElementById('tray');
+    tray.classList.toggle('on', shortlist.length > 0);
+    document.getElementById('tray-n').textContent = shortlist.length;
+    document.getElementById('tray-l').textContent = shortlist.length === 1 ? 'home on your shortlist' : 'homes on your shortlist';
+    document.getElementById('tray-t').innerHTML = shortlist.map(function (x) { return '<img src="img/' + x.img + '" alt="' + esc(x.t) + '">'; }).join('');
+    cardsEl.querySelectorAll('.sc').forEach(function (c) {
+      var on = shortlist.some(function (x) { return String(x.id) === c.dataset.id; });
+      c.classList.toggle('is-short', on); c.querySelector('.sl').setAttribute('aria-pressed', on ? 'true' : 'false');
+      c.querySelector('.strip .m-red').classList.toggle('keep', on);
+      c.querySelector('.strip .pm').setAttribute('fill', on ? '#B0122C' : '#14191E');
+      var sec = c.querySelector('.sec'); sec.textContent = on ? 'On your shortlist' : sec.dataset.sec;
+    });
+  }
+  function toggle(c) { var x = byId(c.dataset.id); var i = shortlist.indexOf(x); if (i >= 0) shortlist.splice(i, 1); else shortlist.push(x); renderShort(); }
+  cardsEl.addEventListener('mouseover', function (e) { var c = e.target.closest('.sc'); if (c) syncHot(byId(c.dataset.id)); });
+  cardsEl.addEventListener('mouseleave', function () { syncHot(null); });
+  cardsEl.addEventListener('focusin', function (e) { var c = e.target.closest('.sc'); if (c) syncHot(byId(c.dataset.id)); });
+  cardsEl.addEventListener('focusout', function (e) { if (!cardsEl.contains(e.relatedTarget)) syncHot(null); });
+  cardsEl.addEventListener('click', function (e) { var b = e.target.closest('.sl'); if (b) toggle(b.closest('.sc')); });
+  siteMap.addEventListener('mouseover', function (e) {
+    var g = e.target.closest('.cl,.m-comm'), a = g && g.dataset.a;
+    siteMap.querySelectorAll('.m-red').forEach(function (p) { p.classList.toggle('on', !!a && p.dataset.a === a); });
+    cardsEl.querySelectorAll('.sc').forEach(function (c) { var m = !!a && c.dataset.a === a; c.classList.toggle('hot', m); c.querySelector('.strip .m-red').classList.toggle('on', m); });
+  });
+  siteMap.addEventListener('mouseleave', function () { syncHot(null); cardsEl.querySelectorAll('.sc.hot').forEach(function (c) { c.classList.remove('hot'); }); });
+  document.getElementById('tray-clear').addEventListener('click', function () { shortlist = []; renderShort(); });
+
+  /* ---------- 3. Cartography ---------- */
+  var carto = document.getElementById('carto-map');
+  var VB = { city: '0 0 1000 700', community: '700 300 210 147', street: '750 335 100 70' };
+  carto.innerHTML = mapSVG({ vb: VB.city, plots: true, label: 'Redline cartography demonstration' }) + '<span class="attr">Stylised geography</span>';
+  var cSvg = carto.querySelector('svg'); fitSymbols(cSvg);
+  frameStrips();
+  window.addEventListener('resize', function () { fitSymbols(cSvg); fitSymbols(siteSvg); frameStrips(); });
+  function setZoom(z) {
+    carto.dataset.zoom = z;
+    document.querySelectorAll('#zoombar button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.z === z ? 'true' : 'false'); });
+    carto.querySelectorAll('.m-red').forEach(function (p) { p.classList.toggle('on', z !== 'city' && p.dataset.a === 'Al Raha'); });
+    tweenVB(cSvg, VB[z]);
+  }
+  document.getElementById('zoombar').addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) setZoom(b.dataset.z); });
+  carto.addEventListener('click', function (e) {
+    var p = e.target.closest('.plot');
+    if (p) { carto.querySelectorAll('.plot').forEach(function (g) { var on = g === p && !g.classList.contains('act'); g.classList.toggle('act', on); g.setAttribute('aria-pressed', on ? 'true' : 'false'); }); return; }
+    var c = e.target.closest('.m-comm,.cl'); if (c && c.dataset.a === 'Al Raha' && carto.dataset.zoom === 'city') setZoom('community');
+  });
+  carto.addEventListener('keydown', function (e) { var p = e.target.closest('.plot'); if (p && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); p.dispatchEvent(new MouseEvent('click', { bubbles: true })); } });
+  carto.querySelector('.plot[data-id="31571"]').classList.add('short');
+  document.getElementById('layers').addEventListener('change', function (e) { var i = e.target; if (i.dataset.l) carto.classList.toggle('no-' + i.dataset.l, !i.checked); });
+})();
+</script>

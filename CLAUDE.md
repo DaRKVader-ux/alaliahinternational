@@ -52,7 +52,7 @@ Project skills live in `.claude/skills/`. **One owner per rule:** if a skill cov
 | `alaliah-brand-system` | Active |
 | `alaliah-accessibility`, `alaliah-visual-regression` | Active |
 | `alaliah-environments` | Active (environments, Novamira safety, plugin policy, 21st usage) |
-| `alaliah-design-system` | Pending Stage 02 approval |
+| `alaliah-design-system` | Active (Redline; type provisional until Stage 05) |
 | `alaliah-property-search`, `alaliah-property-card`, `alaliah-property-detail`, `alaliah-community-pages`, `alaliah-project-pages`, `alaliah-responsive` | Pending Stage 03 |
 | `alaliah-motion` | Pending Stage 04 (provisional rules: D-011) |
 | `alaliah-wordpress-architecture` | Pending CRM/feed discovery (open-questions Q3) |
