@@ -1,0 +1,15 @@
+{
+  "name": "alaliah-qa",
+  "private": true,
+  "type": "module",
+  "description": "Browser QA tooling. Playwright is pinned to the version whose browsers are preinstalled in the cloud environment.",
+  "scripts": {
+    "check": "node check.mjs",
+    "lighthouse": "lighthouse --chrome-flags=\"--headless=new --no-sandbox\" --only-categories=performance,accessibility,seo,best-practices"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.11.3",
+    "lighthouse": "13.5.0",
+    "playwright": "1.56.1"
+  }
+}

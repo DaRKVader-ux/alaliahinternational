@@ -2,10 +2,13 @@
 
 Brand, product and engineering work for Al Aliah International (Abu Dhabi real-estate brokerage and property management). The goal is a **modern Abu Dhabi property discovery and advisory experience**, not a prettier agency website.
 
+**Architecture: WORDPRESS-FIRST** (D-004). Custom WordPress theme, CPTs + taxonomies + structured fields, REST/AJAX for interactive search. Framer is for prototyping only. No Supabase. External DBs and search services need written justification.
+
 ## Read first
-1. `docs/00-master-brief.md`: primary strategic context. Treat it as authoritative.
-2. `docs/decisions.md`: approved decisions, overrides of the brief, and **current stage status**.
+1. `docs/00-master-brief.md`: primary strategic context. Sections marked SUPERSEDED/Amended defer to the decision log.
+2. `docs/decisions.md`: approved decisions, overrides of the brief, the **rule-priority order (D-010)** and **current stage status**.
 3. `docs/open-questions.md`: unresolved risks. Check it before designing anything they affect.
+4. `docs/capabilities.md`: what tooling is verified, partial, or broken in this environment.
 
 ## Stage gating (strict)
 01 Brand → 02 Visual world → 03 Website experience → 04 Motion → 05 Implementation.
@@ -18,23 +21,35 @@ Brand, product and engineering work for Al Aliah International (Abu Dhabi real-e
 - **Never invent data:** no fake metrics, testimonials, licence numbers, transaction counts or awards. Mark mock data as placeholder.
 - **Red is brand equity.** Evolve it, don't replace it. No gold/navy/beige luxury palettes.
 - **Abu Dhabi, not Dubai,** in all imagery and references.
-- **Usability beats spectacle** in search, listings, forms and anything a tenant uses.
+- **Usability beats spectacle** in search, listings, forms and anything a tenant uses. Native scroll on functional pages (D-011).
 - **RTL-ready by construction:** use logical CSS properties (`margin-inline-start`, not `margin-left`), avoid direction-baked icons and layouts, and keep copy out of images.
-- **Accessibility:** semantic HTML, visible focus, WCAG AA contrast, reduced-motion support.
+- **Accessibility:** WCAG 2.2 AA, per `alaliah-accessibility`.
+- **No secrets in the repo** (D-013). MCP keys come from env vars.
 - Every major decision must pass the ten questions in brief §64.
 
 ## Skills
-Project skills live in `.claude/skills/`. **One owner per rule:** if a skill covers a topic, update that skill instead of restating its rules elsewhere.
+Project skills live in `.claude/skills/`. **One owner per rule:** if a skill covers a topic, update that skill instead of restating its rules elsewhere. When skills disagree, apply D-010: brand strategy beats generic design skills.
 
 | Skill | Status |
 |---|---|
-| `alaliah-brand-system` | Active (Stage 01) |
+| `alaliah-brand-system` | Active |
+| `alaliah-accessibility`, `alaliah-visual-regression` | Active |
 | `alaliah-design-system` | Pending Stage 02 approval |
-| `property-search`, `property-listing`, `property-detail`, `projects`, `community-pages`, `developers`, `agent-pages`, `real-estate-seo` | Pending Stage 03 |
-| `motion-direction` | Pending Stage 04 |
-| `framer-development`, `framer-cms`, `property-data`, `arabic-rtl`, `accessibility`, `responsive-design`, `performance`, `visual-regression`, `qa` | Pending Stage 05 / architecture decision (open-questions Q7) |
+| `alaliah-property-search`, `alaliah-property-card`, `alaliah-property-detail`, `alaliah-community-pages`, `alaliah-project-pages`, `alaliah-responsive` | Pending Stage 03 |
+| `alaliah-motion` | Pending Stage 04 (provisional rules: D-011) |
+| `alaliah-wordpress-architecture` | Pending CRM/feed discovery (open-questions Q3) |
 
-Do not create a pending skill with placeholder content (decision D-003).
+Do not create a pending skill with placeholder content (D-003).
+
+Vendored third-party skills (frontend-design, design-taste-frontend, ui-ux-pro-max, GSAP, Motion, React, WordPress, webapp-testing) are pinned and documented in `docs/capabilities.md`. Rules for them:
+- Update them only through a re-review (D-012).
+- **Never run ui-ux-pro-max with `--persist`.**
+- Run ui-ux-pro-max scripts from the repo root: `python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<query>" --domain <domain>`.
+
+## Tooling
+- Local WordPress (no Docker/MySQL needed): `tools/wp-local/setup.sh <dir> [port]`, then `cd <dir>/wp && php -S localhost:<port>`.
+- Browser QA at all widths, with axe: `cd tools/qa && npm install && node check.mjs <url> <out-dir>`.
+- In cloud sessions, `wordpress.org`, `21st.dev` and `api.github.com` are blocked by egress policy. Use the GitHub git mirrors (as the setup script does).
 
 ## Writing style for project docs
 Concise and precise, following the brand voice. Avoid filler and superlatives.

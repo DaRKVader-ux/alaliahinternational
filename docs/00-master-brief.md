@@ -2,6 +2,8 @@
 
 > **Status:** Primary strategic context for all design and development decisions, unless later project instructions explicitly override it.
 > Overrides and resolved decisions are recorded in [`decisions.md`](./decisions.md). Unresolved risks are in [`open-questions.md`](./open-questions.md).
+>
+> **⚠ Architecture override (D-004, 2026-10-06): WORDPRESS-FIRST.** WordPress is the primary CMS, backend and production platform. Framer is for prototyping and exploration only. Supabase/PostgreSQL is no longer the preferred backend. Sections **53, 54, 56** are superseded, and **55, 57, 58, 59** are amended. Each is marked inline. The full architecture direction is in [`decisions.md`](./decisions.md) D-004 to D-008.
 
 This project is a complete digital redesign and redevelopment of **Al Aliah International**, an Abu Dhabi real-estate brokerage and property-management company.
 
@@ -423,21 +425,37 @@ Meaningful semantic structure · usable keyboard navigation · visible focus sta
 
 ## 53. Technical direction
 
+> **SUPERSEDED by D-004.** Production platform is a custom WordPress theme with Custom Post Types, taxonomies and structured fields. Framer is for prototyping/exploration only (D-005). The original text below is kept for history.
+
 The preferred visual layer may be **FRAMER**, but do not force every system into native Framer CMS if that creates poor data architecture.
 
 Framer would mainly handle: brand experience, homepage, editorial pages, communities, projects, agent pages, content, motion, presentation. Advanced property search may need a stronger external data layer.
 
 ## 54. Possible backend
 
+> **SUPERSEDED by D-004 / D-007.** No Supabase schemas. Property data lives in WordPress (CPTs + taxonomies + structured fields, with custom tables only where query performance justifies them). Any external database or search service needs written justification first (D-006). The original text below is kept for history.
+
 **Supabase / PostgreSQL** for property data. Candidate tables: `properties`, `projects`, `developers`, `communities`, `agents`, `property_types`, `amenities`, `property_amenities`, `media`, `project_units`, `leads`, `saved_properties`.
 
 ## 55. Property data
+
+> **Amended by D-004:** these become WordPress CPT fields and taxonomies (`property`, `project`, `community`, `developer`, `agent`, `insight`). Whether each value is a taxonomy, structured field or custom-table column is decided after the feed is reviewed (open-questions Q3).
 
 Candidate fields: id, slug, title, purpose, status, price, currency, bedrooms, bathrooms, size, property type, community, building, developer, latitude, longitude, furnished, completion status, handover, featured, agent, description, amenities, gallery, floor plans.
 
 **The schema must match Al Aliah's actual data source. Do not invent a final schema before understanding their current CRM/feed.**
 
 ## 56. Possible technical structure
+
+> **SUPERSEDED by D-004.** Current intended structure:
+>
+> ```
+> CRM / property feed → idempotent WordPress importer (persistent source IDs)
+>   → CPTs + taxonomies + structured fields (+ custom index tables if justified)
+>     → custom theme (server-rendered, indexable) + REST/AJAX endpoints for search, map, autocomplete, forms
+> ```
+>
+> The original text below is kept for history.
 
 ```
 Framer
@@ -451,9 +469,13 @@ Framer stays the visual layer. Property data stays structured and scalable.
 
 ## 57. Required development capabilities
 
+> **Amended by D-004:** primary capabilities are now WordPress (theme, CPTs, taxonomies, REST API, block editor/custom blocks, Interactivity API, WP-CLI, performance, security, PHP coding standards, query optimisation) plus modern CSS/JS. Framer is prototype-only; Supabase is removed. See `docs/capabilities.md`.
+
 Framer · Framer CMS · Framer Code Components · React · TypeScript · modern CSS · animation · responsive design · accessibility · SEO · structured data · API integration · Supabase · PostgreSQL · map APIs · geospatial data · property search · URL/search-state management · analytics · image optimization · CRM integration · RTL · visual regression · automated browser testing · Git/GitHub.
 
 ## 58. Tooling / MCP expectations
+
+> **Amended by D-004:** Framer is for prototyping only, and the Supabase entry is removed. Current tooling status is in `docs/capabilities.md`.
 
 - **Framer:** site construction and publishing.
 - **21st.dev:** exploring quality UI patterns (search, filters, drawers, dropdowns, command-style interfaces, carousels, interactive controls). Do not paste random components into the final site; adapt everything to the Al Aliah design system.
@@ -463,6 +485,8 @@ Framer · Framer CMS · Framer Code Components · React · TypeScript · modern 
 - **Browser / Playwright / DevTools:** responsive QA, browser testing, screenshot comparison, interaction testing, console errors, accessibility checks, performance inspection. Do not rely only on screenshots; test the real interface.
 
 ## 59. Project-specific skills
+
+> **Amended:** the skill list is now maintained in `CLAUDE.md` (the skills table). `framer-*` and Supabase-oriented skills are dropped, and `alaliah-wordpress-architecture` is added (created once the CRM/feed is known).
 
 Maintain dedicated guidance for: `alaliah-brand-system`, `alaliah-design-system`, `framer-development`, `framer-cms`, `property-search`, `property-listing`, `property-detail`, `projects`, `community-pages`, `developers`, `agent-pages`, `property-data`, `real-estate-seo`, `arabic-rtl`, `motion-direction`, `accessibility`, `responsive-design`, `performance`, `visual-regression`, `QA`.
 
