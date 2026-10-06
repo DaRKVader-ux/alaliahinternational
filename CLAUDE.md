@@ -36,7 +36,7 @@ Brand, product and engineering work for Al Aliah International (Abu Dhabi real-e
 ## Non-negotiables
 - **Never invent data:** no fake metrics, testimonials, licence numbers, transaction counts or awards. Mark mock data as placeholder.
 - **Red is brand equity.** Evolve it, don't replace it. No gold/navy/beige luxury palettes.
-- **Abu Dhabi, not Dubai,** in all imagery and references.
+- **Abu Dhabi leads.** Brand-level imagery and references are Abu Dhabi only. Dubai appears only on Dubai area pages and Dubai listings (D-031), and Dubai imagery never stands in for Abu Dhabi.
 - **Usability beats spectacle** in search, listings, forms and anything a tenant uses. Native scroll on functional pages (D-011).
 - **RTL-ready by construction:** use logical CSS properties (`margin-inline-start`, not `margin-left`), avoid direction-baked icons and layouts, and keep copy out of images.
 - **Accessibility:** WCAG 2.2 AA, per `alaliah-accessibility`.

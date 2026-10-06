@@ -58,6 +58,9 @@ Confirmed direction: do not recreate Property Finder or Bayut. Search differenti
 
 §45 forbids invented metrics. Collect before designing trust components: brokerage licence / ORN, agent BRN numbers, verifiable transaction figures (if any), testimonials with permission, and formally agreed developer relationships.
 
+### Q11. Developer ratings and reviews
+The Developer page (Stage 03.1 §4) has a ratings module that is shown only with legitimate data: an independent third-party aggregate with a public method (source, count, date and link, under that platform's licence terms), or an official regulator rating if one is published. Al Aliah's own rating of a developer is excluded because of the conflict of interest. **Needed from the client:** whether any such source exists that they consider legitimate, and whether they are comfortable showing third-party scores next to developers they work with. Until then the module is omitted.
+
 ---
 
 ## WordPress-specific architecture questions
@@ -147,7 +150,8 @@ Production's `robots.txt` is a static file (modified 2024-04-18) listing query-s
 ## Business / content questions
 
 ### B1. Dubai presentation vs Abu Dhabi positioning
-*Corrected 2026-10-06:* the inventory is **Abu Dhabi-led (11 of 14 listings)**; 3 are Dubai off-plan projects. The *presentation* leans to Dubai: an "Areas in Dubai" page, a Dubai homepage hero image, and 29 vs 8 homepage mentions. The approved positioning is **Abu Dhabi expertise with UAE reach** (brief §24). Before Stage 02 imagery and Stage 03 IA, the client must answer: **is Dubai off-plan a core line of business, or legacy content?** If core, the positioning needs an explicit "UAE reach" layer. If legacy, the content needs replacing.
+*Partly answered by D-031 (2026-10-06):* Dubai is an active **secondary** area in the navigation (Areas › Dubai). Abu Dhabi leads: first in order, default in search and maps, and the only market in brand-level imagery. The inventory is Abu Dhabi-led (11 of 14 listings; 3 Dubai off-plan projects).
+**Still open:** which Dubai communities and which lines (sale, rent, off-plan) are active, and whether the existing "Areas in Dubai" page content is kept or rewritten.
 
 ### B2. Demo content on the live site
 Theme demo pages are published on production (Zillow Estimate, Stripe, Splash, CRM dashboards) and 17 demo reviews sit in the database. To be removed in the rebuild. Removing them earlier from production is the owner's call (R9).

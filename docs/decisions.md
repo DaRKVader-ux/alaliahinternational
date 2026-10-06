@@ -13,7 +13,7 @@ Format: `D-NNN · date · area` then the decision and its rationale.
 | 01 Brand understanding | **Complete** |
 | Capability / infrastructure setup | **Mostly complete.** Skills, QA, local WP, 21st and Novamira are verified, and the staging audit is done ([`wordpress-environment-report.md`](./wordpress-environment-report.md)). Open: staging isolation (E1), restorable backup (E3), staging hygiene fixes (E2). These block major WordPress work, not Stage 02 |
 | 02 Visual world / aesthetic direction | **Complete.** Redline approved (D-027, D-028); 02.5b refinements approved (D-029); final refinement 02.5c completed ([`stage-02-5c-final-refinement.md`](./stage-02-5c-final-refinement.md)) with T5 type as the working system (D-030). `alaliah-design-system` is active |
-| 03 Website experience | **In progress.** 03.1 information architecture presented ([`stage-03-1-information-architecture.md`](./stage-03-1-information-architecture.md)); awaiting approval |
+| 03 Website experience | **In progress.** 03.1 information architecture, revision 2 (client navigation, D-031) presented ([`stage-03-1-information-architecture.md`](./stage-03-1-information-architecture.md)); awaiting approval |
 | 04 Motion & interaction | Locked until Stage 03 is approved |
 | 05 Implementation | Locked until Stage 04 is approved. No production theme or plugin is built before then; architecture is set by D-021 – D-025 |
 
@@ -173,3 +173,9 @@ Approved from 02.5b: the three intensity levels (Functional, Editorial, Immersiv
 - **Card:** the Site select card gains a price plate, a site strip and a redline drawn around the *community* (not the card edge), plus the plot-marker shortlist symbol.
 - **Map:** the Redline cartography (layer order, coastal shelf, road and label hierarchies, constant-size symbols) is the art direction for the MapLibre style.
 - Stage 02 is complete. `alaliah-design-system` is created from 02.5, 02.5b and 02.5c and owns these rules (D-003).
+
+**D-031 · 2026-10-06 · Primary navigation and Dubai scope (client instruction)**
+- **Primary navigation:** About Us, Buy, Rent, Off-plan, Areas (Abu Dhabi, Dubai), Developers. "Developers" is the label; the archive page is titled "All Developers". Contact is a prominent header CTA, not a navigation item.
+- **Entities:** Developer, Project, Property and Area stay separate. The spine is Developer → Projects → Properties → Areas, with reverse links from properties and projects to their developer and area.
+- **Developer pages** show only legitimate data: no invented ratings, reviews, project counts or company facts.
+- **Dubai scope (partly answers B1):** Dubai is an active secondary area. Abu Dhabi stays the lead market: listed first, the default in search and maps, and the only market in brand-level imagery. Dubai imagery and references appear only on Dubai area pages and Dubai listings. This narrows the earlier "Abu Dhabi, not Dubai" non-negotiable; it does not remove it.
