@@ -26,9 +26,14 @@ Staging and production resolve to the **same IP (216.158.227.108)** as of 2026-1
 - If any read reveals production paths, credentials or databases, stop and report. Do not use them.
 
 ## Privileged MCP naming
-Privileged WordPress connections are named by site and environment:
-`novamira-alaliah-staging`, and later (only if authorised) `novamira-alaliah-production`.
-Never use ambiguous names like `wordpress`, `wp` or `alaliah` for a privileged server. **Before every Novamira call, confirm the server name says `staging`.**
+| MCP server name | Environment | Host |
+|---|---|---|
+| `novamira-alaliah-trigonso` | **Staging** | `alaliah.trigonsolutions.co` (the `trigonso` suffix = trigonsolutions staging host) |
+| `novamira-alaliah-production` | Production, only if authorised later | `alaliahinternational.com` |
+
+Never use ambiguous names like `wordpress`, `wp` or `alaliah` for a privileged server. **Before every Novamira call, confirm the server is `novamira-alaliah-trigonso` and that the site URL it reports is the staging host.** Any server whose name or reported URL points at `alaliahinternational.com` is production: stop.
+
+Credentials (application password) live only in local Claude Code config or environment variables (`WP_API_URL`, `WP_API_USERNAME`, `WP_API_PASSWORD`). They never go in `.mcp.json`, git or docs.
 
 ## Novamira safety
 Novamira can read and write files, execute PHP and query the database. Treat it as root-level access to the site.

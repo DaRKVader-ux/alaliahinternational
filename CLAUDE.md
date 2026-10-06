@@ -8,7 +8,7 @@ Brand, product and engineering work for Al Aliah International (Abu Dhabi real-e
 | | URL | Posture |
 |---|---|---|
 | Production | https://alaliahinternational.com/ | **Read-only by default.** No writes without explicit authorisation for that change |
-| Staging | https://alaliah.trigonsolutions.co/ | Primary writable WordPress, accessed via Novamira MCP (`novamira-alaliah-staging`) |
+| Staging | https://alaliah.trigonsolutions.co/ | Primary writable WordPress, accessed via Novamira MCP (`novamira-alaliah-trigonso`) |
 | Local | `tools/wp-local/setup.sh` | Isolated tests and QA. Does not replace staging |
 
 **Load `alaliah-environments` before any staging or production action, any Novamira or WP-CLI call, or any plugin/theme change.** Staging and production currently share an IP (open-questions E1), so treat staging actions as potentially production-reaching.

@@ -35,7 +35,7 @@ Everything marked ✅ was **exercised**, not just detected: a tool call returned
 | **21st MCP** (`https://21st.dev/api/mcp`) | project, `.mcp.json` (key via `API_KEY_21ST` env) | ✅ **verified 2026-10-06** | `get_usage` → authenticated, **free tier: 2 component retrievals/day, AI generation disabled**, search unmetered. `search("property search filter bar with price range")` → 5 real results. `21st.dev` is now allowed by egress. Key not present in repo or Claude config files. Usage rules: D-018 |
 | Supabase, Vercel | account connectors | available, **deliberately unused** | D-007; Vercel hosting is irrelevant to WordPress |
 | Framer | none | not configured | D-005: prototype-only, no integration needed now |
-| **Novamira** (`novamira-alaliah-staging`) | not yet configured | ⏳ **pending** | Not installed/connected yet. Its endpoint will be on the staging host, which egress currently **denies** (E4). Naming and safety: D-015 / D-016 |
+| **Novamira** (`novamira-alaliah-trigonso`) | local Claude config only (`~/.claude.json`, mode 600; not in git) | ❌ **configured, not connecting** | 2026-10-06: proxy `@automattic/mcp-wordpress-remote` 0.4.0 starts; `tools/list` fails with `403 Host not in allowlist: alaliah.trigonsolutions.co` (egress, E4). Credentials not yet tested. Naming and safety: D-015 / D-016 |
 | Staging `alaliah.trigonsolutions.co` | n/a | ❌ **blocked by egress** | 403 at proxy. Needed for Novamira and staging browser QA (D-019) |
 | Production `alaliahinternational.com` | n/a | ❌ **blocked by egress** | 403 at proxy. Read-only comparison only (D-014). Same IP as staging (E1) |
 
