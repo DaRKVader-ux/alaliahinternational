@@ -12,7 +12,7 @@ Format: `D-NNN · date · area` then the decision and its rationale.
 |---|---|
 | 01 Brand understanding | **Complete** |
 | Capability / infrastructure setup | **Mostly complete.** Skills, QA, local WP, 21st and Novamira are verified, and the staging audit is done ([`wordpress-environment-report.md`](./wordpress-environment-report.md)). Open: staging isolation (E1), restorable backup (E3), staging hygiene fixes (E2). These block major WordPress work, not Stage 02 |
-| 02 Visual world / aesthetic direction | **Next** |
+| 02 Visual world / aesthetic direction | **In progress.** Three directions presented 2026-10-06 ([`stage-02-visual-directions.md`](./stage-02-visual-directions.md)); awaiting selection. Recommended: Redline with two borrowings |
 | 03 Website experience | Locked until Stage 02 is approved |
 | 04 Motion & interaction | Locked until Stage 03 is approved |
 | 05 Implementation | Locked until Stage 04 is approved. No production theme or plugin is built before then; architecture is set by D-021 – D-025 |
