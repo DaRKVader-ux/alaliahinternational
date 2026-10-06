@@ -12,7 +12,7 @@ Format: `D-NNN · date · area` then the decision and its rationale.
 |---|---|
 | 01 Brand understanding | **Complete** |
 | Capability / infrastructure setup | **Mostly complete.** Skills, QA, local WP, 21st and Novamira are verified, and the staging audit is done ([`wordpress-environment-report.md`](./wordpress-environment-report.md)). Open: staging isolation (E1), restorable backup (E3), staging hygiene fixes (E2). These block major WordPress work, not Stage 02 |
-| 02 Visual world / aesthetic direction | **Direction selected: Redline** (D-027). Stage 02.5 correction and design-system study presented 2026-10-06 ([`stage-02-5-redline.md`](./stage-02-5-redline.md)); awaiting approval. `alaliah-design-system` is created on approval |
+| 02 Visual world / aesthetic direction | **Redline 02.5 approved** as the primary direction (D-028). Stage 02.5b system refinement presented 2026-10-06 ([`stage-02-5b-refinement.md`](./stage-02-5b-refinement.md)); awaiting approval. `alaliah-design-system` is created on approval from 02.5 + 02.5b |
 | 03 Website experience | Locked until Stage 02 is approved |
 | 04 Motion & interaction | Locked until Stage 03 is approved |
 | 05 Implementation | Locked until Stage 04 is approved. No production theme or plugin is built before then; architecture is set by D-021 – D-025 |
@@ -162,3 +162,5 @@ Redline is the selected Stage 02 direction. The Stage 02.5 correction moves it f
 
 Crimson stays a controlled signal (selection, focus, navigation, primary action). The system study (principles, composition rules, density modes, photography tiers, tokens with measured contrast, motion vocabulary, component vocabulary) is in `stage-02-5-redline.md` and becomes `alaliah-design-system` once approved.
 
+**D-028 · 2026-10-06 · Redline 02.5 approved; one refinement pass before Stage 03**
+The corrected Redline (D-027, `stage-02-5-redline.md`) is approved as the primary design direction. Before Stage 03, one system-refinement pass (02.5b) covers typography, hierarchy moments, the signature card, map art direction, the property-detail signature, the community emotional layer and three intensity levels, without redesigning Redline. The 02.5b proposals (including the T1 type pairing and the intensity levels) are not decisions until approved.

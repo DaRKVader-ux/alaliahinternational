@@ -1,0 +1,868 @@
+<title>Redline System Refinement</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anybody:wdth,wght@50..150,300..900&family=Reem+Kufi:wght@400..700&family=Noto+Kufi+Arabic:wght@400..800&family=Archivo:wdth,wght@62..125,400..700&family=Syne:wght@400..800&family=Instrument+Sans:wdth,wght@75..100,400..700&family=Alexandria:wght@300..800&family=Funnel+Display:wght@300..800&family=Funnel+Sans:wght@300..800&family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap">
+<style>
+/* Layout: 12-column content grid with flexible margins so images can bleed; recommended pairing T1 (Anybody across its width axis + Reem Kufi / Noto Kufi Arabic) runs the page.
+   Single committed visual world: cool sheet ground, slate shade for immersive moments, crimson as signal only. */
+:root {
+  --sheet: #F2F4F4; --paper: #FFFFFF; --ink: #14191E; --ink-2: #4A545C; --ink-3: #5F6A72; --line: #CDD3D7;
+  --crimson: #B0122C; --crimson-tint: #F6E0E4; --shade: #0F1E25; --shade-2: #18303A; --on-shade: #E8EEEF; --on-shade-2: #A9B8BE; --crimson-on-shade: #F0566E;
+  --water: #D6E3E7; --water-deep: #C7D7DC;
+  --f: "Anybody", "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --f-ar-display: "Reem Kufi", "Noto Kufi Arabic", Tahoma, sans-serif;
+  --f-ar: "Noto Kufi Arabic", Tahoma, sans-serif;
+  --ease: cubic-bezier(.22,.7,.2,1);
+  color-scheme: light;
+}
+* { box-sizing: border-box }
+html { scroll-padding-top: 72px }
+body { margin: 0; background: var(--sheet); color: var(--ink); font: 400 17px/1.55 var(--f); font-stretch: 100%; font-variant-numeric: lining-nums; -webkit-font-smoothing: antialiased }
+img { display: block; max-width: 100%; height: auto }
+h1, h2, h3, h4, p { margin: 0 }
+h1, h2, h3 { text-wrap: balance }
+button { font: inherit; color: inherit }
+a { color: inherit }
+:focus-visible { outline: 3px solid var(--crimson); outline-offset: 3px }
+[lang="ar"] { font-family: var(--f-ar) }
+.num { font-variant-numeric: tabular-nums lining-nums }
+.wrap { max-width: 1248px; margin-inline: auto; padding-inline: clamp(16px, 4vw, 32px) }
+.g { display: grid; grid-template-columns: [full-start] minmax(16px, 1fr) [content-start] repeat(12, minmax(0, 104px)) [content-end] minmax(16px, 1fr) [full-end] }
+
+/* T1 type roles */
+.comp { font-stretch: 58%; font-weight: 700; letter-spacing: -0.01em; line-height: 0.86 }
+.ext { font-stretch: 120%; font-size: 0.78rem; font-weight: 500; letter-spacing: 0.01em; color: var(--ink-2) }
+.ar-d { font-family: var(--f-ar-display); font-weight: 700 }
+.mirror { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap }
+
+/* chrome */
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 40; background: color-mix(in srgb, var(--sheet) 92%, transparent); backdrop-filter: blur(8px); border-block-end: 1px solid var(--line) }
+.bar .wrap { display: flex; align-items: center; gap: 16px; min-height: 56px; flex-wrap: wrap; padding-block: 6px }
+.brand { font-weight: 800; font-stretch: 70%; font-size: 1.2rem; text-decoration: none; letter-spacing: 0.005em }
+.brand span { font-weight: 400; font-stretch: 100%; color: var(--ink-3); font-size: 0.82rem; margin-inline-start: 8px }
+.bar nav { display: flex; gap: 2px; margin-inline-start: auto; flex-wrap: wrap }
+.bar nav a { text-decoration: none; padding: 6px 9px; font-size: 0.9rem; color: var(--ink-2) }
+.bar nav a:hover, .bar nav a[aria-current="true"] { color: var(--ink) }
+.bar nav a[aria-current="true"] { box-shadow: inset 0 -2px 0 var(--crimson) }
+section.s { padding-block: clamp(64px, 9vw, 120px) }
+.s-head { display: grid; gap: 10px; margin-block-end: 32px; max-width: 66ch }
+.s-head .k { font-stretch: 120%; font-size: 0.8rem; color: var(--ink-3) }
+.s-head h2 { font-size: clamp(2.6rem, 6vw, 4.6rem); }
+.s-head p { color: var(--ink-2); font-size: 1.05rem }
+.note { font-size: 0.84rem; color: var(--ink-3) }
+.btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 18px; border: 1px solid var(--ink); background: transparent; font-weight: 600; cursor: pointer; text-decoration: none; border-radius: 2px }
+.btn:hover { background: var(--ink); color: var(--paper) }
+.btn.primary { background: var(--crimson); color: #fff; border-color: var(--crimson) }
+.btn.primary:hover { background: #8E0E23 }
+.flag { position: absolute; inset-block-start: 10px; inset-inline-start: 10px; z-index: 2; font-size: 0.72rem; font-weight: 600; font-stretch: 110%; background: var(--paper); border: 1px solid var(--ink-3); padding: 3px 8px; border-radius: 2px }
+
+/* ===== intro ===== */
+.intro { padding-block: clamp(48px, 7vw, 96px) 24px }
+.intro h1 { font-size: clamp(4rem, 13vw, 10rem) }
+.intro .sub { margin-block-start: 18px; max-width: 60ch; color: var(--ink-2); font-size: 1.1rem }
+.intro ol { margin: 28px 0 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px }
+.intro ol a { display: grid; gap: 2px; text-decoration: none; background: var(--paper); padding: 12px 14px; border-block-start: 2px solid var(--ink) }
+.intro ol a:hover { border-color: var(--crimson) }
+.intro ol b { font-stretch: 64%; font-size: 1.5rem; line-height: 1 }
+.intro ol span { font-size: 0.86rem; color: var(--ink-2) }
+
+/* ===== 1. TYPE ===== */
+.pairs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px }
+.pair { background: var(--paper); padding: 20px; display: grid; gap: 14px; align-content: start; position: relative; min-width: 0 }
+.pair.rec { box-shadow: inset 0 0 0 2px var(--crimson) }
+.pair .tag { font-size: 0.78rem; color: var(--ink-3); display: flex; justify-content: space-between; gap: 8px; font-family: var(--f); font-stretch: 115% }
+.pair .tag b { color: var(--crimson); font-weight: 600 }
+.pair .name { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; border-block-end: 1px solid var(--line); padding-block-end: 10px; flex-wrap: wrap }
+.pair .fig { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap }
+.pair .t { font-size: 1.1rem; line-height: 1.25 }
+.pair .b { font-size: 0.95rem; color: var(--ink-2); line-height: 1.5 }
+.pair .l { font-size: 0.78rem; color: var(--ink-3) }
+.pair .fonts { font-size: 0.78rem; color: var(--ink-3); font-family: var(--f); border-block-start: 1px solid var(--line); padding-block-start: 10px }
+/* T0 baseline */
+.p0 { font-family: "Archivo", sans-serif } .p0 .n1 { font-size: 2.6rem; font-weight: 600; font-stretch: 68%; line-height: .9 } .p0 [lang="ar"] { font-family: "Noto Kufi Arabic", sans-serif; font-size: 1.5rem; font-weight: 600 }
+.p0 .fg { font-size: 2rem; font-weight: 600; font-stretch: 80% } .p0 .l { font-stretch: 110% }
+/* T1 */
+.p1 { font-family: "Anybody", sans-serif } .p1 .n1 { font-size: 3.2rem; font-weight: 700; font-stretch: 56%; line-height: .86 } .p1 [lang="ar"] { font-family: "Reem Kufi", sans-serif; font-size: 1.9rem; font-weight: 700 }
+.p1 .fg { font-size: 2.6rem; font-weight: 700; font-stretch: 56% } .p1 .t { font-weight: 600; font-stretch: 92% } .p1 .l { font-stretch: 122% } .p1 .b [lang="ar"] { font-family: "Noto Kufi Arabic" }
+/* T2 */
+.p2 { font-family: "Instrument Sans", sans-serif } .p2 .n1 { font-family: "Syne", sans-serif; font-size: 2.2rem; font-weight: 800; line-height: .95 } .p2 [lang="ar"] { font-family: "Alexandria", sans-serif; font-size: 1.5rem; font-weight: 700 }
+.p2 .fg { font-family: "Syne", sans-serif; font-size: 1.9rem; font-weight: 700 }
+/* T3 */
+.p3 { font-family: "Funnel Sans", sans-serif } .p3 .n1 { font-family: "Funnel Display", sans-serif; font-size: 2.6rem; font-weight: 700; line-height: .9 } .p3 [lang="ar"] { font-family: "IBM Plex Sans Arabic", sans-serif; font-size: 1.5rem; font-weight: 700 }
+.p3 .fg { font-family: "Funnel Display", sans-serif; font-size: 2.1rem; font-weight: 700 }
+.devices { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-block-start: 14px }
+.dev { background: var(--paper); padding: 22px; display: grid; gap: 12px; align-content: start; min-width: 0 }
+.dev h3 { font-size: 1.05rem; font-weight: 600 }
+.dev p.d { font-size: 0.92rem; color: var(--ink-2) }
+.lockup { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; border-block-end: 2px solid var(--ink); padding-block-end: 8px }
+.lockup .en { font-size: clamp(2.6rem, 5vw, 3.6rem); font-weight: 700; font-stretch: 54%; line-height: .86 }
+.lockup .ar-d { font-size: clamp(1.8rem, 3.4vw, 2.4rem); line-height: 1.2 }
+.figfirst { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap }
+.figfirst b { font-size: clamp(3rem, 6vw, 4.2rem); font-weight: 700; font-stretch: 54%; line-height: .9 }
+.figfirst span { font-stretch: 118%; font-size: 0.85rem; color: var(--ink-2) }
+.widths { display: grid; gap: 4px }
+.widths div { display: grid; grid-template-columns: 90px 1fr; align-items: baseline; gap: 10px; border-block-end: 1px solid var(--line); padding-block: 4px; min-width: 0 }
+.widths span { font-size: 0.74rem; color: var(--ink-3); font-stretch: 115% }
+
+/* ===== 2. HIERARCHY ===== */
+.moments { display: grid; gap: 16px }
+.m-statement { position: relative; overflow: hidden }
+.m-statement .band { aspect-ratio: 21 / 8; overflow: hidden; background: #cfdde3 }
+.m-statement .band img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 62% }
+.m-statement h3 { position: absolute; inset-inline-start: clamp(12px, 3vw, 32px); inset-block-start: clamp(4px, 1.5vw, 18px); font-size: clamp(4rem, 15vw, 12rem); color: var(--ink); z-index: 2; pointer-events: none }
+.m-statement .cap { position: absolute; inset-block-end: 10px; inset-inline-end: 12px; background: var(--paper); font-size: 0.78rem; padding: 4px 8px; z-index: 2 }
+.m-row { display: grid; grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); gap: 16px }
+.m-figure { background: var(--paper); padding: 26px; display: grid; gap: 8px; align-content: end }
+.m-figure b { font-size: clamp(6rem, 14vw, 10rem); font-stretch: 52%; font-weight: 800; line-height: .82 }
+.m-inversion { background: var(--shade); color: var(--on-shade); padding: 26px; display: grid; gap: 10px; align-content: start }
+.m-inversion .ext { color: var(--on-shade-2) }
+.m-inversion h3 { font-size: 2.2rem; font-stretch: 60%; font-weight: 700; line-height: .95 }
+.m-inversion p { color: var(--on-shade-2); font-size: 0.95rem }
+.m-quiet { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px }
+.m-quiet div { background: var(--paper); padding: 18px; display: grid; gap: 4px; align-content: start; font-size: 0.92rem; color: var(--ink-2) }
+.m-quiet b { color: var(--ink); font-size: 1rem }
+.rules { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-block-start: 16px }
+.rules div { background: var(--paper); padding: 14px; display: grid; gap: 4px; align-content: start; font-size: 0.86rem; color: var(--ink-2) }
+.rules b { color: var(--ink); font-stretch: 64%; font-size: 1.35rem; line-height: 1 }
+
+/* ===== 3. CARD ===== */
+.site { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 20px; align-items: start }
+.cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px }
+.card { position: relative; background: var(--paper); display: grid; grid-template-rows: auto 1fr; transition: transform 220ms var(--ease), box-shadow 220ms var(--ease) }
+.card .bd { position: absolute; inset: -1px; width: calc(100% + 2px); height: calc(100% + 2px); pointer-events: none; overflow: visible; z-index: 3 }
+.card .bd rect { fill: none; stroke: var(--crimson); stroke-width: 2; stroke-dasharray: 100; stroke-dashoffset: 100; transition: stroke-dashoffset 240ms var(--ease) }
+.card:hover, .card:focus-within, .card.hot, .card.is-short { transform: translateY(-6px); box-shadow: 0 18px 30px -22px rgba(15,30,37,.55) }
+.card:hover .bd rect, .card:focus-within .bd rect, .card.hot .bd rect, .card.is-short .bd rect { stroke-dashoffset: 0 }
+.card .frame { position: relative; aspect-ratio: 4 / 3; overflow: hidden; background: #dbe3e6 }
+.card .frame img { width: 100%; height: 100%; object-fit: cover; transition: transform 500ms var(--ease) }
+.card:hover .frame img, .card:focus-within .frame img, .card.is-short .frame img { transform: scale(1.04) translateY(-2%) }
+.card .db { padding: 14px 16px 16px; display: grid; gap: 8px; align-content: start }
+.card .row1 { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px }
+.card .price { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap }
+.card .price b { font-size: 2rem; font-weight: 700; font-stretch: 56%; line-height: .9; font-variant-numeric: tabular-nums }
+.card .price span { font-stretch: 118%; font-size: 0.72rem; color: var(--ink-3) }
+.card h3 { font-size: 0.98rem; font-weight: 500; line-height: 1.3 }
+.card .place { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 0.86rem; color: var(--ink-2) }
+.card .place [lang="ar"] { color: var(--ink-3) }
+.card dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; border-block-start: 1px solid var(--line); padding-block-start: 8px }
+.card dt { font-stretch: 120%; font-size: 0.68rem; color: var(--ink-3) }
+.card dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; font-size: 0.94rem }
+.card dd.na { font-weight: 400; color: var(--ink-3); font-size: 0.84rem }
+.card .sec { font-size: 0.82rem; color: var(--ink-2); min-height: 1.3em; opacity: 0; transform: translateY(-4px); transition: opacity 200ms, transform 200ms var(--ease) }
+.card:hover .sec, .card:focus-within .sec, .card.is-short .sec { opacity: 1; transform: none }
+.card.is-short .sec { color: var(--crimson); font-weight: 600 }
+.card .ft { display: flex; align-items: center; justify-content: space-between; gap: 10px }
+.sl { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; border: 1px solid var(--line); background: var(--paper); font: 600 0.84rem var(--f); cursor: pointer; flex: 0 0 auto }
+.sl::before { content: ''; width: 10px; height: 10px; border: 2px solid var(--ink) }
+.sl:hover { border-color: var(--ink) }
+.sl[aria-pressed="true"] { border-color: var(--crimson); color: var(--crimson) }
+.sl[aria-pressed="true"]::before { background: var(--crimson); border-color: var(--crimson) }
+.sl:focus-visible { outline: 2px solid var(--crimson); outline-offset: 2px }
+.loc { flex: 0 0 auto; width: 58px; height: 40px; background: var(--water); border: 1px solid var(--line) }
+.loc svg { width: 100%; height: 100%; display: block }
+.loc .ld { fill: #F6F8F8 }
+.loc .dot { fill: var(--ink); transition: fill 160ms }
+.card.is-short .loc .dot, .card:hover .loc .dot { fill: var(--crimson) }
+.site-map { position: sticky; top: 72px; display: grid; gap: 8px }
+.tray { position: sticky; bottom: 12px; z-index: 5; margin-block-start: 18px; background: var(--ink); color: var(--paper); display: flex; align-items: center; gap: 12px; padding: 10px 12px; flex-wrap: wrap; transform: translateY(8px); opacity: 0; pointer-events: none; transition: opacity 200ms, transform 200ms var(--ease) }
+.tray.on { opacity: 1; transform: none; pointer-events: auto }
+.tray .cnt { background: var(--crimson); color: #fff; font-weight: 700; min-width: 30px; height: 30px; display: grid; place-items: center; border-radius: 15px; padding-inline: 8px; font-variant-numeric: tabular-nums }
+.tray .thumbs { display: flex; gap: 6px }
+.tray .thumbs img { width: 48px; height: 36px; object-fit: cover }
+.tray button { margin-inline-start: auto; background: transparent; border: 1px solid #fff; color: #fff; padding: 8px 12px; cursor: pointer; border-radius: 2px }
+
+/* ===== shared map ===== */
+.map { position: relative; background: var(--water); overflow: hidden }
+.map svg { width: 100%; height: auto; display: block }
+.m-land { fill: var(--sheet); stroke: #B9C4C9; stroke-width: 1; vector-effect: non-scaling-stroke }
+.m-deep { fill: none; stroke: var(--water-deep); stroke-width: 10; vector-effect: non-scaling-stroke }
+.m-road { fill: none; stroke: #fff; stroke-width: 2; vector-effect: non-scaling-stroke; opacity: 0; transition: opacity 300ms }
+.map[data-zoom="street"] .m-road, .map[data-zoom="community"] .m-road.arterial { opacity: 1 }
+.m-comm { fill: transparent; stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; cursor: pointer; transition: fill 150ms }
+.m-comm:hover, .m-comm.hot { fill: rgba(176, 18, 44, .07) }
+.m-comm.act { fill: var(--crimson-tint); stroke: var(--crimson); stroke-width: 2; stroke-dasharray: none }
+.m-label { font: 700 13px var(--f); font-stretch: 62%; fill: var(--ink-2); pointer-events: none }
+.m-label.ctx { font-weight: 500; fill: #7E8A91; font-stretch: 80% }
+.m-label-ar { font: 700 12px var(--f-ar-display); fill: var(--ink-3); pointer-events: none }
+.cl circle { fill: var(--ink); stroke: #fff; stroke-width: 2; vector-effect: non-scaling-stroke; transition: fill 150ms }
+.cl text { font: 700 11px var(--f); fill: #fff; text-anchor: middle; dominant-baseline: central; pointer-events: none }
+.cl.hot circle, .cl.act circle { fill: var(--crimson) }
+.plot { cursor: pointer }
+.plot rect { fill: var(--ink); stroke: #fff; stroke-width: 2; vector-effect: non-scaling-stroke; transition: fill 150ms }
+.plot.short rect { fill: #fff; stroke: var(--crimson); stroke-width: 2.5 }
+.plot.act rect, .plot:hover rect, .plot:focus-visible rect { fill: var(--crimson); stroke: #fff }
+.plot .tag { opacity: 0; transition: opacity 150ms; pointer-events: none }
+.plot.act .tag, .plot:hover .tag, .plot:focus-visible .tag, .map[data-zoom="street"] .plot .tag { opacity: 1 }
+.plot .tag rect { fill: var(--paper); stroke: var(--ink); stroke-width: 1 }
+.plot.act .tag rect, .plot:hover .tag rect { stroke: var(--crimson) }
+.plot .tag text { font: 700 12px var(--f); font-stretch: 60%; fill: var(--ink); dominant-baseline: central }
+.plot:focus-visible { outline: none }
+.map .attr { position: absolute; inset-block-end: 4px; inset-inline-end: 6px; font-size: 0.66rem; color: var(--ink-3) }
+.callout { position: absolute; z-index: 4; width: 190px; background: var(--paper); box-shadow: 0 14px 30px -14px rgba(0,0,0,.45); transform: translate(-50%, calc(-100% - 18px)); opacity: 0; pointer-events: none; transition: opacity 150ms }
+.callout.on { opacity: 1 }
+.callout img { aspect-ratio: 16 / 10; width: 100%; object-fit: cover }
+.callout div { padding: 8px 10px; display: grid; gap: 2px; font-size: 0.8rem }
+.callout b { font-size: 1.3rem; font-stretch: 56%; font-weight: 700; line-height: 1 }
+
+/* ===== 4. MAP LANGUAGE ===== */
+.maplang { display: grid; grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); gap: 20px; align-items: start }
+.zoombar { display: inline-flex; border: 1px solid var(--ink-3); margin-block-end: 10px }
+.zoombar button { border: 0; background: var(--paper); padding: 9px 14px; cursor: pointer; font-size: 0.92rem }
+.zoombar button + button { border-inline-start: 1px solid var(--ink-3) }
+.zoombar button[aria-pressed="true"] { background: var(--ink); color: var(--paper) }
+.legend { background: var(--paper); padding: 20px; display: grid; gap: 12px }
+.legend h3 { font-size: 1.05rem; font-weight: 600 }
+.legend ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px }
+.legend li { display: grid; grid-template-columns: 44px 1fr; gap: 10px; align-items: center; font-size: 0.88rem; color: var(--ink-2) }
+.legend li b { color: var(--ink); font-weight: 600; display: block }
+.legend svg { width: 44px; height: 30px; display: block }
+
+/* ===== 5. PROPERTY ===== */
+.prop { background: var(--paper) }
+.p-top { position: relative }
+.p-fig { grid-column: full-start / 10; grid-row: 1 / 3; margin: 0; position: relative }
+.p-fig .frame { position: relative; overflow: hidden; aspect-ratio: 4 / 3; max-height: 80vh; background: #e3e8ea }
+.p-fig .frame img { width: 100%; height: 100%; object-fit: cover }
+.p-sheet { grid-column: 9 / content-end; grid-row: 1; align-self: start; margin-block-start: 44px; z-index: 3; background: var(--paper); padding: clamp(20px, 2.6vw, 32px); display: grid; gap: 14px; box-shadow: 0 22px 46px -26px rgba(15,30,37,.5) }
+.p-sheet .ext { color: var(--ink-2) }
+.p-sheet .pr { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap }
+.p-sheet .pr b { font-size: clamp(3rem, 5vw, 4.2rem); font-weight: 700; font-stretch: 54%; line-height: .86; font-variant-numeric: tabular-nums }
+.p-sheet .pr span { font-stretch: 118%; font-size: 0.82rem; color: var(--ink-3) }
+.p-sheet h2 { font-size: 1.3rem; font-weight: 600; font-stretch: 92%; line-height: 1.2 }
+.p-sheet .mirror .en { font-weight: 700; font-stretch: 60%; font-size: 1.6rem }
+.p-sheet .mirror .ar-d { font-size: 1.3rem; color: var(--ink-2) }
+.p-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-block: 1px solid var(--line) }
+.p-facts div { padding: 10px 10px 10px 0; display: grid; gap: 2px; position: relative }
+.p-facts div + div { padding-inline-start: 12px; border-inline-start: 1px solid var(--line) }
+.p-facts dt { font-stretch: 120%; font-size: 0.7rem; color: var(--ink-3) }
+.p-facts dd { margin: 0; font-weight: 700; font-size: 1.5rem; font-stretch: 60%; font-variant-numeric: tabular-nums; line-height: 1 }
+.p-facts div::before { content: ""; position: absolute; inset-inline-start: 0; inset-block-start: -1px; height: 3px; width: 0; background: var(--crimson); transition: width 260ms var(--ease) }
+.p-facts div + div::before { inset-inline-start: 12px }
+.p-facts div.mark::before { width: 34px }
+.p-facts div.mark dd { color: var(--crimson) }
+.rooms { grid-column: content-start / 10; grid-row: 3; display: flex; flex-wrap: wrap; gap: 6px; margin-block-start: 16px }
+.rooms button { border: 1px solid var(--ink-3); background: var(--paper); padding: 7px 12px; cursor: pointer; font-size: 0.9rem; display: inline-flex; gap: 6px; align-items: baseline; border-radius: 999px }
+.rooms button .c { font-variant-numeric: tabular-nums; color: var(--ink-3); font-size: 0.8rem }
+.rooms button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink) }
+.rooms button[aria-pressed="true"] .c { color: #C9D1D6 }
+.rail { grid-column: content-start / 10; grid-row: 4; display: flex; gap: 10px; margin-block-start: 12px; overflow-x: auto; padding-block-end: 6px; min-height: 96px }
+.rail button { all: unset; cursor: pointer; flex: 0 0 auto; width: 118px; aspect-ratio: 4 / 3; overflow: hidden; position: relative }
+.rail button[hidden] { display: none }
+.rail button img { width: 100%; height: 100%; object-fit: cover; opacity: .75; transition: opacity 150ms }
+.rail button:hover img, .rail button[aria-current="true"] img { opacity: 1 }
+.rail button[aria-current="true"]::after { content: ""; position: absolute; inset: 0; box-shadow: inset 0 0 0 3px var(--crimson) }
+.rail button:focus-visible { outline: 3px solid var(--crimson); outline-offset: 2px }
+.p-live { grid-column: content-start / 10; grid-row: 5; font-size: 0.86rem; color: var(--ink-2); margin-block-start: 6px }
+.p-replay { grid-column: 10 / content-end; grid-row: 3 / 6; align-self: start; margin-block-start: 16px; display: grid; gap: 8px; justify-items: start; padding-inline-start: 16px }
+.anc { position: absolute; width: 30px; height: 30px; transform: translate(-50%, -50%); z-index: 3 }
+.anc button { all: unset; cursor: pointer; width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,.95); border: 2px solid var(--ink); display: grid; place-items: center; font-size: 0.76rem; font-weight: 700; box-shadow: 0 2px 10px rgba(0,0,0,.28); transition: transform 180ms var(--ease), background 150ms }
+.anc button:focus-visible { outline: 3px solid #fff; outline-offset: 2px }
+.anc .tip { position: absolute; inset-inline-start: 38px; top: 50%; margin-top: -15px; background: var(--paper); font-size: 0.82rem; padding: 6px 10px; white-space: nowrap; box-shadow: 0 6px 18px -8px rgba(0,0,0,.4); opacity: 0; transition: opacity 180ms; pointer-events: none }
+.anc.flip .tip { inset-inline-start: auto; inset-inline-end: 38px }
+.anc.on button { background: var(--crimson); border-color: #fff; color: #fff; transform: scale(1.08) }
+.anc.on .tip, .anc:hover .tip { opacity: 1 }
+
+/* ===== 6. COMMUNITY STORY ===== */
+.comm { background: var(--shade); color: var(--on-shade); padding-block: clamp(64px, 8vw, 104px) clamp(48px, 6vw, 80px) }
+.comm .s-head .k, .comm .s-head p { color: var(--on-shade-2) }
+.skip { color: var(--crimson-on-shade); font-weight: 600 }
+.story { position: relative; height: min(86vh, 780px); overflow-y: auto; overflow-x: hidden; background: var(--shade); border-block: 1px solid #2A424C; overscroll-behavior: auto }
+.story:focus-visible { outline-offset: -3px }
+.chap { position: relative }
+.chap .stage { position: sticky; top: 0; height: min(86vh, 780px); overflow: hidden }
+.ch0 { height: 300% } .ch1 { height: 220% } .ch2 { height: 220% } .ch3 { height: 240% }
+.ch0 .frame { position: absolute; inset: 0; clip-path: inset(16% 20% 16% 20%); will-change: clip-path }
+.ch0 .frame img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.12); will-change: transform }
+.ch0 .title { position: absolute; inset-inline: clamp(16px, 5vw, 64px); inset-block-end: clamp(20px, 5vh, 56px); z-index: 2; display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap }
+.ch0 .title h3 { font-size: clamp(5rem, 16vw, 13rem); font-stretch: 52%; font-weight: 800; line-height: .82; color: #fff; display: flex; overflow: hidden }
+.ch0 .title h3 span { display: inline-block; will-change: transform }
+.ch0 .title .ar-d { font-size: clamp(2.4rem, 6vw, 5rem); color: #fff; line-height: 1.2 }
+.ch0 .shade-plate { position: absolute; inset-inline: 0; inset-block-end: 0; height: 46%; background: linear-gradient(transparent, rgba(15,30,37,.72)); z-index: 1; opacity: 0 }
+.ch1 .stage, .ch2 .stage { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); align-items: center }
+.ch1 .pic { position: relative; height: 100%; overflow: hidden }
+.ch1 .pic img { position: absolute; inset: -8% 0; width: 100%; height: 116%; object-fit: cover; will-change: transform }
+.story .line { padding: clamp(20px, 4vw, 56px); display: grid; gap: 14px }
+.story .line .ext { color: var(--on-shade-2) }
+.story .line h4 { font-size: clamp(2.2rem, 5vw, 4rem); font-stretch: 56%; font-weight: 700; line-height: .92 }
+.story .line p { color: var(--on-shade-2); max-width: 36ch }
+.ch2 .stage { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr) }
+.ch2 .pics { position: relative; height: 100%; }
+.ch2 .pics .a { position: absolute; inset-inline-start: 4%; inset-block-start: 10%; width: 62%; aspect-ratio: 4 / 3; overflow: hidden; will-change: transform }
+.ch2 .pics .b { position: absolute; inset-inline-end: 0; inset-block-end: 8%; width: 58%; aspect-ratio: 4 / 3; overflow: hidden; will-change: transform; box-shadow: 0 30px 50px -30px rgba(0,0,0,.8) }
+.ch2 .pics img { width: 100%; height: 100%; object-fit: cover }
+.ch3 .stage { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); align-items: center; gap: 0 }
+.ch3 .smap { padding: clamp(16px, 3vw, 40px) }
+.ch3 .smap .map { background: #1C3540 }
+.ch3 .smap .m-land { fill: #23404C; stroke: #35525E }
+.ch3 .smap .m-label { fill: #C8D4D8 }
+.ch3 .smap .m-label.ctx { fill: #7E959E }
+.ch3 .boundary { fill: rgba(240,86,110,.14); stroke: var(--crimson-on-shade); stroke-width: 2.5; vector-effect: non-scaling-stroke; stroke-dasharray: 1; stroke-dashoffset: 1 }
+.ch3 .homes { display: flex; gap: 10px; margin-block-start: 6px }
+.ch3 .homes img { width: 31%; aspect-ratio: 4 / 3; object-fit: cover; will-change: transform, opacity }
+.ch3 .count b { font-size: clamp(5rem, 12vw, 9rem); font-stretch: 52%; font-weight: 800; line-height: .82 }
+.story-end { padding: 48px clamp(20px, 5vw, 64px); display: grid; gap: 12px; justify-items: start }
+.story-end a { color: var(--crimson-on-shade); font-weight: 600 }
+.story.static { height: auto; overflow: visible }
+.story.static .chap { height: auto }
+.story.static .stage { position: relative; height: auto; min-height: 520px }
+.story.static .ch0 .frame { position: relative; clip-path: none; height: 560px }
+.story.static .ch0 .frame img { transform: none }
+.story.static .ch0 .shade-plate { opacity: 1 }
+.story.static .ch1 .pic { min-height: 520px }
+.story.static .ch2 .pics { min-height: 520px }
+.story.static .boundary { stroke-dashoffset: 0 }
+.comm-after { margin-block-start: 22px; display: flex; gap: 18px; flex-wrap: wrap; align-items: baseline; color: var(--on-shade-2); font-size: 0.9rem }
+
+/* ===== 7. INTENSITY ===== */
+.levels { display: grid; gap: 18px }
+.lvl { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 18px; align-items: start }
+.lvl .meta { display: grid; gap: 6px; padding-block-start: 6px }
+.lvl .meta h3 { margin: 0; font-weight: 700; font-size: 2rem; font-stretch: 58%; line-height: .9 }
+.lvl .meta span { font-size: 0.86rem; color: var(--ink-2) }
+.vp { background: var(--paper); border: 1px solid var(--line); overflow: hidden; position: relative; min-width: 0 }
+.vp .chrome { display: flex; gap: 5px; padding: 7px 10px; border-block-end: 1px solid var(--line); background: var(--sheet) }
+.vp .chrome i { width: 7px; height: 7px; border-radius: 50%; background: var(--line) }
+.lv-f { padding: 18px; display: grid; gap: 12px }
+.lv-f .hd { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; border-block-end: 1px solid var(--line); padding-block-end: 8px }
+.lv-f .hd h4 { font-size: 1.35rem; font-weight: 700; font-stretch: 70% }
+.lv-f .rows { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px }
+.mini { display: grid; gap: 4px; font-size: 0.8rem; background: var(--sheet); align-content: start }
+.mini small { font-size: 0.7rem; color: var(--ink-3); margin-inline-start: 4px; font-stretch: 118% }
+.mini img { aspect-ratio: 4 / 3; width: 100%; object-fit: cover }
+.mini div { padding: 6px 8px 8px }
+.mini b { font-stretch: 60%; font-size: 1.1rem; line-height: 1 }
+.mini p { margin: 4px 0 0 }
+.lv-e { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); min-height: 300px }
+.lv-e .img { position: relative; overflow: hidden }
+.lv-e .img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover }
+.lv-e .tx { padding: 24px; display: grid; gap: 10px; align-content: center }
+.lv-e .tx h4 { font-size: 3rem; font-stretch: 54%; font-weight: 700; line-height: .86 }
+.lv-e .tx .ar-d { font-size: 1.4rem; color: var(--ink-2) }
+.lv-i { background: var(--shade); color: var(--on-shade); position: relative; min-height: 360px; display: grid }
+.lv-i img { position: absolute; inset-block: 0; inset-inline-end: 0; width: 64%; height: 100%; object-fit: cover }
+.lv-i .tx { position: relative; z-index: 2; padding: 28px; display: grid; align-content: end; gap: 6px }
+.lv-i h4 { font-size: clamp(4rem, 9vw, 7.5rem); font-stretch: 50%; font-weight: 800; line-height: .8 }
+.lv-i .ar-d { font-size: 2rem; color: var(--on-shade-2) }
+.lv-i p { color: var(--on-shade-2); max-width: 30ch; font-size: 0.9rem }
+.ltable { overflow-x: auto; background: var(--paper); margin-block-start: 22px }
+.ltable table { border-collapse: collapse; width: 100%; min-width: 760px; font-size: 0.9rem }
+.ltable th, .ltable td { text-align: start; padding: 10px 12px; border-block-end: 1px solid var(--line); vertical-align: top }
+.ltable thead th { font-stretch: 64%; font-size: 1.3rem; font-weight: 700 }
+.ltable tbody th { font-stretch: 118%; font-size: 0.78rem; font-weight: 500; color: var(--ink-2) }
+
+footer { background: var(--shade); color: var(--on-shade-2); padding-block: 40px; font-size: 0.88rem }
+footer .wrap { display: grid; gap: 6px }
+footer strong { color: var(--on-shade) }
+
+@media (max-width: 1080px) {
+  .pairs { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+  .rules { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+}
+@media (max-width: 900px) {
+  .devices, .m-quiet { grid-template-columns: 1fr }
+  .m-row, .site, .maplang { grid-template-columns: 1fr }
+  .site-map { position: static; order: -1 }
+  .p-fig { grid-column: full-start / full-end; grid-row: 1 }
+  .p-sheet { grid-column: content-start / content-end; grid-row: 5; margin-block-start: 18px }
+  .rooms, .rail, .p-live { grid-column: content-start / content-end }
+  .rooms { grid-row: 2 } .rail { grid-row: 3 } .p-live { grid-row: 4 }
+  .p-replay { grid-column: content-start / content-end; grid-row: 6; padding-inline-start: 0; margin-block-start: 18px }
+  .ch1 .stage, .ch2 .stage, .ch3 .stage { grid-template-columns: 1fr; grid-template-rows: 58% 42% }
+  .ch2 .pics { order: -1 }
+  .lvl { grid-template-columns: 1fr }
+  .lv-e { grid-template-columns: 1fr } .lv-e .img { min-height: 200px }
+  .lv-i img { width: 100%; opacity: .45 }
+}
+@media (max-width: 600px) {
+  .brand span { display: none }
+  .bar .wrap { gap: 0; padding-block: 8px 0 }
+  .bar nav { flex-wrap: nowrap; overflow-x: auto; margin-inline: -9px 0; width: calc(100% + 9px); scrollbar-width: none }
+  .bar nav a { flex: 0 0 auto }
+  .pairs, .cards, .rules { grid-template-columns: 1fr }
+  .lv-f .rows { grid-template-columns: 1fr 1fr }
+  .anc .tip { display: none }
+  .anc.on .tip { display: block; top: 36px; margin-top: 0; inset-inline-start: -10px; white-space: normal; width: 170px }
+  .anc.flip.on .tip { inset-inline-start: auto; inset-inline-end: -10px }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0ms !important; animation: none !important }
+}
+</style>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="#top">Al Aliah International<span>Redline 02.5b, system refinement</span></a>
+    <nav aria-label="Refinement areas">
+      <a href="#type">Type</a><a href="#hierarchy">Hierarchy</a><a href="#card">Card</a><a href="#maps">Map</a><a href="#property">Property</a><a href="#community">Community</a><a href="#levels">Intensity</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <section class="intro wrap" aria-labelledby="h-intro">
+    <h1 class="comp" id="h-intro">Redline, refined</h1>
+    <p class="sub">Seven refinements to the approved system: no new direction and no page designs. Each section shows one piece working with Al Aliah's own listing photos and data. The page itself is set in the recommended type pairing.</p>
+    <ol>
+      <li><a href="#type"><b>Type</b><span>Ownable Latin and Arabic pairing</span></a></li>
+      <li><a href="#hierarchy"><b>Hierarchy</b><span>Five controlled moments</span></a></li>
+      <li><a href="#card"><b>Card</b><span>Site select, with map context</span></a></li>
+      <li><a href="#maps"><b>Map</b><span>Communities, plots, clusters</span></a></li>
+      <li><a href="#property"><b>Property</b><span>The room index sequence</span></a></li>
+      <li><a href="#community"><b>Community</b><span>Scroll-scoped story</span></a></li>
+      <li><a href="#levels"><b>Intensity</b><span>Functional, editorial, immersive</span></a></li>
+    </ol>
+  </section>
+
+  <!-- 1 TYPE -->
+  <section class="s" id="type" aria-labelledby="h-type">
+    <div class="wrap">
+      <div class="s-head"><span class="k">1. Typography</span><h2 class="comp" id="h-type">An ownable pairing</h2><p>The same content set four ways. The current pairing is the baseline; T1 is recommended. All faces are free stand-ins; licensed equivalents are listed in the study.</p></div>
+      <div class="pairs">
+        <article class="pair p0"><div class="tag"><span>T0, current</span></div>
+          <div class="name"><span class="n1">Al Raha</span><span lang="ar" dir="rtl">الراحة</span></div>
+          <div class="fig"><span class="fg num">219,999</span><span class="l">AED per year</span></div>
+          <p class="t">Three-bedroom villa with courtyard</p><p class="b">Townhouse communities on the mainland coast, between Abu Dhabi island and Yas Island.</p><p class="l">Built-up area</p>
+          <p class="fonts">Archivo, Noto Kufi Arabic</p></article>
+        <article class="pair p1 rec"><div class="tag"><span>T1, compressed + Kufi</span><b>Recommended</b></div>
+          <div class="name"><span class="n1">Al Raha</span><span lang="ar" dir="rtl">الراحة</span></div>
+          <div class="fig"><span class="fg num">219,999</span><span class="l">AED per year</span></div>
+          <p class="t">Three-bedroom villa with courtyard</p><p class="b">Townhouse communities on the mainland coast, between Abu Dhabi island and Yas Island.</p><p class="l">Built-up area</p>
+          <p class="fonts">Anybody across its width axis, Reem Kufi (Arabic display), Noto Kufi Arabic (Arabic text)</p></article>
+        <article class="pair p2"><div class="tag"><span>T2, extended + geometric</span></div>
+          <div class="name"><span class="n1">Al Raha</span><span lang="ar" dir="rtl">الراحة</span></div>
+          <div class="fig"><span class="fg num">219,999</span><span class="l">AED per year</span></div>
+          <p class="t">Three-bedroom villa with courtyard</p><p class="b">Townhouse communities on the mainland coast, between Abu Dhabi island and Yas Island.</p><p class="l">Built-up area</p>
+          <p class="fonts">Syne, Instrument Sans, Alexandria</p></article>
+        <article class="pair p3"><div class="tag"><span>T3, cut + Plex</span></div>
+          <div class="name"><span class="n1">Al Raha</span><span lang="ar" dir="rtl">الراحة</span></div>
+          <div class="fig"><span class="fg num">219,999</span><span class="l">AED per year</span></div>
+          <p class="t">Three-bedroom villa with courtyard</p><p class="b">Townhouse communities on the mainland coast, between Abu Dhabi island and Yas Island.</p><p class="l">Built-up area</p>
+          <p class="fonts">Funnel Display, Funnel Sans, IBM Plex Sans Arabic</p></article>
+      </div>
+      <div class="devices">
+        <div class="dev"><h3>Mirror lockup</h3><div class="lockup"><span class="en">Yas Island</span><span class="ar-d" lang="ar" dir="rtl">جزيرة ياس</span></div><p class="d">English starts, Arabic ends, on one baseline. The two scripts read toward the edges of the same line. For community and section names only.</p></div>
+        <div class="dev"><h3>Figure first</h3><div class="figfirst"><b class="num">5,948</b><span>sq ft built-up area</span></div><p class="d">Figures set compressed and large, units small and extended. Tabular lining numerals everywhere.</p></div>
+        <div class="dev"><h3>Width is hierarchy</h3><div class="widths">
+          <div><span>Compressed</span><p style="font-stretch:56%;font-weight:700;font-size:2rem;line-height:1">Khalifa City</p></div>
+          <div><span>Normal</span><p>Reading text and listing titles</p></div>
+          <div><span>Extended</span><p class="ext" style="margin:0">Labels and metadata</p></div>
+        </div><p class="d">Compressed means place or figure; normal means reading; extended means label.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 HIERARCHY -->
+  <section class="s" id="hierarchy" aria-labelledby="h-hier" style="background:var(--paper)">
+    <div class="wrap">
+      <div class="s-head"><span class="k">2. Visual hierarchy</span><h2 class="comp" id="h-hier">Moments break the calm</h2><p>Five named moments add contrast, scale, asymmetry and bleed. They are rationed, so the quiet modules around them stay calm and usable.</p></div>
+      <div class="moments">
+        <figure class="m-statement" style="margin:0"><h3 class="comp">Yas Island</h3><div class="band"><img src="img/yas-terrace-view.jpg" alt="View from a Yas Island villa terrace across tree-lined streets" width="1280" height="960" loading="lazy"></div><figcaption class="cap">Statement and bleed band: type crosses the image only over open sky</figcaption></figure>
+        <div class="m-row">
+          <div class="m-figure"><span class="ext">Figure</span><b class="num">11</b><p>homes listed in Abu Dhabi, counted from the current listing data</p></div>
+          <div class="m-inversion"><span class="ext">Inversion</span><h3>One shade section per editorial page</h3><p>Shade interrupts the sheet to mark a change of subject. On immersive pages it can alternate.</p></div>
+        </div>
+        <div class="m-quiet"><div><b>Quiet module</b>Facts, forms and lists stay on sheet and paper at normal width.</div><div><b>Quiet module</b>At least two quiet modules separate moments on editorial pages.</div><div><b>Quiet module</b>Functional pages use only the Figure moment.</div></div>
+      </div>
+      <div class="rules">
+        <div><b>Statement</b>Display at 4 to 8 times body size. One per viewport.</div>
+        <div><b>Bleed band</b>Edge to edge. Tier A or B photos only.</div>
+        <div><b>Inversion</b>A shade section. One per editorial page.</div>
+        <div><b>Offset</b>8/4 or 4/8 splits, alternating sides, mirrored in RTL.</div>
+        <div><b>Figure</b>One real, sourced number at display size.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 CARD -->
+  <section class="s" id="card" aria-labelledby="h-card">
+    <div class="wrap">
+      <div class="s-head"><span class="k">3. Signature card</span><h2 class="comp" id="h-card">Site select</h2><p>Image, data, crimson selection and map respond as one unit. Hover or focus a card to locate it on the map; Shortlist keeps it. In production the card itself opens the listing. No tilt, no 3D.</p></div>
+      <div class="site">
+        <div><div class="cards" id="cards"></div><div class="tray" id="tray" aria-live="polite"><span class="cnt" id="tray-n">0</span><span id="tray-l">On your shortlist</span><span class="thumbs" id="tray-t"></span><button type="button" id="tray-clear">Clear shortlist</button></div></div>
+        <div class="site-map" role="group" aria-label="Map context for the cards"><div class="map" id="site-map"></div><p class="note">Schematic, not to scale. Pins sit at community level until listings carry real coordinates.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 MAP -->
+  <section class="s" id="maps" aria-labelledby="h-map" style="background:var(--paper)">
+    <div class="wrap">
+      <div class="s-head"><span class="k">4. Map art direction</span><h2 class="comp" id="h-map">A Redline map</h2><p>Built from the system's tokens, never vendor defaults. Communities are areas, listings are plots, and the redline boundary appears only when a community is selected.</p></div>
+      <div class="maplang">
+        <div>
+          <div class="zoombar" role="group" aria-label="Zoom level" id="zoombar">
+            <button type="button" aria-pressed="true" data-z="city">City</button><button type="button" aria-pressed="false" data-z="community">Al Raha</button><button type="button" aria-pressed="false" data-z="street">Street</button>
+          </div>
+          <div class="map" id="lang-map" data-zoom="city"></div>
+          <p class="note" style="margin-block-start:8px">Schematic geometry and plot positions for demonstration. Production uses MapLibre with a custom style on vector tiles; plot pins need real coordinates (open question Q3).</p>
+        </div>
+        <div class="legend"><h3>Map language</h3>
+          <ul>
+            <li><svg viewBox="0 0 44 30" aria-hidden="true"><rect width="44" height="30" fill="#D6E3E7"/><path d="M0 18 C12 14 20 22 44 16 L44 30 L0 30Z" fill="#F2F4F4" stroke="#B9C4C9"/></svg><span><b>Land and water</b>Sheet land, pale slate water, a deeper band along coasts.</span></li>
+            <li><svg viewBox="0 0 44 30" aria-hidden="true"><rect x="6" y="6" width="32" height="18" fill="none" stroke="#5F6A72" stroke-dasharray="3 3"/></svg><span><b>Community area</b>Hairline outline, no fill. Tinted on hover.</span></li>
+            <li><svg viewBox="0 0 44 30" aria-hidden="true"><rect x="6" y="6" width="32" height="18" fill="#F6E0E4" stroke="#B0122C" stroke-width="2"/></svg><span><b>Selected community</b>The redline: crimson boundary and tint, only as a state.</span></li>
+            <li><svg viewBox="0 0 44 30" aria-hidden="true"><circle cx="22" cy="15" r="11" fill="#14191E" stroke="#fff" stroke-width="2"/><text x="22" y="15" fill="#fff" font-size="11" font-weight="700" text-anchor="middle" dominant-baseline="central" font-family="Anybody">3</text></svg><span><b>Cluster</b>Ink disc with a count. Three sizes: 1, 2 to 5, 6 or more.</span></li>
+            <li><svg viewBox="0 0 44 30" aria-hidden="true"><rect x="16" y="9" width="12" height="12" fill="#14191E" stroke="#fff" stroke-width="2"/></svg><span><b>Plot marker</b>A square for a plot, not a teardrop.</span></li>
+            <li><svg viewBox="0 0 44 30" aria-hidden="true"><rect x="4" y="9" width="12" height="12" fill="#B0122C" stroke="#fff" stroke-width="2"/><rect x="19" y="7" width="23" height="16" fill="#fff" stroke="#B0122C"/><text x="30.5" y="15" font-size="9" font-weight="700" text-anchor="middle" dominant-baseline="central" font-family="Anybody" font-stretch="60%">420k</text></svg><span><b>Active plot</b>Crimson marker and a figure-first price tag.</span></li>
+            <li><svg viewBox="0 0 44 30" aria-hidden="true"><rect x="16" y="9" width="12" height="12" fill="#fff" stroke="#B0122C" stroke-width="2.5"/></svg><span><b>Shortlisted</b>Crimson outline, so it stays findable.</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 PROPERTY -->
+  <section class="s prop" id="property" aria-labelledby="h-prop">
+    <div class="wrap"><div class="s-head"><span class="k">5. Property detail signature</span><h2 class="comp" id="h-prop">The room index</h2><p>One sequence at the top of the page: the photo arrives, the facts land, details reveal, and the room index lets you read the home by room. Everything below it stays plain.</p></div></div>
+    <div class="g p-top">
+      <figure class="p-fig" style="margin:0"><div class="frame" id="p-frame"><img id="p-img" src="img/yas-terrace-pergola.jpg" alt="Upper terrace with a timber-clad wall, pergola shade and a glass balustrade" width="1280" height="960"><div id="p-hs"></div></div></figure>
+      <div class="p-sheet" id="p-sheet">
+        <span class="ext">Villa for rent</span>
+        <div class="pr"><b class="num">420,000</b><span>AED per year</span></div>
+        <h2>Five-bedroom villa with maid's room</h2>
+        <div class="mirror"><span class="en">Yas Island</span><span class="ar-d" lang="ar" dir="rtl">جزيرة ياس</span></div>
+        <dl class="p-facts" id="p-facts"><div data-f="bed"><dt>Bedrooms</dt><dd>5</dd></div><div data-f="bath"><dt>Bathrooms</dt><dd>6</dd></div><div data-f="area"><dt>Built-up area</dt><dd>5,948 <span style="font-size:.8rem;font-stretch:118%;font-weight:400">sq ft</span></dd></div></dl>
+        <button class="btn primary" type="button">Request a viewing</button>
+        <p class="note">Listing 31521, live data from staging. Photo room tags were added by hand for this specimen.</p>
+      </div>
+      <div class="rooms" id="rooms" role="group" aria-label="Rooms"></div>
+      <div class="rail" id="rail" role="group" aria-label="Gallery"></div>
+      <p class="p-live" id="p-live" aria-live="polite"></p>
+      <div class="p-replay"><button class="btn" type="button" id="replay">Replay the arrival</button><p class="note">Arrival runs once when the page opens. Reduced motion shows the final state.</p></div>
+    </div>
+  </section>
+
+  <!-- 6 COMMUNITY -->
+  <section class="comm" id="community" aria-labelledby="h-comm">
+    <div class="wrap">
+      <div class="s-head"><span class="k">6. Community emotional layer</span><h2 class="comp" id="h-comm">The approach to Al Raha</h2><p>Scroll inside the panel. Smooth scroll and scroll-scrubbed chapters run only here; the rest of this page keeps native scroll. <a class="skip" href="#after-story">Skip the story</a></p></div>
+    </div>
+    <div class="story" id="story" tabindex="0" aria-label="Al Raha story. Scroll to move through four chapters.">
+      <div class="story-in" id="story-in">
+        <div class="chap ch0"><div class="stage">
+          <div class="frame"><img src="img/raha-street.jpg" alt="An Al Raha street of two-storey townhouses in hard afternoon light" width="1280" height="960"></div>
+          <div class="shade-plate"></div>
+          <div class="title"><h3 class="comp" aria-label="Al Raha"><span>A</span><span>l</span><span>&nbsp;</span><span>R</span><span>a</span><span>h</span><span>a</span></h3><span class="ar-d" lang="ar" dir="rtl">الراحة</span></div>
+        </div></div>
+        <div class="chap ch1"><div class="stage">
+          <div class="pic"><img src="img/raha-row.jpg" alt="A row of contemporary townhouses with covered parking under a clear sky" width="1280" height="960" loading="lazy"></div>
+          <div class="line"><span class="ext">Arrive</span><h4>Low-rise rows under open sky</h4><p>Two-storey townhouses set along quiet internal streets, each with covered parking at the front.</p></div>
+        </div></div>
+        <div class="chap ch2"><div class="stage">
+          <div class="line"><span class="ext">Live</span><h4>Private courtyards, shared calm</h4><p>Paved courtyards behind each home, and views across the community from the upper floors.</p></div>
+          <div class="pics"><div class="a"><img src="img/raha-court.jpg" alt="A paved private courtyard behind a townhouse" width="900" height="675" loading="lazy"></div><div class="b"><img src="img/raha-view.jpg" alt="View from an upper floor across an Al Raha community" width="1280" height="960" loading="lazy"></div></div>
+        </div></div>
+        <div class="chap ch3"><div class="stage">
+          <div class="smap"><div class="map" id="story-map"></div></div>
+          <div class="line"><span class="ext">Homes</span><div class="count"><b class="num" id="story-count">3</b></div><h4 style="font-size:clamp(1.8rem,3.6vw,2.6rem)">homes listed with Al Aliah in Al Raha</h4><div class="homes"><img src="img/raha-court.jpg" alt="" width="900" height="675" loading="lazy"><img src="img/raha4-living.jpg" alt="" width="700" height="525" loading="lazy"><img src="img/raha-apt-render.jpg" alt="" width="700" height="525" loading="lazy"></div></div>
+        </div></div>
+        <div class="story-end"><p>The story hands over to the listings at editorial intensity.</p><a href="#after-story">Continue to the Al Raha listings</a></div>
+      </div>
+    </div>
+    <div class="wrap"><p class="comm-after" id="after-story" tabindex="-1"><span>Photos: current Al Aliah listing photography (Tier C). In production, the approach chapter uses commissioned Tier A photography.</span><span id="story-mode"></span></p></div>
+  </section>
+
+  <!-- 7 LEVELS -->
+  <section class="s" id="levels" aria-labelledby="h-lv">
+    <div class="wrap">
+      <div class="s-head"><span class="k">7. Intensity levels</span><h2 class="comp" id="h-lv">One system, three settings</h2><p>The same content (Al Raha and its homes) at each level. Tokens, type families, crimson rules and accessibility never change; scale, spacing, imagery and motion do.</p></div>
+      <div class="levels">
+        <div class="lvl"><div class="meta"><h3>Functional</h3><span>Search, filters, forms. Regular grid, contained images, CSS-only feedback, native scroll.</span></div>
+          <div class="vp"><div class="chrome"><i></i><i></i><i></i></div><div class="lv-f"><div class="hd"><h4>Al Raha</h4><span class="note">3 homes</span></div><div class="rows" id="lv-f-rows"></div></div></div></div>
+        <div class="lvl"><div class="meta"><h3>Editorial</h3><span>Property, project, article. Offset split, one edge image, one entry sequence.</span></div>
+          <div class="vp"><div class="chrome"><i></i><i></i><i></i></div><div class="lv-e"><div class="img"><img src="img/raha-row.jpg" alt="" width="1280" height="960" loading="lazy"></div><div class="tx"><span class="ext">Community</span><h4>Al Raha</h4><span class="ar-d" lang="ar" dir="rtl">الراحة</span><p style="color:var(--ink-2);font-size:.92rem">Townhouse communities on the mainland coast, between Abu Dhabi island and Yas Island.</p></div></div></div></div>
+        <div class="lvl"><div class="meta"><h3>Immersive</h3><span>Homepage, community, campaigns. Shade, statement type, bleed, scoped scroll storytelling.</span></div>
+          <div class="vp"><div class="chrome"><i></i><i></i><i></i></div><div class="lv-i"><img src="img/raha-street.jpg" alt="" width="1280" height="960" loading="lazy"><div class="tx"><h4>Al Raha</h4><span class="ar-d" lang="ar" dir="rtl">الراحة</span><p>Low-rise rows under open sky, three homes listed.</p></div></div></div></div>
+      </div>
+      <div class="ltable" tabindex="0" role="region" aria-label="Intensity settings, scrolls sideways on small screens"><table>
+        <thead><tr><td></td><th scope="col">Functional</th><th scope="col">Editorial</th><th scope="col">Immersive</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Type scale</th><td>Ratio 1.2, display up to 44 px</td><td>Ratio 1.25, display up to 112 px</td><td>Ratio 1.333, statements up to 160 px</td></tr>
+          <tr><th scope="row">Width axis</th><td>Compressed for figures only</td><td>Compressed titles and figures</td><td>Full range</td></tr>
+          <tr><th scope="row">Section spacing</th><td>32 to 56 px</td><td>72 to 112 px</td><td>120 to 200 px</td></tr>
+          <tr><th scope="row">Imagery</th><td>Contained 4:3</td><td>One edge-bleed hero, contained gallery</td><td>Full bleed, cross-boundary, bleed bands</td></tr>
+          <tr><th scope="row">Surfaces</th><td>Sheet and paper</td><td>One inversion at most</td><td>Sheet and shade alternating</td></tr>
+          <tr><th scope="row">Moments</th><td>Figure only</td><td>One per viewport</td><td>Several, with rhythm</td></tr>
+          <tr><th scope="row">Motion</th><td>CSS, 250 ms or less</td><td>One entry sequence, Flip in gallery</td><td>ScrollTrigger chapters, Lenis inside the story</td></tr>
+          <tr><th scope="row">Scroll</th><td>Native</td><td>Native</td><td>Native outside the story</td></tr>
+          <tr><th scope="row">JS budget</th><td>30 KB gzip</td><td>60 KB gzip</td><td>120 KB gzip, these templates only</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </section>
+</main>
+
+<footer><div class="wrap"><p><strong>Stage 02.5b for Al Aliah International</strong>, prepared by Trigon Solutions. A system refinement, not page designs.</p><p>Photography and listing data: Al Aliah's current listings on the staging site, 6 October 2026. Renders are labelled. Typefaces are free stand-ins; colors are indicative until the logo master arrives.</p></div></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/Flip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.3.26/dist/lenis.min.js"></script>
+<script>
+(function () {
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var hasGsap = !!window.gsap;
+  if (hasGsap) { gsap.registerPlugin(ScrollTrigger, Flip); }
+  var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var fmt = function (n) { return n.toLocaleString('en-US'); };
+
+  /* ---------- geometry (schematic, 600 x 440) ---------- */
+  var COMM = {
+    'Al Khalidiya':    { c: [120, 252], lp: [124, 294, 'middle'], d: 'M92 236 L150 228 L156 268 L98 276 Z', ar: 'الخالدية' },
+    'Al Reem Island':  { c: [300, 212], lp: [336, 216, 'start'], d: 'M276 204 L324 198 L328 222 L280 228 Z', ar: 'جزيرة الريم' },
+    'Yas Island':      { c: [470, 172], lp: [520, 176, 'start'], d: 'M432 176 L462 150 L508 156 L512 186 L470 200 Z', ar: 'جزيرة ياس' },
+    'Al Raha':         { c: [452, 258], lp: [452, 228, 'middle'], d: 'M418 248 L486 236 L492 270 L424 282 Z', ar: 'الراحة' },
+    'Al Reef Downtown':{ c: [548, 280], lp: [574, 318, 'end'], d: 'M528 266 L572 262 L574 296 L530 300 Z', ar: 'الريف' },
+    'Khalifa City':    { c: [436, 334], lp: [486, 338, 'start'], d: 'M404 316 L470 308 L478 356 L410 362 Z', ar: 'مدينة خليفة' },
+    'Madinat Al Riyad':{ c: [524, 398], lp: [488, 402, 'end'], d: 'M496 384 L556 378 L560 414 L500 420 Z', ar: 'مدينة الرياض' }
+  };
+  var LAND = '<path class="m-deep" d="M0 352 C70 342 130 356 190 348 C240 341 270 318 312 314 C352 310 372 292 412 284 C450 276 492 266 538 252 C566 244 600 238 600 238"/>' +
+    '<path class="m-land" d="M0 440 L0 352 C70 342 130 356 190 348 C240 341 270 318 312 314 C352 310 372 292 412 284 C450 276 492 266 538 252 C566 244 600 238 600 238 L600 440 Z"/>' +
+    '<path class="m-land" d="M58 258 C68 222 120 202 172 200 C220 198 262 212 282 236 C294 258 276 286 244 296 C194 310 122 308 84 294 C62 286 54 272 58 258 Z"/>' +
+    '<path class="m-land" d="M272 214 C276 200 300 194 322 196 C334 198 336 214 328 224 C316 232 290 234 278 228 C272 224 270 220 272 214 Z"/>' +
+    '<path class="m-land" d="M270 136 C290 118 360 112 410 122 C420 128 414 142 400 146 C350 156 300 158 276 152 C266 148 264 142 270 136 Z"/>' +
+    '<path class="m-land" d="M424 178 C430 158 468 142 502 148 C522 152 524 176 512 190 C496 204 456 208 434 200 C424 194 420 186 424 178 Z"/>' +
+    '<path class="m-road arterial" d="M150 270 C230 300 300 300 360 300 C420 300 470 276 560 270"/>' +
+    '<path class="m-road arterial" d="M300 220 C360 240 400 250 452 258 C480 250 500 200 470 176"/>' +
+    '<path class="m-road" d="M436 264 L480 256 M440 274 L486 266 M452 244 L460 280 M470 242 L476 276"/>' +
+    '<text class="m-label ctx" x="300" y="108">Saadiyat Island</text><text class="m-label ctx" x="96" y="222">Abu Dhabi island</text>';
+  var L = [
+    { id: 31521, t: "Five-bedroom villa with maid's room", a: 'Yas Island', p: 'rent', b: 5, ba: 6, s: 5948, pr: 420000, img: 'yas-street.jpg', xy: [478, 176] },
+    { id: 31571, t: 'Three-bedroom villa with courtyard', a: 'Al Raha', p: 'rent', b: 3, ba: 5, s: 1979, pr: 219999, img: 'raha-court.jpg', xy: [440, 254] },
+    { id: 30967, t: 'Furnished four-bedroom home with private pool', a: 'Al Raha', p: 'rent', b: 4, ba: 5, s: null, pr: 280000, img: 'raha4-living.jpg', xy: [462, 268] },
+    { id: 31094, t: 'Two-bedroom apartment with beach access', a: 'Al Raha', p: 'offplan', b: 2, ba: 3, s: 1157, pr: 3481025, img: 'raha-apt-render.jpg', render: true, xy: [474, 246] },
+    { id: 31495, t: 'Five-bedroom villa', a: 'Madinat Al Riyad', p: 'ready', b: 5, ba: 6, s: 11510, pr: 3800000, img: 'riyad-villa.jpg', xy: [526, 398] },
+    { id: 31013, t: 'Furnished one-bedroom at Marina Square', a: 'Al Reem Island', p: 'rent', b: 1, ba: 2, s: 915, pr: 105000, img: 'reem-living.jpg', xy: [300, 212] },
+    { id: 31082, t: 'Two-bedroom apartment', a: 'Al Reef Downtown', p: 'ready', b: 2, ba: 2, s: 1354, pr: 1170000, img: 'reef-apt.jpg', xy: [548, 280] },
+    { id: 31083, t: 'Four-bedroom townhouse with private pool', a: 'Khalifa City', p: 'offplan', b: 4, ba: 4, s: 4075, pr: 3936708, img: 'khalifa-render.jpg', render: true, xy: [436, 334] }
+  ];
+  var PUR = { rent: 'For rent', ready: 'Ready to buy', offplan: 'Off-plan' };
+  var short = function (n) { return n >= 1e6 ? (n / 1e6).toFixed(n >= 1e7 ? 0 : 2).replace(/\.?0+$/, '') + 'm' : Math.round(n / 1000) + 'k'; };
+
+  function mapSVG(opts) {
+    var s = '<svg viewBox="' + (opts.vb || '0 0 600 440') + '" role="img" aria-label="' + esc(opts.label || 'Schematic map of Abu Dhabi communities') + '">' + LAND;
+    Object.keys(COMM).forEach(function (k) {
+      var c = COMM[k];
+      s += '<path class="m-comm" data-a="' + k + '" d="' + c.d + '"/>';
+    });
+    if (opts.boundary) s += '<path class="boundary" pathLength="1" d="' + COMM[opts.boundary].d + '"/>';
+    Object.keys(COMM).forEach(function (k) {
+      var lp = COMM[k].lp;
+      s += '<text class="m-label" data-ax="' + lp[0] + '" data-ay="' + lp[1] + '" text-anchor="' + lp[2] + '" x="' + lp[0] + '" y="' + lp[1] + '">' + k + '</text>';
+    });
+    if (opts.clusters) {
+      var counts = {}; opts.clusters.forEach(function (x) { counts[x.a] = (counts[x.a] || 0) + 1; });
+      Object.keys(counts).forEach(function (a) { var c = COMM[a].c, n = counts[a], r = n === 1 ? 10 : n <= 5 ? 13 : 16;
+        s += '<g class="cl" data-a="' + a + '" data-ax="' + c[0] + '" data-ay="' + c[1] + '"><circle cx="' + c[0] + '" cy="' + c[1] + '" r="' + r + '"/><text x="' + c[0] + '" y="' + c[1] + '">' + n + '</text></g>'; });
+    }
+    if (opts.plots) opts.plots.forEach(function (x) {
+      var tagW = 46;
+      s += '<g class="plot" tabindex="0" role="button" data-id="' + x.id + '" data-ax="' + x.xy[0] + '" data-ay="' + x.xy[1] + '" aria-label="' + esc(x.t + ', AED ' + fmt(x.pr)) + '"><rect x="' + (x.xy[0] - 5) + '" y="' + (x.xy[1] - 5) + '" width="10" height="10"/>' +
+        '<g class="tag"><rect x="' + (x.xy[0] + 9) + '" y="' + (x.xy[1] - 9) + '" width="' + tagW + '" height="18"/><text x="' + (x.xy[0] + 13) + '" y="' + x.xy[1] + '">' + short(x.pr) + '</text></g></g>';
+    });
+    return s + '</svg>';
+  }
+
+  /* ---------- 3. Site select ---------- */
+  var cardsEl = document.getElementById('cards'), siteMap = document.getElementById('site-map');
+  var CARDS = [L[0], L[1], L[4], L[5]];
+  var shortlist = [];
+  function locator(a) {
+    var c = COMM[a].c;
+    return '<span class="loc" aria-hidden="true"><svg viewBox="300 120 300 200"><rect x="300" y="120" width="300" height="200" fill="#D6E3E7"/><path class="ld" d="M300 316 C350 312 372 292 412 284 C450 276 492 266 538 252 C566 244 600 238 600 238 L600 320 L300 320 Z"/><path class="ld" d="M424 178 C430 158 468 142 502 148 C522 152 524 176 512 190 C496 204 456 208 434 200 C424 194 420 186 424 178 Z"/><path class="ld" d="M272 214 C276 200 300 194 322 196 C334 198 336 214 328 224 C316 232 290 234 278 228 Z"/><circle class="dot" cx="' + Math.max(310, Math.min(590, c[0])) + '" cy="' + Math.max(130, Math.min(310, c[1])) + '" r="12"/></svg></span>';
+  }
+  function cardHTML(x) {
+    var rent = x.p === 'rent';
+    var psf = (!rent && x.s) ? 'AED ' + fmt(Math.round(x.pr / x.s)) + ' per sq ft' : (rent ? 'Annual rent, payable per lease terms' : '');
+    return '<article class="card" data-id="' + x.id + '" data-a="' + esc(x.a) + '">' +
+      '<svg class="bd" aria-hidden="true"><rect x="0" y="0" width="100%" height="100%" pathLength="100"/></svg>' +
+      '<div class="frame"><img src="img/' + x.img + '" alt="" width="700" height="525" loading="lazy">' + (x.render ? '<span class="flag">Developer render</span>' : '') + '</div>' +
+      '<div class="db"><div class="row1"><div class="price"><b>' + fmt(x.pr) + '</b><span>AED' + (rent ? ' per year' : '') + '</span></div>' + locator(x.a) + '</div>' +
+      '<h3>' + esc(x.t) + '</h3><div class="place"><span>' + esc(x.a) + '</span><span lang="ar" dir="rtl">' + COMM[x.a].ar + '</span></div>' +
+      '<dl><div><dt>Beds</dt><dd>' + x.b + '</dd></div><div><dt>Baths</dt><dd>' + x.ba + '</dd></div><div><dt>Area</dt>' + (x.s ? '<dd>' + fmt(x.s) + ' sq ft</dd>' : '<dd class="na">Not listed</dd>') + '</div></dl>' +
+      '<div class="ft"><p class="sec" data-sec="' + esc(psf) + '">' + esc(psf) + '</p><button type="button" class="sl" aria-pressed="false" aria-label="Shortlist: ' + esc(x.t) + ', ' + esc(x.a) + '">Shortlist</button></div></div></article>';
+  }
+  cardsEl.innerHTML = CARDS.map(cardHTML).join('');
+  siteMap.innerHTML = mapSVG({ vb: '240 120 360 300', clusters: L, plots: [], label: 'Map context for the listing cards' }) + '<div class="callout" id="co" aria-hidden="true"><img alt=""><div><b></b><span></span></div></div><span class="attr">Schematic</span>';
+  var co = document.getElementById('co');
+  function byId(id) { return L.filter(function (x) { return String(x.id) === String(id); })[0]; }
+  function syncHot(x) {
+    siteMap.querySelectorAll('.m-comm').forEach(function (p) { p.classList.toggle('hot', !!x && p.dataset.a === x.a); });
+    siteMap.querySelectorAll('.cl').forEach(function (g) { g.classList.toggle('hot', !!x && g.dataset.a === x.a); });
+    if (!x) { co.classList.remove('on'); return; }
+    var c = COMM[x.a].c;
+    co.style.left = ((c[0] - 240) / 360 * 100) + '%'; co.style.top = ((c[1] - 120) / 300 * 100) + '%';
+    co.querySelector('img').src = 'img/' + x.img; co.querySelector('b').textContent = fmt(x.pr) + ' AED' + (x.p === 'rent' ? ' / yr' : ''); co.querySelector('span').textContent = x.a;
+    co.classList.add('on');
+  }
+  function renderShort() {
+    siteMap.querySelectorAll('.m-comm').forEach(function (p) { p.classList.toggle('act', shortlist.some(function (x) { return x.a === p.dataset.a; })); });
+    siteMap.querySelectorAll('.cl').forEach(function (g) { g.classList.toggle('act', shortlist.some(function (x) { return x.a === g.dataset.a; })); });
+    var tray = document.getElementById('tray');
+    tray.classList.toggle('on', shortlist.length > 0);
+    document.getElementById('tray-n').textContent = shortlist.length;
+    document.getElementById('tray-l').textContent = shortlist.length === 1 ? 'home on your shortlist' : 'homes on your shortlist';
+    document.getElementById('tray-t').innerHTML = shortlist.map(function (x) { return '<img src="img/' + x.img + '" alt="' + esc(x.t) + '">'; }).join('');
+    cardsEl.querySelectorAll('.card').forEach(function (c) {
+      var on = shortlist.some(function (x) { return String(x.id) === c.dataset.id; });
+      c.classList.toggle('is-short', on); c.querySelector('.sl').setAttribute('aria-pressed', on ? 'true' : 'false');
+      var sec = c.querySelector('.sec'); sec.textContent = on ? 'On your shortlist' : sec.dataset.sec;
+    });
+  }
+  function toggle(c) { var x = byId(c.dataset.id); var i = shortlist.indexOf(x); if (i >= 0) shortlist.splice(i, 1); else shortlist.push(x); renderShort(); }
+  cardsEl.addEventListener('mouseover', function (e) { var c = e.target.closest('.card'); if (c) syncHot(byId(c.dataset.id)); });
+  cardsEl.addEventListener('mouseleave', function () { syncHot(null); });
+  cardsEl.addEventListener('focusin', function (e) { var c = e.target.closest('.card'); if (c) syncHot(byId(c.dataset.id)); });
+  cardsEl.addEventListener('focusout', function () { syncHot(null); });
+  cardsEl.addEventListener('click', function (e) { var b = e.target.closest('.sl'); if (b) toggle(b.closest('.card')); });
+  siteMap.addEventListener('mouseover', function (e) { var g = e.target.closest('.cl,.m-comm'); cardsEl.querySelectorAll('.card').forEach(function (c) { c.classList.toggle('hot', !!g && c.dataset.a === g.dataset.a); }); });
+  siteMap.addEventListener('mouseleave', function () { cardsEl.querySelectorAll('.card.hot').forEach(function (c) { c.classList.remove('hot'); }); });
+  document.getElementById('tray-clear').addEventListener('click', function () { shortlist = []; renderShort(); });
+
+  /* ---------- 4. Map language ---------- */
+  var lang = document.getElementById('lang-map');
+  var VB = { city: '0 80 600 360', community: '392 214 124 84', street: '424 232 68 44' };
+  var rahaPlots = L.filter(function (x) { return x.a === 'Al Raha'; });
+  lang.innerHTML = mapSVG({ vb: VB.city, clusters: L, plots: rahaPlots, label: 'Map language demonstration' }) + '<span class="attr">Schematic geometry</span>';
+  var langSvg = lang.querySelector('svg');
+  function setZoom(z) {
+    lang.dataset.zoom = z;
+    document.querySelectorAll('#zoombar button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.z === z ? 'true' : 'false'); });
+    lang.querySelectorAll('.cl').forEach(function (g) { g.style.display = (z === 'city' || g.dataset.a !== 'Al Raha') ? '' : 'none'; });
+    lang.querySelectorAll('.plot').forEach(function (g) { g.style.display = z === 'city' ? 'none' : ''; });
+    lang.querySelectorAll('.m-comm').forEach(function (p) { p.classList.toggle('act', z !== 'city' && p.dataset.a === 'Al Raha'); });
+    if (hasGsap && !reduce) gsap.to(langSvg, { attr: { viewBox: VB[z] }, duration: 0.9, ease: 'power3.inOut', onUpdate: function () { fitSymbols(langSvg); } });
+    else langSvg.setAttribute('viewBox', VB[z]);
+    fitSymbols(langSvg);
+  }
+  /* Geography zooms; symbols keep their screen size, as on a real map. */
+  function fitSymbols(svg, m) {
+    var k = +svg.getAttribute('viewBox').split(/[\s,]+/)[2] / 600 * (m || 1);
+    svg.querySelectorAll('[data-ax]').forEach(function (el) {
+      var x = el.dataset.ax, y = el.dataset.ay;
+      el.setAttribute('transform', 'translate(' + x + ' ' + y + ') scale(' + k + ') translate(' + -x + ' ' + -y + ')');
+    });
+  }
+  document.getElementById('zoombar').addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) setZoom(b.dataset.z); });
+  lang.addEventListener('click', function (e) {
+    var p = e.target.closest('.plot'); if (p) { lang.querySelectorAll('.plot').forEach(function (g) { g.classList.toggle('act', g === p && !g.classList.contains('act')); }); return; }
+    var c = e.target.closest('.m-comm,.cl'); if (c && c.dataset.a === 'Al Raha') setZoom('community');
+  });
+  lang.addEventListener('keydown', function (e) { var p = e.target.closest('.plot'); if (p && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); p.dispatchEvent(new MouseEvent('click', { bubbles: true })); } });
+  setZoom('city');
+  lang.querySelector('.plot[data-id="31571"]').classList.add('short');
+
+  /* ---------- 5. Room index ---------- */
+  var P = [
+    { f: 'yas-terrace-pergola.jpg', r: 'Terraces', alt: 'Upper terrace with a timber-clad wall, pergola shade and a glass balustrade', hs: [[38, 14, 'Pergola shade'], [10, 44, 'Timber-clad wall'], [88, 64, 'Glass balustrade']] },
+    { f: 'yas-terrace-view.jpg', r: 'Terraces', alt: 'Terrace view across tree-lined streets', hs: [[34, 46, 'Tree-lined streets'], [86, 22, 'Pergola']] },
+    { f: 'yas-terrace-2.jpg', r: 'Terraces', alt: 'Second covered terrace overlooking the garden', hs: [[50, 16, 'Covered terrace']] },
+    { f: 'yas-living.jpg', r: 'Living', alt: 'Living room with large windows onto the garden', hs: [[42, 34, 'Garden-facing glazing']] },
+    { f: 'yas-dining.jpg', r: 'Dining', alt: 'Dining room with floor-to-ceiling glazing', hs: [[14, 46, 'Glazing to the garden'], [56, 72, 'Dining table for eight']] },
+    { f: 'yas-kitchen.jpg', r: 'Kitchen', alt: 'Fitted kitchen with timber lower cabinets', hs: [[58, 40, 'Window over the sink']] },
+    { f: 'yas-bedroom.jpg', r: 'Bedrooms', alt: 'Bedroom with a full-height window', hs: [[12, 40, 'Full-height window']] },
+    { f: 'yas-bedroom-2.jpg', r: 'Bedrooms', alt: 'Bedroom with a seating area', hs: [[70, 64, 'Seating area']] },
+    { f: 'yas-bath.jpg', r: 'Bathrooms', alt: 'Bathroom with a backlit mirror and walk-in shower', hs: [[64, 30, 'Backlit mirror'], [30, 46, 'Walk-in shower']] },
+    { f: 'yas-front.jpg', r: 'Exterior', alt: 'Front of the villa with a garage and street trees', hs: [[60, 40, 'Front elevation'], [70, 76, 'Garage frontage']] },
+    { f: 'yas-stair.jpg', r: 'Stair', alt: 'Open stair with a glass balustrade', hs: [[52, 52, 'Open stair']] }
+  ];
+  var FACT = { Bedrooms: 'bed', Bathrooms: 'bath' };
+  var ROOMS = ['All'].concat(P.map(function (p) { return p.r; }).filter(function (r, i, a) { return a.indexOf(r) === i; }));
+  var pImg = document.getElementById('p-img'), hs = document.getElementById('p-hs'), rail = document.getElementById('rail'), live = document.getElementById('p-live'), roomsEl = document.getElementById('rooms');
+  var curRoom = 'All', curIdx = 0;
+  roomsEl.innerHTML = ROOMS.map(function (r) { var n = r === 'All' ? P.length : P.filter(function (p) { return p.r === r; }).length; return '<button type="button" aria-pressed="' + (r === 'All') + '" data-r="' + r + '">' + r + ' <span class="c">' + n + '</span></button>'; }).join('');
+  rail.innerHTML = P.map(function (p, i) { return '<button type="button" data-i="' + i + '" data-r="' + p.r + '" aria-label="Photo: ' + esc(p.alt) + '"' + (i === 0 ? ' aria-current="true"' : '') + '><img src="img/' + p.f + '" alt="" width="1280" height="960" loading="lazy"></button>'; }).join('');
+  function drawHs(i, animate) {
+    hs.innerHTML = P[i].hs.map(function (h, k) { return '<span class="anc' + (h[0] > 70 ? ' flip' : '') + '" style="inset-inline-start:' + h[0] + '%;top:' + h[1] + '%"><button type="button" aria-label="Detail ' + (k + 1) + ': ' + esc(h[2]) + '">' + (k + 1) + '</button><span class="tip">' + esc(h[2]) + '</span></span>'; }).join('');
+    hs.querySelectorAll('.anc').forEach(function (a) { a.querySelector('button').addEventListener('click', function () { var on = !a.classList.contains('on'); hs.querySelectorAll('.anc').forEach(function (x) { x.classList.remove('on'); }); if (on) a.classList.add('on'); }); });
+    if (animate && hasGsap && !reduce) gsap.from(hs.querySelectorAll('.anc'), { scale: 0.4, opacity: 0, duration: 0.45, stagger: 0.12, ease: 'back.out(2)', delay: 0.15 });
+    live.textContent = (curRoom === 'All' ? 'All rooms' : curRoom) + '. Photo shows: ' + P[i].alt + '. Details: ' + P[i].hs.map(function (h) { return h[2]; }).join('; ') + '.';
+  }
+  function show(i) {
+    curIdx = i;
+    rail.querySelectorAll('button').forEach(function (b) { if (+b.dataset.i === i) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current'); });
+    var swap = function () { pImg.src = 'img/' + P[i].f; pImg.alt = P[i].alt; drawHs(i, true); };
+    if (hasGsap && !reduce) gsap.to(pImg, { opacity: 0, duration: 0.18, onComplete: function () { swap(); pImg.onload = function () { gsap.to(pImg, { opacity: 1, duration: 0.32 }); }; } });
+    else swap();
+  }
+  function pickRoom(r) {
+    curRoom = r;
+    roomsEl.querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.r === r ? 'true' : 'false'); });
+    var state = hasGsap && !reduce ? Flip.getState(rail.querySelectorAll('button')) : null;
+    rail.querySelectorAll('button').forEach(function (b) { b.hidden = !(r === 'All' || b.dataset.r === r); });
+    if (state) Flip.from(state, { duration: 0.4, ease: 'power2.inOut', absolute: true, onEnter: function (els) { return gsap.fromTo(els, { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.3 }); }, onLeave: function (els) { return gsap.to(els, { opacity: 0, scale: 0.9, duration: 0.2 }); } });
+    document.querySelectorAll('#p-facts div').forEach(function (d) { d.classList.toggle('mark', FACT[r] === d.dataset.f); });
+    var first = r === 'All' ? 0 : P.findIndex(function (p) { return p.r === r; });
+    show(first);
+  }
+  roomsEl.addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) pickRoom(b.dataset.r); });
+  rail.addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) show(+b.dataset.i); });
+  drawHs(0, false);
+  function arrive() {
+    if (!hasGsap || reduce) return;
+    var sheet = document.getElementById('p-sheet');
+    var tl = gsap.timeline();
+    tl.fromTo(pImg, { scale: 1.08, opacity: 0.4 }, { scale: 1, opacity: 1, duration: 1.1, ease: 'power3.out' })
+      .fromTo(sheet, { x: 60, opacity: 0 }, { x: 0, opacity: 1, duration: 0.7, ease: 'power3.out' }, 0.25)
+      .fromTo(sheet.querySelectorAll('.pr, .mirror'), { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, stagger: 0.1, ease: 'power2.out' }, 0.7)
+      .fromTo(hs.querySelectorAll('.anc'), { scale: 0.4, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.45, stagger: 0.12, ease: 'back.out(2)' }, 1.0);
+  }
+  document.getElementById('replay').addEventListener('click', function () { pickRoom('All'); setTimeout(arrive, 60); });
+  if ('IntersectionObserver' in window) {
+    var once = new IntersectionObserver(function (es) { es.forEach(function (en) { if (en.isIntersecting) { arrive(); once.disconnect(); } }); }, { threshold: 0.35 });
+    once.observe(document.getElementById('p-frame'));
+  }
+
+  /* ---------- 6. Community story ---------- */
+  var story = document.getElementById('story'), storyIn = document.getElementById('story-in');
+  document.getElementById('story-map').innerHTML = mapSVG({ vb: '330 160 260 200', boundary: 'Al Raha', label: 'Map of Al Raha with its boundary' });
+  fitSymbols(document.querySelector('#story-map svg'), 1.6);
+  var modeNote = document.getElementById('story-mode');
+  if (!hasGsap || reduce) {
+    story.classList.add('static'); modeNote.textContent = reduce ? 'Reduced motion: the story is shown as a static sequence.' : 'Animation libraries did not load: the story is shown as a static sequence.';
+  } else {
+    var lenis = window.Lenis ? new Lenis({ wrapper: story, content: storyIn, lerp: 0.085, smoothWheel: true }) : null;
+    if (lenis) {
+      lenis.on('scroll', ScrollTrigger.update); gsap.ticker.add(function (t) { lenis.raf(t * 1000); }); gsap.ticker.lagSmoothing(0);
+      /* At either end of the story, hand the wheel back to the page instead of trapping it.
+         Capture on the parent runs before Lenis's listener on the wrapper. */
+      story.parentNode.addEventListener('wheel', function (e) {
+        if (!story.contains(e.target)) return;
+        var atEnd = lenis.targetScroll >= lenis.limit - 1, atStart = lenis.targetScroll <= 0;
+        if ((e.deltaY > 0 && atEnd) || (e.deltaY < 0 && atStart)) e.stopPropagation();
+      }, { capture: true, passive: true });
+    }
+    modeNote.textContent = lenis ? 'Smooth scroll (Lenis) is active inside the story panel only.' : 'Native scroll inside the story panel.';
+    var st = function (trigger, tl) { ScrollTrigger.create({ trigger: trigger, scroller: story, start: 'top top', end: 'bottom bottom', scrub: 0.6, animation: tl }); };
+    var c0 = story.querySelector('.ch0');
+    st(c0, gsap.timeline()
+      .to(c0.querySelector('.frame'), { clipPath: 'inset(0% 0% 0% 0%)', ease: 'none', duration: 1 }, 0)
+      .to(c0.querySelector('.frame img'), { scale: 1, ease: 'none', duration: 1 }, 0)
+      .to(c0.querySelector('.shade-plate'), { opacity: 1, duration: 0.4 }, 0.5)
+      .from(c0.querySelectorAll('.title h3 span'), { yPercent: 110, stagger: 0.05, duration: 0.4, ease: 'power3.out' }, 0.45)
+      .from(c0.querySelector('.title .ar-d'), { opacity: 0, y: 30, duration: 0.3 }, 0.7));
+    var c1 = story.querySelector('.ch1');
+    st(c1, gsap.timeline().fromTo(c1.querySelector('.pic img'), { yPercent: -6 }, { yPercent: 6, ease: 'none', duration: 1 }, 0)
+      .from(c1.querySelectorAll('.line > *'), { y: 40, opacity: 0, stagger: 0.08, duration: 0.3 }, 0.05));
+    var c2 = story.querySelector('.ch2');
+    st(c2, gsap.timeline().fromTo(c2.querySelector('.pics .a'), { y: 60 }, { y: -40, ease: 'none', duration: 1 }, 0)
+      .fromTo(c2.querySelector('.pics .b'), { y: 140 }, { y: -20, ease: 'none', duration: 1 }, 0)
+      .from(c2.querySelectorAll('.line > *'), { y: 40, opacity: 0, stagger: 0.08, duration: 0.3 }, 0.05));
+    var c3 = story.querySelector('.ch3');
+    var countEl = document.getElementById('story-count'), cnt = { v: 0 };
+    st(c3, gsap.timeline().to(c3.querySelector('.boundary'), { strokeDashoffset: 0, ease: 'none', duration: 0.6 }, 0)
+      .to(cnt, { v: 3, duration: 0.4, ease: 'none', onUpdate: function () { countEl.textContent = Math.round(cnt.v); } }, 0.3)
+      .from(c3.querySelectorAll('.homes img'), { y: 30, opacity: 0, stagger: 0.08, duration: 0.25 }, 0.55));
+  }
+
+  /* ---------- 7. Levels ---------- */
+  document.getElementById('lv-f-rows').innerHTML = L.filter(function (x) { return x.a === 'Al Raha'; }).map(function (x) { return '<div class="mini"><img src="img/' + x.img + '" alt="" loading="lazy" width="700" height="525"><div><b class="num">' + fmt(x.pr) + '</b><small>' + (x.p === 'rent' ? 'AED per year' : 'AED') + '</small><p>' + esc(x.t) + '</p></div></div>'; }).join('');
+
+  /* nav state */
+  var links = document.querySelectorAll('.bar nav a');
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (es) { es.forEach(function (en) { if (en.isIntersecting) links.forEach(function (l) { l.setAttribute('aria-current', l.getAttribute('href') === '#' + en.target.id ? 'true' : 'false'); }); }); }, { rootMargin: '-45% 0px -50% 0px' });
+    ['type', 'hierarchy', 'card', 'maps', 'property', 'community', 'levels'].forEach(function (id) { io.observe(document.getElementById(id)); });
+  }
+})();
+</script>
