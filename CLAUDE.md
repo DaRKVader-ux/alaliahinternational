@@ -4,6 +4,15 @@ Brand, product and engineering work for Al Aliah International (Abu Dhabi real-e
 
 **Architecture: WORDPRESS-FIRST** (D-004). Custom WordPress theme, CPTs + taxonomies + structured fields, REST/AJAX for interactive search. Framer is for prototyping only. No Supabase. External DBs and search services need written justification.
 
+## Environments (D-014)
+| | URL | Posture |
+|---|---|---|
+| Production | https://alaliahinternational.com/ | **Read-only by default.** No writes without explicit authorisation for that change |
+| Staging | https://alaliah.trigonsolutions.co/ | Primary writable WordPress, accessed via Novamira MCP (`novamira-alaliah-staging`) |
+| Local | `tools/wp-local/setup.sh` | Isolated tests and QA. Does not replace staging |
+
+**Load `alaliah-environments` before any staging or production action, any Novamira or WP-CLI call, or any plugin/theme change.** Staging and production currently share an IP (open-questions E1), so treat staging actions as potentially production-reaching.
+
 ## Read first
 1. `docs/00-master-brief.md`: primary strategic context. Sections marked SUPERSEDED/Amended defer to the decision log.
 2. `docs/decisions.md`: approved decisions, overrides of the brief, the **rule-priority order (D-010)** and **current stage status**.
@@ -24,7 +33,8 @@ Brand, product and engineering work for Al Aliah International (Abu Dhabi real-e
 - **Usability beats spectacle** in search, listings, forms and anything a tenant uses. Native scroll on functional pages (D-011).
 - **RTL-ready by construction:** use logical CSS properties (`margin-inline-start`, not `margin-left`), avoid direction-baked icons and layouts, and keep copy out of images.
 - **Accessibility:** WCAG 2.2 AA, per `alaliah-accessibility`.
-- **No secrets in the repo** (D-013). MCP keys come from env vars.
+- **No secrets in the repo** (D-013). MCP keys come from env vars. Never run 21st `installCommand`s (they embed the key in a URL).
+- **Production is read-only.** Staging is where work happens, and it counts as done only after browser QA on the staging URL (D-019).
 - Every major decision must pass the ten questions in brief §64.
 
 ## Skills
@@ -34,6 +44,7 @@ Project skills live in `.claude/skills/`. **One owner per rule:** if a skill cov
 |---|---|
 | `alaliah-brand-system` | Active |
 | `alaliah-accessibility`, `alaliah-visual-regression` | Active |
+| `alaliah-environments` | Active (environments, Novamira safety, plugin policy, 21st usage) |
 | `alaliah-design-system` | Pending Stage 02 approval |
 | `alaliah-property-search`, `alaliah-property-card`, `alaliah-property-detail`, `alaliah-community-pages`, `alaliah-project-pages`, `alaliah-responsive` | Pending Stage 03 |
 | `alaliah-motion` | Pending Stage 04 (provisional rules: D-011) |
@@ -49,7 +60,7 @@ Vendored third-party skills (frontend-design, design-taste-frontend, ui-ux-pro-m
 ## Tooling
 - Local WordPress (no Docker/MySQL needed): `tools/wp-local/setup.sh <dir> [port]`, then `cd <dir>/wp && php -S localhost:<port>`.
 - Browser QA at all widths, with axe: `cd tools/qa && npm install && node check.mjs <url> <out-dir>`.
-- In cloud sessions, `wordpress.org`, `21st.dev` and `api.github.com` are blocked by egress policy. Use the GitHub git mirrors (as the setup script does).
+- In cloud sessions, `wordpress.org` and `api.github.com` are blocked by egress policy (use the GitHub git mirrors, as the setup script does). The staging and production hosts are also blocked until they are added to the environment's allowed domains (open-questions E4). `21st.dev` is allowed.
 
 ## Writing style for project docs
 Concise and precise, following the brand voice. Avoid filler and superlatives.

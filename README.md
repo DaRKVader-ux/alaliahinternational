@@ -15,4 +15,4 @@ Redesign and redevelopment of the Al Aliah International website as a modern Abu
 | `tools/wp-local/setup.sh` | Throwaway local WordPress on SQLite (PHP + git only) |
 | `tools/qa/check.mjs` | Playwright + axe QA at 1920/1440/1024/768/390/375 |
 
-**Current stage:** 01 Brand complete → capability setup complete → **02 Visual world** next.
+**Current stage:** 01 Brand complete → infrastructure setup in progress (waiting on Novamira + network access) → **02 Visual world** next.

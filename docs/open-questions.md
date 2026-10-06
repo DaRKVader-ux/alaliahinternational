@@ -28,6 +28,8 @@ Resolved in Stage 02 design-system work: brand crimson stays, and a distinct sem
 ## Blocking Stage 03 (IA, search, listings)
 
 ### Q3. Property data source: the largest unknown
+*First pass:* the staging audit (D-016) will show whether listings already exist in WordPress and which plugin or importer creates them. That does not replace asking the client which CRM is the system of record.
+
 Required before the content model, search UX or importer can be designed:
 
 - CRM name, API availability, or XML/JSON/CSV feed format, plus a **sample export**
@@ -80,10 +82,34 @@ Decide after Q3/Q4: taxonomies vs indexed meta vs a custom index table (e.g. a d
 Stage 04 ideas like "fluid gallery transitions" and "structured page transitions" are harder in server-rendered WordPress. SPA-style routers (Barba.js, Swup) intercept navigation and commonly break plugin scripts, analytics page views, forms and the admin bar. The lower-risk route is the **cross-document View Transitions API** as progressive enhancement. **Stage 02 must not assume seamless app-like transitions between pages.**
 
 ### W6. Hosting, environments, ownership
-Managed WordPress host or self-managed? Staging environment? Full-page caching vs uncached search/REST endpoints? Who applies core and plugin security updates after launch, and what is the paid-plugin budget (WPML, ACF Pro, forms, SEO)? **Also unknown: is the current Al Aliah site already WordPress?** It could not be checked from this environment because the host is blocked by egress policy.
+*Partly answered (D-014):* production `alaliahinternational.com`, staging `alaliah.trigonsolutions.co`, WordPress as CMS. Still open: host type (managed vs cPanel/self-managed), full-page caching vs uncached search/REST endpoints, who applies core and plugin security updates after launch, and the paid-plugin budget (WPML, ACF Pro, forms, SEO). Whether production itself runs WordPress today will be confirmed by the staging audit if staging is a clone, or by a read-only check of production once egress allows it.
 
 ### W7. Lead data handling
 Store leads in WordPress, push them to the CRM only, or both? This needs to respect UAE data-protection obligations (PDPL), spam protection, and attribution data for analytics. Decide before the forms are built.
+
+---
+
+## Environment & access risks (raised 2026-10-06)
+
+### E1. Staging and production appear to share a host
+Both hostnames resolve to **216.158.227.108**. If they are on the same server, and especially the same hosting account or system user, then Novamira's file and PHP-execution abilities on staging may technically reach production files or databases. "Production is read-only" would then be a policy only, not a technical boundary. **Need from the host or developer:** are staging and production separate system users with separate databases and DB users? Can Novamira's file access be confined to the staging document root? Until confirmed, `alaliah-environments` treats staging actions as potentially production-reaching.
+
+### E2. Staging hygiene (if staging is a production clone)
+A clone carries real personal data (users, leads, form entries) and live integrations. Risks: test submissions reaching the real CRM, emails sent to real clients or agents, scheduled imports writing to external systems, search engines indexing a duplicate site (SEO damage to production). The first audit checks these (`alaliah-environments` → Staging hygiene). Fixing any of them needs approval.
+
+### E3. Backup verification
+Not verifiable from here. Novamira may not expose backup tooling, and host-level backups (cPanel/JetBackup, managed-host snapshots) are outside WordPress. **Need:** the backup mechanism, retention, and a confirmed restore point for staging before major architectural work (D-016).
+
+### E4. Network access from cloud sessions
+The cloud environment's egress policy currently **denies both `alaliah.trigonsolutions.co` and `alaliahinternational.com`** (HTTP 403 at the proxy). Without them:
+- Novamira cannot be reached, if its MCP endpoint is served from the staging domain (likely)
+- browser QA against staging (D-019) is impossible
+- read-only comparison with production is impossible
+
+**Action (user):** add both domains to the environment's allowed domains.
+
+### E5. Novamira as an attack surface
+An MCP endpoint that can write files and execute PHP on a public host is high-value to attackers. **Need:** strong per-user credentials (not a shared admin password), HTTPS only, ideally an IP or token restriction, disabled when not in use, and never enabled on production without a separate decision.
 
 ---
 

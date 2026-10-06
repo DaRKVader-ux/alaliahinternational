@@ -31,11 +31,13 @@ Everything marked ✅ was **exercised**, not just detected: a tool call returned
 |---|---|---|---|
 | **Figma** | account connector | ✅ responds | `whoami` → Full seat, **Starter** plan. Figma documents very low monthly MCP tool-call limits for Starter plans; check the rate-limits page before relying on it for Stage 02 production work |
 | **GitHub** | account connector | ✅ responds | `get_me` → `DaRKVader-ux` |
-| **shadcn-ui** (`@jpisnice/shadcn-ui-mcp-server@3.0.0`) | project, `.mcp.json` | ⚠ **partial in cloud** | Verified over stdio: 10 tools listed; `get_component(dialog)` returns source. `list_components` / `get_block` fail with 403 because this session blocks `api.github.com`. Expected to work fully locally; set `GITHUB_PERSONAL_ACCESS_TOKEN` to avoid rate limits |
-| **21st MCP** (`https://21st.dev/api/mcp`) | project, `.mcp.json` | ❌ **not working** | Two blockers: (1) `21st.dev` is denied by this environment's network policy (HTTP 403 at the proxy); (2) no API key. Fix: add `21st.dev` to the environment's allowed domains and export `API_KEY_21ST` (free key at 21st.dev/mcp). The legacy `@21st-dev/magic` package was deliberately not used |
+| **shadcn-ui** (`@jpisnice/shadcn-ui-mcp-server@3.0.0`) | project, `.mcp.json` | ⚠ **partial in cloud** | Connected in-session; `get_component(sheet)` verified 2026-10-06. `list_components` / `get_block` need `api.github.com`, which is blocked in cloud sessions; they work locally. Set `GITHUB_PERSONAL_ACCESS_TOKEN` to avoid rate limits |
+| **21st MCP** (`https://21st.dev/api/mcp`) | project, `.mcp.json` (key via `API_KEY_21ST` env) | ✅ **verified 2026-10-06** | `get_usage` → authenticated, **free tier: 2 component retrievals/day, AI generation disabled**, search unmetered. `search("property search filter bar with price range")` → 5 real results. `21st.dev` is now allowed by egress. Key not present in repo or Claude config files. Usage rules: D-018 |
 | Supabase, Vercel | account connectors | available, **deliberately unused** | D-007; Vercel hosting is irrelevant to WordPress |
 | Framer | none | not configured | D-005: prototype-only, no integration needed now |
-| WordPress MCP | none | not configured | Not needed. WP-CLI + REST cover it. Revisit if a remote staging site exists |
+| **Novamira** (`novamira-alaliah-staging`) | not yet configured | ⏳ **pending** | Not installed/connected yet. Its endpoint will be on the staging host, which egress currently **denies** (E4). Naming and safety: D-015 / D-016 |
+| Staging `alaliah.trigonsolutions.co` | n/a | ❌ **blocked by egress** | 403 at proxy. Needed for Novamira and staging browser QA (D-019) |
+| Production `alaliahinternational.com` | n/a | ❌ **blocked by egress** | 403 at proxy. Read-only comparison only (D-014). Same IP as staging (E1) |
 
 Project MCP servers show "pending approval" on first launch. Approve them once per machine.
 
@@ -47,6 +49,7 @@ Project MCP servers show "pending approval" on first launch. Approve them once p
 | `alaliah-brand-system` | ✅ active (Stage 01). Equivalent to the requested `alaliah-brand` |
 | `alaliah-accessibility` | ✅ active (D-009) |
 | `alaliah-visual-regression` | ✅ active (D-009). Backed by `tools/qa/check.mjs` |
+| `alaliah-environments` | ✅ active (D-014 – D-019): environments, Novamira safety, plugin policy, 21st usage |
 | `alaliah-design-system` | pending Stage 02 approval |
 | `alaliah-property-search`, `alaliah-property-card`, `alaliah-property-detail`, `alaliah-community-pages`, `alaliah-project-pages`, `alaliah-responsive` | pending Stage 03 |
 | `alaliah-motion` | pending Stage 04 (provisional rules in D-011) |
@@ -73,7 +76,7 @@ All were discovered by the harness in-session (they appear in the available-skil
 | Three.js, R3F, Spline, Rive, Lottie, Babylon, PixiJS, A-Frame skills | No approved spatial/3D use case (D-011). Add if Stage 02/03 justifies one |
 | Convex skills | D-006 / D-007 |
 | `wpds`, `wp-abilities-*`, `wp-plugin-directory-guidelines`, `blueprint` | wp-admin design system, AI Abilities API, and wordpress.org directory publishing: not this project |
-| 21st `21st-ui` skill | The MCP it depends on is not reachable |
+| 21st `21st-ui` skill | Its guidance targets installing generated components, which D-018 restricts. The MCP tool descriptions are sufficient |
 | Taste variants (`soft`, `brutalist`, `minimalist`, `redesign`, …) | Style presets would compete with the brand-led Stage 02 directions |
 
 ## 4. Frontend libraries
@@ -111,13 +114,17 @@ All were discovered by the harness in-session (they appear in the available-skil
 
 ## 7. Verdict
 
-### READY FOR STAGE 2 (with two stated limitations)
+### Stage 02 (visual direction): READY
+Every capability Stage 02 needs is verified: brand rules, art-direction skills, research data, 21st and shadcn research, browser rendering and screenshots at all QA widths, accessibility scanning, and Figma (within Starter-plan limits).
 
-Every capability **Stage 02 needs** has been verified: brand rules, art-direction skills, research data, a browser that renders and screenshots explorations at all QA widths, accessibility scanning, and Figma access.
+### Infrastructure track: NOT COMPLETE
+| Item | Blocker | Owner |
+|---|---|---|
+| Novamira connection | Not installed/connected; staging host denied by egress (E4) | User / developer |
+| Staging environment audit | Needs Novamira | Claude, once connected (D-016) |
+| Staging browser QA | Staging host denied by egress | User: allow `alaliah.trigonsolutions.co` |
+| Production read-only comparison | Production host denied by egress | User: allow `alaliahinternational.com` |
+| Backup verification | Not visible from here (E3) | User / host |
+| Host isolation | Shared IP with production (E1) | User / host |
 
-The two limitations do not block visual-direction work:
-
-1. **21st MCP is not working** (egress block + missing API key). It is a component-research tool, which belongs to Stage 03. **It must be fixed before Stage 03.**
-2. **shadcn MCP is partial in cloud sessions** (`api.github.com` blocked). `get_component` works; listing and blocks need a local machine or a widened network policy.
-
-Not part of this verdict: Q3/Q4 (CRM feed, inventory) block **Stage 03**, not Stage 02.
+The infrastructure track blocks **Stage 03** (the content model and templates depend on what staging contains), not Stage 02. Q3/Q4 (CRM feed, inventory) also block Stage 03.

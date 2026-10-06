@@ -11,7 +11,7 @@ Format: `D-NNN · date · area` then the decision and its rationale.
 | Stage | Status |
 |---|---|
 | 01 Brand understanding | **Complete** |
-| Capability setup | **Complete.** See [`capabilities.md`](./capabilities.md) |
+| Capability / infrastructure setup | **In progress.** Skills, QA, local WP and 21st are verified. Waiting on Novamira connection, egress allowlist for the Al Aliah hosts, and the staging audit. See [`capabilities.md`](./capabilities.md) |
 | 02 Visual world / aesthetic direction | **Next** |
 | 03 Website experience | Locked until Stage 02 is approved |
 | 04 Motion & interaction | Locked until Stage 03 is approved |
@@ -78,3 +78,30 @@ Third-party skills are vendored at project scope in `.claude/skills/`, pinned to
 
 **D-013 · 2026-10-06 · Security**
 No secrets in the repository. MCP credentials are read from environment variables (`API_KEY_21ST`, `GITHUB_PERSONAL_ACCESS_TOKEN`). WordPress salts, CRM credentials and API keys live in environment config, never in docs, code or frontend bundles.
+
+**D-014 · 2026-10-06 · Environments (source of truth)**
+| Fact | Value |
+|---|---|
+| Production | `https://alaliahinternational.com/`: live site, **read-only by default** |
+| Staging | `https://alaliah.trigonsolutions.co/`: **primary writable WordPress** for the redesign |
+| Primary CMS | WordPress |
+| WordPress access | Novamira MCP, on staging only |
+| 21st MCP | API key provided through the environment. Connection verified 2026-10-06 |
+
+Production writes of any kind (files, DB, plugins, themes, settings, content, migrations, WP-CLI writes) require explicit user authorisation for that specific change. Workflow: repo/local → staging → browser QA → production later. The local SQLite harness is kept for isolated tests and does not replace staging. Operational rules are owned by the `alaliah-environments` skill.
+
+**D-015 · 2026-10-06 · Privileged MCP naming**
+Privileged WordPress MCP connections are named `novamira-alaliah-staging` / `novamira-alaliah-production`. Ambiguous names (`wordpress`, `alaliah`, …) are not allowed. Novamira connects to staging only, unless production access is explicitly authorised later.
+
+**D-016 · 2026-10-06 · Novamira safety**
+Discover abilities before use; read before write; preserve content, users, credentials, media, plugin data, integrations and SEO metadata; no destructive shortcuts. A recoverable staging backup (DB, uploads, themes, plugins, config) must be **verified** before major architectural work, and an unverifiable backup is reported, never assumed. The first Novamira session is a read-only audit that produces `docs/wordpress-environment-report.md`, then stops.
+
+**D-017 · 2026-10-06 · Legacy systems & plugins**
+Nothing legacy (plugin, theme, shortcode, table) is removed until it is shown that no content, data, URL or integration depends on it. Plugins are used for mature infrastructure (SEO, multilingual, forms, caching, security, redirects, image optimisation, backups), never for the product experience (property UI and cards, search UX, design-system components, cinematic interaction, page architecture). Every new plugin needs a written reason. No generic real-estate plugin is installed before the property data source is understood (Q3). Generic commercial themes are not used as the foundation.
+
+**D-018 · 2026-10-06 · 21st usage**
+21st is research and reference only, never the design system. Read tools only by default; account-writing tools only on explicit request. Generated or installed components are never used blindly: fetch with `get_component`, inspect, adapt. **21st `installCommand`s are not run** because they embed the API key in a URL (shell history and logs). Free tier: 2 component retrievals/day; AI generation disabled.
+
+**D-019 · 2026-10-06 · Definition of done for WordPress work**
+A feature is done only after browser QA against the **staging URL** (desktop/tablet/mobile, navigation, console, failed requests, forms, animation and reduced motion, keyboard, accessibility, overflow, layout shift). Passing lint, builds or local WordPress is not enough.
+
