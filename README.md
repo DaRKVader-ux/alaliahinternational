@@ -10,6 +10,7 @@ Redesign and redevelopment of the Al Aliah International website as a modern Abu
 | [`docs/capabilities.md`](docs/capabilities.md) | Verified tooling, skills and MCP status |
 | [`docs/wordpress-environment-report.md`](docs/wordpress-environment-report.md) | Staging WordPress audit (2026-10-06) |
 | [`docs/stage-02-visual-directions.md`](docs/stage-02-visual-directions.md) | Stage 02: three visual directions + recommendation ([specimens](docs/stage-02/visual-directions.html)) |
+| [`docs/stage-02-5-redline.md`](docs/stage-02-5-redline.md) | Stage 02.5: Redline corrected + design-system study ([specimen](docs/stage-02-5/redline.html)) |
 | [`CLAUDE.md`](CLAUDE.md) | Working rules for AI-assisted development |
 
 | Tool | Purpose |
@@ -17,4 +18,4 @@ Redesign and redevelopment of the Al Aliah International website as a modern Abu
 | `tools/wp-local/setup.sh` | Throwaway local WordPress on SQLite (PHP + git only) |
 | `tools/qa/check.mjs` | Playwright + axe QA at 1920/1440/1024/768/390/375 |
 
-**Current stage:** **02 Visual world in progress**: three directions presented, awaiting selection. Major WordPress work is blocked by staging isolation and backups (open-questions E1, E3).
+**Current stage:** **02.5**: Redline selected; corrected direction and design-system study awaiting approval. Major WordPress work is blocked by staging isolation and backups (open-questions E1, E3).

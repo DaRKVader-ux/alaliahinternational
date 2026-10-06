@@ -18,6 +18,8 @@ Stage 02 exploration can start from the known identity (red architectural mark, 
 Until then, every color value in Stage 02 is **approximate and labeled as such**.
 
 ### Q2. Photography reality and budget
+*Measured in Stage 02.5:* the Abu Dhabi listing photos on staging are phone/WhatsApp exports capped at **1,280–1,600 px** wide. They work in cards and galleries and soften as full-bleed heroes. Redline's community and brand moments need originals at **2,400 px or more** (Tier A/B, `stage-02-5-redline.md` §5). The library holds **no Abu Dhabi place or community photography**; the only large place images are Dubai.
+
 §23 rules out relying on developer renders, stock, or Dubai imagery. If commissioned architectural, community and agent photography is not budgeted, a direction built on large photographic moments will fail once real listing photos fill the templates. **Every Stage 02 direction must be shown with average listing photography, not only hero imagery** (brief §64, question 6).
 
 ### Q6. Brand crimson versus error red
@@ -35,7 +37,7 @@ Required before the content model, search UX or importer can be designed:
 - CRM name, API availability, or XML/JSON/CSV feed format, plus a **sample export**
 - whether the CRM also syndicates to Property Finder / Bayut (which system is the record?)
 - persistent listing IDs, statuses, agent IDs, image URLs
-- **coordinate quality:** per-unit lat/lng, or only community/building level? This decides whether list + map is real or decorative.
+- **coordinate quality:** per-unit lat/lng, or only community/building level? This decides whether list + map is real or decorative. *Verified on staging:* 13 of 14 listings store `0,0`, and one Abu Dhabi listing stores lower-Manhattan coordinates (a theme demo default). **No listing has usable coordinates today.**
 - **tag completeness** for sea view, waterfront, balcony, payment plan, handover year. A filter backed by sparse data produces false zero-result states.
 - update frequency (sets the importer schedule and cache strategy)
 
@@ -144,8 +146,8 @@ Production's `robots.txt` is a static file (modified 2024-04-18) listing query-s
 
 ## Business / content questions
 
-### B1. Dubai inventory vs Abu Dhabi positioning
-Current listings are Dubai projects (Binghatti, Bayz, Azizi Venice). An "Areas in Dubai" page is live, and the production homepage mentions Dubai 29× vs Abu Dhabi 8×. The approved positioning is **Abu Dhabi expertise with UAE reach** (brief §24). Before Stage 02 imagery and Stage 03 IA, the client must answer: **is Dubai off-plan a core line of business, or legacy content?** If core, the positioning needs an explicit "UAE reach" layer. If legacy, the content needs replacing.
+### B1. Dubai presentation vs Abu Dhabi positioning
+*Corrected 2026-10-06:* the inventory is **Abu Dhabi-led (11 of 14 listings)**; 3 are Dubai off-plan projects. The *presentation* leans to Dubai: an "Areas in Dubai" page, a Dubai homepage hero image, and 29 vs 8 homepage mentions. The approved positioning is **Abu Dhabi expertise with UAE reach** (brief §24). Before Stage 02 imagery and Stage 03 IA, the client must answer: **is Dubai off-plan a core line of business, or legacy content?** If core, the positioning needs an explicit "UAE reach" layer. If legacy, the content needs replacing.
 
 ### B2. Demo content on the live site
 Theme demo pages are published on production (Zillow Estimate, Stripe, Splash, CRM dashboards) and 17 demo reviews sit in the database. To be removed in the rebuild. Removing them earlier from production is the owner's call (R9).

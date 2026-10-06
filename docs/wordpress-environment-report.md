@@ -156,8 +156,10 @@ Built-in: pages 27 published + 3 drafts; posts: none; attachments 553.
 - Wordfence (cloned config) emailed "Problems found on alaliahinternational.com" and user-lockout alerts on 2026-10-05/06. The alert content was not read.
 - **These are indicators, not proof of compromise.** Investigating them requires production access, which is out of scope. See R2.
 
-### 8.3 Inventory is Dubai-led, not Abu Dhabi-led
-Recent listing titles are Dubai projects (Binghatti Aquarise, Bayz 102, Azizi Venice). A published page is "Areas in Dubai". The production homepage mentions "Dubai" 29 times and "Abu Dhabi" 8 times. This conflicts with the approved positioning ("Abu Dhabi expertise with UAE reach", brief §24) and needs a business decision, not a design one (open-questions B1).
+### 8.3 Dubai is over-represented in presentation, not inventory
+> **Corrected 2026-10-06 (Stage 02.5):** the original text said the inventory was Dubai-led. That was wrong. By city taxonomy, **11 of 14 listings are Abu Dhabi** (Yas Island, Al Raha, Al Reem, Al Khalidiya, Al Reef Downtown, Khalifa City, Madinat Al Riyad) and **3 are Dubai** off-plan projects (Binghatti Aquarise, Bayz 102, Azizi Venice). The three Dubai titles happened to be among the most recent.
+
+The *presentation* still leans to Dubai: a published page is "Areas in Dubai", the homepage hero image is a Dubai photo (`DUBAI.jpg`), and the production homepage mentions "Dubai" 29 times and "Abu Dhabi" 8 times. This conflicts with the approved positioning ("Abu Dhabi expertise with UAE reach", brief §24) and needs a business decision, not a design one (open-questions B1).
 
 Listing copy also uses language the brief removes ("Exclusive Offer", "Invest Now", "10% discount").
 

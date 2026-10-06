@@ -12,7 +12,7 @@ Format: `D-NNN · date · area` then the decision and its rationale.
 |---|---|
 | 01 Brand understanding | **Complete** |
 | Capability / infrastructure setup | **Mostly complete.** Skills, QA, local WP, 21st and Novamira are verified, and the staging audit is done ([`wordpress-environment-report.md`](./wordpress-environment-report.md)). Open: staging isolation (E1), restorable backup (E3), staging hygiene fixes (E2). These block major WordPress work, not Stage 02 |
-| 02 Visual world / aesthetic direction | **In progress.** Three directions presented 2026-10-06 ([`stage-02-visual-directions.md`](./stage-02-visual-directions.md)); awaiting selection. Recommended: Redline with two borrowings |
+| 02 Visual world / aesthetic direction | **Direction selected: Redline** (D-027). Stage 02.5 correction and design-system study presented 2026-10-06 ([`stage-02-5-redline.md`](./stage-02-5-redline.md)); awaiting approval. `alaliah-design-system` is created on approval |
 | 03 Website experience | Locked until Stage 02 is approved |
 | 04 Motion & interaction | Locked until Stage 03 is approved |
 | 05 Implementation | Locked until Stage 04 is approved. No production theme or plugin is built before then; architecture is set by D-021 – D-025 |
@@ -154,4 +154,11 @@ Resolves D-025. The production architecture is:
 - **Elementor and WPResidence** (theme + WpResidence core/Elementor-widget/Studio plugins) may stay installed **temporarily for legacy compatibility only**. The redesigned frontend must not depend on them: no Elementor templates, widgets, CSS or JS, and no WPResidence functions, CPT registrations, meta or shortcodes called by the new theme or plugin. Their removal follows D-024 (deactivate first; delete only after replacement is proven and approved).
 - The custom theme may still use `theme.json`, block patterns and the block editor (editor approach: open-questions W3).
 - **Not built yet.** Implementation starts at Stage 05. Stage 02 visual direction is next.
+
+**D-027 · 2026-10-06 · Visual direction: Redline, corrected to "architectural intelligence"**
+Redline is the selected Stage 02 direction. The Stage 02.5 correction moves it from architectural *documentation* to architectural *intelligence*: composition, image choreography, depth, asymmetry and anchored information replace visible drafting apparatus (no decorative red lines, ticks, coordinates or CAD styling). Two borrowings only, applied under Redline's rules, and no hybrid of the three directions:
+- **From Rubric:** meaningful bilingual English/Arabic treatment of place and section names.
+- **From Hard Light:** photographic drama for community and brand-led moments only.
+
+Crimson stays a controlled signal (selection, focus, navigation, primary action). The system study (principles, composition rules, density modes, photography tiers, tokens with measured contrast, motion vocabulary, component vocabulary) is in `stage-02-5-redline.md` and becomes `alaliah-design-system` once approved.
 
