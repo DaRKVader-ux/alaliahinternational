@@ -139,11 +139,19 @@ WPResidence, its core plugin, Elementor and add-ons, existing content, media and
 - Before deactivating or replacing a component, document: content, shortcode, property-data and metadata dependencies, and the migration path (see `wordpress-environment-report.md` §8.1).
 - Cloned content, images and client data are preserved until the migration strategy is approved. Demo/fake content (e.g. the 17 demo reviews) is identified now and removed deliberately later. Purging copied security/PII data (report R7) remains an owner decision and is not done by default.
 
-**D-025 · 2026-10-06 · Theme foundation & Elementor: decision deferred**
+**D-025 · 2026-10-06 · Theme foundation & Elementor** · *RESOLVED by D-026 (Option C)*
 WPResidence is **not** assumed to be the frontend foundation. The choice is made after Stages 02 and 03 are approved, between:
 - **A.** Hello Elementor + Trigon child theme
 - **B.** Twenty Twenty-Five + Trigon child theme
 - **C.** Fully custom Trigon theme
 
 Criteria, in order: lowest unnecessary frontend overhead, strongest design control, performance, maintainability, clean animation integration, minimal vendor dependency. Familiarity is not a criterion. The new site must not depend on Elementor unless explicitly approved. If Elementor is kept for legacy or editorial convenience, templates and styling stay under the Trigon design system.
+
+**D-026 · 2026-10-06 · Option C approved: fully custom theme + core plugin**
+Resolves D-025. The production architecture is:
+- **`alaliah-trigon`**: a fully custom WordPress theme (not a child theme), `Author: Trigon Solutions`, which owns presentation.
+- **`trigon-alaliah-core`**: a custom core plugin, `Author: Trigon Solutions`, which owns data and logic (per D-022).
+- **Elementor and WPResidence** (theme + WpResidence core/Elementor-widget/Studio plugins) may stay installed **temporarily for legacy compatibility only**. The redesigned frontend must not depend on them: no Elementor templates, widgets, CSS or JS, and no WPResidence functions, CPT registrations, meta or shortcodes called by the new theme or plugin. Their removal follows D-024 (deactivate first; delete only after replacement is proven and approved).
+- The custom theme may still use `theme.json`, block patterns and the block editor (editor approach: open-questions W3).
+- **Not built yet.** Implementation starts at Stage 05. Stage 02 visual direction is next.
 

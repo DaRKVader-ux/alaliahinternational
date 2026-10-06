@@ -75,7 +75,9 @@ This choice decides whether `motion-framer`, `gsap-react`, `vercel-react-best-pr
 Options: WPML (commercial), Polylang, or WordPress multisite per language. The choice affects URL structure (`/ar/…`), `hreflang`, translated CPT and taxonomy slugs, importer behavior (does the feed carry Arabic fields?) and editor workflow. **Decide before Stage 03 IA is finalised**, even if Arabic launches later.
 
 ### W3. Theme and editor approach
-*Framing updated by D-022/D-025:* the theme foundation is one of **A** Hello Elementor + Trigon child, **B** Twenty Twenty-Five + Trigon child, **C** fully custom Trigon theme, decided after Stages 02–03. *Preliminary assessment, not a decision:* against the D-025 criteria, **C** scores highest. A keeps the Elementor ecosystem in the critical path. B inherits a core block theme whose templates and styles would be almost entirely overridden, while still exposing the site to changes when the parent updates. A custom theme can still use `theme.json`, block patterns and the block editor, so C does not mean giving up Gutenberg. The editor options below still apply within whichever foundation is chosen.
+*Foundation resolved by D-026: Option C (fully custom theme).* Still open: the **editor approach** inside it (block theme with custom blocks/patterns vs hybrid with a locked editor), decided in Stage 03.
+
+*Earlier framing (D-022/D-025):* the theme foundation is one of **A** Hello Elementor + Trigon child, **B** Twenty Twenty-Five + Trigon child, **C** fully custom Trigon theme, decided after Stages 02–03. *Preliminary assessment, not a decision:* against the D-025 criteria, **C** scores highest. A keeps the Elementor ecosystem in the critical path. B inherits a core block theme whose templates and styles would be almost entirely overridden, while still exposing the site to changes when the parent updates. A custom theme can still use `theme.json`, block patterns and the block editor, so C does not mean giving up Gutenberg. The editor options below still apply within whichever foundation is chosen.
 
 - **A.** Block theme + custom blocks/patterns
 - **B.** Classic/hybrid theme + ACF Blocks (ACF Pro is a paid licence)
@@ -91,6 +93,11 @@ Stage 04 ideas like "fluid gallery transitions" and "structured page transitions
 
 ### W6. Hosting, environments, ownership
 *Answered by audit ([`wordpress-environment-report.md`](./wordpress-environment-report.md)):* production runs WordPress (WPResidence child theme + Elementor). Both sites are on **one shared LiteSpeed host (DirectAdmin layout) in the same hosting account**, with host page cache (`advanced-cache.php`) and Imunify. MariaDB 10.11, PHP 8.2. Still open: whether to stay on shared hosting for the new build (performance for uncached search/REST endpoints), who applies security updates after launch (production shows spam indicators, P2), and the paid-plugin budget.
+
+### W9. Legacy data and URL migration under Option C (raised by D-026)
+Two consequences to plan in Stage 03, before any code:
+1. **Post-type ownership.** Property, agent and developer data lives in WPResidence's `estate_*` post types and `wpestate` meta, registered by the WpResidence core plugin. `trigon-alaliah-core` must either (a) register its own post types and **migrate** the data, or (b) take over the existing `estate_*` names to keep data and URLs in place. Option (b) collides with the WpResidence core plugin while it is still active. Either way, current URLs (`/properties/…`, `/agents/…`, `/estate_developer/…`) need a redirect or preservation plan, even though production is currently `noindex` (P1).
+2. **Legacy pages won't survive a theme switch as-is.** The 14 Elementor-built pages use WpResidence Elementor widgets, Studio templates and theme page templates that rely on the WPResidence theme being active. Switching the active theme to `alaliah-trigon` will break or blank them. Plan: rebuild pages in the new system, and keep them reachable only on staging while the legacy stack is still active.
 
 ### W8. Code licence and handover
 WordPress themes and plugins that use WordPress APIs are generally distributed under **GPL-2.0-or-later**. Record the licence in the `trigon-alaliah-core` and `alaliah-trigon` headers, and agree with the client what "Trigon Solutions" authorship means for ownership, handover, repository access and support after launch. This is a contract question, not a code one. Decide before the first release.

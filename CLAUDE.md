@@ -18,7 +18,7 @@ Brand, product and engineering work for Al Aliah International (Abu Dhabi real-e
 - **Two layers, branded Trigon Solutions:** theme `alaliah-trigon` (presentation) + plugin `trigon-alaliah-core` (CPTs, taxonomies, fields, REST, search, integrations). Data-bearing code never lives only in the theme.
 - **Git is canonical.** Git → ZIP → staging (upload link + WP-CLI install) → browser QA → release. No code changes made only in WordPress.
 - **Legacy stack (WPResidence, Elementor, content, media):** deactivate on staging if needed, never delete without approval, preserve cloned data until migration is approved.
-- **Theme foundation (A/B/C) and Elementor's role are decided after Stages 02–03.** Nothing is built before Stage 05.
+- **Theme foundation: Option C approved (D-026).** Fully custom theme `alaliah-trigon` + plugin `trigon-alaliah-core`. Elementor and WPResidence may stay installed temporarily for legacy content only; the new frontend never depends on them. Nothing is built before Stage 05.
 
 ## Read first
 1. `docs/00-master-brief.md`: primary strategic context. Sections marked SUPERSEDED/Amended defer to the decision log.
