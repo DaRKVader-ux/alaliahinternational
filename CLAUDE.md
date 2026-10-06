@@ -11,7 +11,14 @@ Brand, product and engineering work for Al Aliah International (Abu Dhabi real-e
 | Staging | https://alaliah.trigonsolutions.co/ | Primary writable WordPress, accessed via Novamira MCP (`novamira-alaliah-trigonso`) |
 | Local | `tools/wp-local/setup.sh` | Isolated tests and QA. Does not replace staging |
 
-**Load `alaliah-environments` before any staging or production action, any Novamira or WP-CLI call, or any plugin/theme change.** Staging and production currently share an IP (open-questions E1), so treat staging actions as potentially production-reaching.
+**Load `alaliah-environments` before any staging or production action, any Novamira or WP-CLI call, or any plugin/theme change.** Staging and production share a hosting account (open-questions E1): every write stays inside the staging WordPress directory, and account- or server-level config is never touched.
+
+## Code ownership & Novamira independence (D-021 – D-025)
+- **Novamira is an access tool, not part of the product.** The site must work with Novamira deactivated or deleted. Never put project code in `wp-content/novamira-sandbox/`, and never use Novamira's design library or skills.
+- **Two layers, branded Trigon Solutions:** theme `alaliah-trigon` (presentation) + plugin `trigon-alaliah-core` (CPTs, taxonomies, fields, REST, search, integrations). Data-bearing code never lives only in the theme.
+- **Git is canonical.** Git → ZIP → staging (upload link + WP-CLI install) → browser QA → release. No code changes made only in WordPress.
+- **Legacy stack (WPResidence, Elementor, content, media):** deactivate on staging if needed, never delete without approval, preserve cloned data until migration is approved.
+- **Theme foundation (A/B/C) and Elementor's role are decided after Stages 02–03.** Nothing is built before Stage 05.
 
 ## Read first
 1. `docs/00-master-brief.md`: primary strategic context. Sections marked SUPERSEDED/Amended defer to the decision log.

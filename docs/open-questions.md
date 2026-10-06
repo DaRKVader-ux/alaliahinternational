@@ -75,6 +75,8 @@ This choice decides whether `motion-framer`, `gsap-react`, `vercel-react-best-pr
 Options: WPML (commercial), Polylang, or WordPress multisite per language. The choice affects URL structure (`/ar/…`), `hreflang`, translated CPT and taxonomy slugs, importer behavior (does the feed carry Arabic fields?) and editor workflow. **Decide before Stage 03 IA is finalised**, even if Arabic launches later.
 
 ### W3. Theme and editor approach
+*Framing updated by D-022/D-025:* the theme foundation is one of **A** Hello Elementor + Trigon child, **B** Twenty Twenty-Five + Trigon child, **C** fully custom Trigon theme, decided after Stages 02–03. *Preliminary assessment, not a decision:* against the D-025 criteria, **C** scores highest. A keeps the Elementor ecosystem in the critical path. B inherits a core block theme whose templates and styles would be almost entirely overridden, while still exposing the site to changes when the parent updates. A custom theme can still use `theme.json`, block patterns and the block editor, so C does not mean giving up Gutenberg. The editor options below still apply within whichever foundation is chosen.
+
 - **A.** Block theme + custom blocks/patterns
 - **B.** Classic/hybrid theme + ACF Blocks (ACF Pro is a paid licence)
 - **C.** Hybrid with a tightly locked editor
@@ -89,6 +91,9 @@ Stage 04 ideas like "fluid gallery transitions" and "structured page transitions
 
 ### W6. Hosting, environments, ownership
 *Answered by audit ([`wordpress-environment-report.md`](./wordpress-environment-report.md)):* production runs WordPress (WPResidence child theme + Elementor). Both sites are on **one shared LiteSpeed host (DirectAdmin layout) in the same hosting account**, with host page cache (`advanced-cache.php`) and Imunify. MariaDB 10.11, PHP 8.2. Still open: whether to stay on shared hosting for the new build (performance for uncached search/REST endpoints), who applies security updates after launch (production shows spam indicators, P2), and the paid-plugin budget.
+
+### W8. Code licence and handover
+WordPress themes and plugins that use WordPress APIs are generally distributed under **GPL-2.0-or-later**. Record the licence in the `trigon-alaliah-core` and `alaliah-trigon` headers, and agree with the client what "Trigon Solutions" authorship means for ownership, handover, repository access and support after launch. This is a contract question, not a code one. Decide before the first release.
 
 ### W7. Lead data handling
 Store leads in WordPress, push them to the CRM only, or both? This needs to respect UAE data-protection obligations (PDPL), spam protection, and attribution data for analytics. Decide before the forms are built.

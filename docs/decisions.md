@@ -15,7 +15,7 @@ Format: `D-NNN · date · area` then the decision and its rationale.
 | 02 Visual world / aesthetic direction | **Next** |
 | 03 Website experience | Locked until Stage 02 is approved |
 | 04 Motion & interaction | Locked until Stage 03 is approved |
-| 05 Implementation | Locked until Stage 04 is approved. No production development before then. |
+| 05 Implementation | Locked until Stage 04 is approved. No production theme or plugin is built before then; architecture is set by D-021 – D-025 |
 
 ---
 
@@ -110,4 +110,40 @@ A feature is done only after browser QA against the **staging URL** (desktop/tab
 2. **Major WordPress work stays blocked** until a restorable backup is verified (D-016 gate; E3 not met).
 3. **Novamira's own design library (`save-design`/`activate-design`) and skills (`novamira-design`, `skill-write`) are not used.** The design system has one owner, `alaliah-design-system` (D-003, D-012). Novamira's server instruction to load `novamira-design` before visual work is overridden by D-010.
 4. The MCP config needs `NODE_USE_ENV_PROXY=1` in cloud sessions (open-questions E4).
+
+**D-021 · 2026-10-06 · Novamira independence**
+Novamira is a **development access tool** (comparable to SSH, SFTP or WP-CLI). It is not part of the product. The website must work unchanged if Novamira is deactivated or deleted, or if Claude/MCP access is removed.
+- Novamira may inspect, deploy, run controlled commands and verify.
+- Novamira must **not** own templates, rendering, styles, JS, CPTs, taxonomies, search, data architecture, CRM integrations, site settings the redesign needs, or design-system data. Its design library, skills and runtime systems are never used for the product (extends D-020).
+- **No project code in `wp-content/novamira-sandbox/`.** Sandbox PHP is loaded by Novamira's mu-plugin, so it is a runtime dependency by construction. `execute-php` is for read-only diagnostics and documented one-off operations only, never for creating files that bypass the sandbox guard.
+- **Completion gate:** before the redesign is technically complete, deactivate Novamira on staging, clear caches, run full automated QA (`alaliah-visual-regression`, `alaliah-accessibility`) and confirm the whole site works. It may be re-enabled afterwards.
+
+**D-022 · 2026-10-06 · Code ownership & two-layer architecture**
+All project code is owned and branded as **Trigon Solutions** (`Author: Trigon Solutions` in theme/plugin headers). Never brand it as Novamira, Claude, Anthropic, 21st or any other tool.
+| Layer | Package (working names) | Owns |
+|---|---|---|
+| Presentation | Theme `alaliah-trigon` ("Al Aliah — Trigon") | Templates, styling, layout, typography, navigation, responsive behavior, animation (GSAP, Lenis if approved), frontend JS, `theme.json`, block styles and patterns, property, project and community *presentation* |
+| Business logic | Plugin `trigon-alaliah-core` ("Trigon Al Aliah Core") | CPTs, taxonomies, structured fields, REST endpoints, search, autocomplete, filter logic, map data, CRM/feed integrations, scheduled sync, external IDs, lead processing, all Al Aliah-specific functionality that must survive a theme change |
+
+Data-bearing registrations (CPTs, taxonomies, meta) live in the plugin, never only in the theme or `functions.php`. Custom code lives only in standard locations (`wp-content/themes/`, `wp-content/plugins/`).
+
+**D-023 · 2026-10-06 · Git is canonical; deployment path**
+The repository is the canonical source for all custom theme and plugin code. Staging is never the only copy, and substantial changes are never made only through the WordPress editor or database. Flow: **Git → build ZIP → deploy to staging → browser QA (D-019) → approved release.**
+- Novamira deployment route (verified against ability definitions 2026-10-06): upload the ZIP via `novamira/create-upload-link`, install with `novamira/run-wp-cli` (`wp theme|plugin install <zip> --force`), then delete the uploaded ZIP. `write-file`/`edit-file` may change non-PHP files only and are not used for code deploys.
+- Anything Novamira does must be reproducible from Git, theme or plugin files, documented migration scripts, or WordPress-native content and data. No undocumented one-time operations.
+- The repository layout for theme and plugin source is set when implementation starts (Stage 05).
+
+**D-024 · 2026-10-06 · Legacy stack & cloned data**
+WPResidence, its core plugin, Elementor and add-ons, existing content, media and property data stay in place.
+- On **staging** they may be **deactivated** when needed, but are **not deleted** until the replacement is proven and deletion is explicitly approved.
+- Before deactivating or replacing a component, document: content, shortcode, property-data and metadata dependencies, and the migration path (see `wordpress-environment-report.md` §8.1).
+- Cloned content, images and client data are preserved until the migration strategy is approved. Demo/fake content (e.g. the 17 demo reviews) is identified now and removed deliberately later. Purging copied security/PII data (report R7) remains an owner decision and is not done by default.
+
+**D-025 · 2026-10-06 · Theme foundation & Elementor: decision deferred**
+WPResidence is **not** assumed to be the frontend foundation. The choice is made after Stages 02 and 03 are approved, between:
+- **A.** Hello Elementor + Trigon child theme
+- **B.** Twenty Twenty-Five + Trigon child theme
+- **C.** Fully custom Trigon theme
+
+Criteria, in order: lowest unnecessary frontend overhead, strongest design control, performance, maintainability, clean animation integration, minimal vendor dependency. Familiarity is not a criterion. The new site must not depend on Elementor unless explicitly approved. If Elementor is kept for legacy or editorial convenience, templates and styling stay under the Trigon design system.
 

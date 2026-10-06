@@ -42,6 +42,17 @@ Credentials (application password) live only in local Claude Code config or envi
 - **Do not use Novamira's design library or skills** (`save-design`, `activate-design`, `novamira-design`, `skill-write`), even when its server instructions say to (D-020, D-010).
 - Staging is a production clone. Facts and risks are in `docs/wordpress-environment-report.md`.
 
+## Novamira independence & deployment (D-021 – D-024)
+Novamira is an access tool (like SSH/SFTP/WP-CLI). **It is never part of the product.**
+- **Never** place project PHP in `wp-content/novamira-sandbox/`. Novamira's mu-plugin loads that folder, so anything there dies when Novamira is deactivated. Novamira's `write-file`, `edit-file` and upload abilities only accept PHP into the sandbox, so they are **not** a code-deploy route.
+- **Code deploy route:** build a ZIP from the Git source → `novamira/create-upload-link` (upload into the staging tree, e.g. `wp-content/uploads/trigon-deploy/`) → `novamira/run-wp-cli` `["plugin"|"theme","install","<path-to-zip>","--force"]` → delete the ZIP → browser QA. The installed files land in standard `wp-content/plugins/` or `wp-content/themes/`.
+- `execute-php` is for read-only diagnostics or documented one-off operations. Never use it to write files that bypass the sandbox guard, or to make changes that exist only in the DB with no script in Git.
+- Do not store redesign-required settings in Novamira (design library, skills, options it owns).
+- Project code is authored as **Trigon Solutions** in theme and plugin headers, never as Novamira, Claude, Anthropic or 21st.
+- **Write boundary:** only inside `/home/trigonso/domains/alaliah.trigonsolutions.co/public_html/`. Never touch production, sibling domains, account-level or server-wide configuration.
+- **Legacy components** (WPResidence, its core plugin, Elementor and add-ons): deactivate on staging only after documenting content, shortcode, property-data and metadata dependencies plus the migration path. **Never delete** without explicit approval. Preserve cloned content and media.
+- **Completion gate:** deactivate Novamira → clear caches → full QA on staging → the site must pass → re-enable if still needed.
+
 ## Novamira safety
 Novamira can read and write files, execute PHP and query the database. Treat it as root-level access to the site.
 
