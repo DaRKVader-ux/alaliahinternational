@@ -47,6 +47,15 @@ final class Schema {
 		return in_array( $type, self::post_types(), true );
 	}
 
+	/** Every taxonomy this plugin registers. Nothing else may be written by the migration. */
+	public static function taxonomies(): array {
+		return array( self::TAX_LOCATION, self::TAX_PURPOSE, self::TAX_COMPLETION, self::TAX_STATUS, self::TAX_CATEGORY, self::TAX_TYPE, self::TAX_AMENITY, self::TAX_REL_DEV, self::TAX_REL_PROJ );
+	}
+
+	public static function is_own_taxonomy( string $taxonomy ): bool {
+		return in_array( $taxonomy, self::taxonomies(), true );
+	}
+
 	public static function permit_systems(): array {
 		/** Allows other regulatory systems to be added without new fields. */
 		return (array) apply_filters( 'trigon_alaliah_permit_systems', self::PERMIT_SYSTEMS );

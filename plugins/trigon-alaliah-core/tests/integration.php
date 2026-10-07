@@ -176,6 +176,23 @@ $code_only = static function ( string $file ): string {
 };
 ok( false === strpos( $code_only( dirname( __DIR__ ) . '/src/Domain/Relations.php' ), 'aa_property_agency' ), 'Relations code never reads aa_property_agency (agency is not developer)' );
 
+$registered_own = array_values( array_filter( get_taxonomies(), static fn( $t ) => 0 === strpos( $t, 'alaliah_' ) ) );
+sort( $registered_own );
+$listed_own = Schema::taxonomies();
+sort( $listed_own );
+eq( $listed_own, $registered_own, 'Schema::taxonomies() lists exactly the registered alaliah_ taxonomies' );
+$refused = false;
+try {
+	$m = new ReflectionMethod( \Trigon\AlaliahCore\Migration\Executor::class, 'own_taxonomy' );
+	$m->setAccessible( true );
+	$m->invoke( new \Trigon\AlaliahCore\Migration\Executor( 'test', false ), 'property_area' );
+} catch ( \RuntimeException $e ) {
+	$refused = true;
+}
+ok( $refused, 'executor refuses a legacy taxonomy before any write (primary protection)' );
+$executor_src = $code_only( dirname( __DIR__ ) . '/src/Migration/Executor.php' );
+ok( ! preg_match( '/\b(property_|estate_)/', $executor_src ), 'executor code names no legacy post type or taxonomy' );
+
 // ------------------------------------------------------------------ 2. setup
 
 t_section( '2. Setup (idempotent)' );

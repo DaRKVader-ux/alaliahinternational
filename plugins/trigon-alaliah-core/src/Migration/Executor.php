@@ -270,6 +270,7 @@ final class Executor {
 			}
 		}
 		foreach ( $item['terms'] as $tax => $slugs ) {
+			$this->own_taxonomy( $tax );
 			$ids = array();
 			foreach ( $slugs as $slug ) {
 				$t = get_term_by( 'slug', $slug, $tax );
@@ -311,6 +312,16 @@ final class Executor {
 		Relations::sync( $id );
 		Quality::store( $id );
 		update_post_meta( $id, 'aa_migration_hash', $this->snapshot( $id, $item ) );
+	}
+
+	/**
+	 * Primary protection: the migration never calls a mutation path on a legacy taxonomy.
+	 * (The write guard and the legacy fingerprint are backstops.)
+	 */
+	private function own_taxonomy( string $taxonomy ): void {
+		if ( ! Schema::is_own_taxonomy( $taxonomy ) ) {
+			throw new \RuntimeException( "Refused: {$taxonomy} is not a Trigon taxonomy." );
+		}
 	}
 
 	/** Audit without private contact values. */

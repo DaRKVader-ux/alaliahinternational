@@ -10,9 +10,13 @@ defined( 'ABSPATH' ) || exit;
  * taxonomy or aa_* meta on our own posts throws and aborts the run. Attachments are
  * read-only: their posts, meta and parents are never touched.
  *
+ * Order of protection: (1) the migration code never intentionally calls a mutation path
+ * on legacy posts, meta, taxonomies or attachments (Executor checks every taxonomy);
+ * (2) this guard; (3) the legacy fingerprint, the final integrity alarm.
+ *
  * Limit: WordPress has no pre-hook for term assignment, so a stray wp_set_object_terms()
- * is detected after it is written. The run still aborts, and the legacy fingerprint
- * comparison reports the change.
+ * (e.g. from third-party code reacting to our saves) is detected after it is written.
+ * The run still aborts, and the fingerprint comparison reports the change.
  */
 final class WriteGuard {
 

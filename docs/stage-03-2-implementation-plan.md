@@ -379,6 +379,11 @@ T1 and T2 prove Developer → Project → Area. P1 proves the property model. **
 
 **Pass condition:** the before and after fingerprints are identical. The check runs at preflight and after every execute, and its result goes into the report.
 
+**Order of protection.** The fingerprint is the final integrity alarm, not the primary protection:
+1. **By construction:** the migration code only calls write APIs with `alaliah_*` post types, `alaliah_*` taxonomies and `aa_*` meta. It never intentionally invokes a mutation path (insert, update, delete, term assignment) against legacy posts, meta, taxonomies or attachments. The executor checks each taxonomy against the plugin's own list before assigning terms.
+2. **Write guard:** while executing, hooks refuse writes outside that allow-list before they happen. **Known limit:** WordPress has no pre-hook for `wp_set_object_terms()`, so a stray term assignment from third-party code reacting to our saves is detected only after it is written; the run then aborts.
+3. **Fingerprint:** compares legacy data before and after every run and fails the run on any difference.
+
 ## 10. Testing before staging
 
 1. **Local WordPress** (`tools/wp-local/setup.sh`, SQLite):
@@ -401,28 +406,39 @@ T1 and T2 prove Developer → Project → Area. P1 proves the property model. **
 
 ## 11. Staging sequence (each step stops if it fails)
 
-| Step | Action | Who | Stop point |
-|---|---|---|---|
-| 1 | **Backup gate:** a fresh, restorable staging backup (§12) | Client/host plus us | Yes, if it can't be verified |
-| 2 | Build the ZIP from Git; upload via Novamira `create-upload-link`; `run-wp-cli plugin install --activate`; delete the ZIP | Us | |
-| 3 | `wp alaliah setup` (fixed terms, reference range reserved) | Us | |
-| 4 | `wp alaliah migrate verify-legacy` (baseline) | Us | |
-| 5 | `wp alaliah migrate plan --set=full` | Us | **Yes: review the report with the client**, including the amenity term map |
-| 6 | `wp alaliah migrate run --execute --set=t1t2`, then `--set=p1` | Us, after approval | |
-| 7 | QA: admin editors, relationship inspector, REST payloads, draft-preview URLs (`/developers/danube-properties/`, `/projects/bayz-102/`), shadow terms, derived counts, `verify-legacy` unchanged, the WPResidence site unchanged | Us | **Yes: stop before broad migration** |
-| 8 | (Later approval) `run --execute --set=full`, editorial review, theme, redirects, cutover | | |
+Approved 2026-10-07 (D-036). Production is not an execution environment in this phase.
 
-**Rollback at any point:** deactivate `trigon-alaliah-core`. New records become inert; legacy data was never changed. If removal is ever wanted, it is a separate approved step that deletes only records carrying `aa_legacy_post_id`.
+| Step | Action | Stop point |
+|---|---|---|
+| 1 | Confirm the host is the staging domain and database | |
+| 2 | Verify the fresh Backuply backup (§12) exists and is available for restore | Stop if it can't be verified |
+| 3 | Take the read-only legacy fingerprint baseline on staging | |
+| 4 | Report readiness | **Stop before uploading anything** |
+| 5 | Build the plugin ZIP from Git | |
+| 6 | Deploy through Git → ZIP → Novamira `create-upload-link` → `run-wp-cli plugin install`; delete the ZIP | |
+| 7 | Activate `trigon-alaliah-core` | |
+| 8 | `wp alaliah setup` | |
+| 9 | `wp alaliah migrate plan --set=full` (dry run only) | |
+| 10 | Verify the legacy fingerprint is unchanged | |
+| 11 | Report the complete dry run: developers, projects, properties, location corrections, references, relationship links, flags, amenity proposals, redirect plan | **Stop for approval** |
+| 12 | `migrate run --execute --set=t1t2`, then `--set=p1` | |
+| 13 | QA: admin editors, REST output, property URLs, developer/project relationships, location hierarchy, floor plans, Data Quality screen, shadow-taxonomy sync, legacy fingerprint, the WPResidence site unchanged | **Stop before broad migration** |
+| 14 | (Later approval) `run --execute --set=full`, editorial review, theme, redirects, cutover | |
+
+**Rollback.**
+- **Functional rollback:** deactivate `trigon-alaliah-core`. The new types, fields and URLs stop working. The rows it created (`alaliah_*` posts and terms, `aa_*` meta, its options) **stay in the database**. Legacy data was never changed.
+- **Database rollback:** restore the staging Backuply backup, or run a separately approved cleanup that targets only migration-created `alaliah_*` records. No cleanup tool exists or will be built without that approval.
 
 ## 12. Backup gate (E3)
 
-The migration writes only new database rows, but the gate still requires a **restorable** backup taken immediately before step 2. Options, in order of preference:
+The migration writes only new database rows, but a restorable backup is still required before the first staging write.
 
-1. **Host or DirectAdmin snapshot** of the staging database and files, plus confirmation that the host can restore it. The client or host performs this; it is account-level and outside our boundary.
-2. **Backuply Pro** (installed on staging) full backup, triggered from wp-admin. Restorability is shown by the backup's integrity check and a listed archive; a test restore to a separate site would be stronger, but needs a host-provided target.
-3. **Supplementary staging-only database export** (`wp db export` to a non-public path inside the staging docroot), downloaded to our side, with table and row counts checked against the live tables.
+**Accepted gate (D-036):** a fresh full **Backuply** backup of staging, verified from staging to have:
+- completed successfully;
+- been listed in Backuply as available for restore;
+- included the staging database and files.
 
-Option 3 alone does not prove restorability. **Recommendation:** 1 or 2, plus 3.
+Rules: do not restore it; do not create another staging clone; never write a database dump inside a web-accessible directory. An off-server export is preferable but not required when the Backuply backup is complete and restorable. A host snapshot remains the stronger option if the host offers one.
 
 ## 13. Risks
 | Risk | Mitigation |
@@ -436,8 +452,8 @@ Option 3 alone does not prove restorability. **Recommendation:** 1 or 2, plus 3.
 
 ## 14. Deliverables and stop points
 1. Plugin code in Git (data layer, admin, validation, CLI), with local tests passing.
-2. **Stop:** backup gate confirmed.
-3. Deploy plus setup plus baseline.
+2. **Stop:** backup gate verified and baseline taken; readiness reported.
+3. Deploy, activate, setup, full dry run, fingerprint check.
 4. **Stop:** full dry-run report reviewed.
-5. Execute T1 and T2, then QA.
+5. Execute T1/T2 and P1, then QA.
 6. **Stop:** approval before broad migration.

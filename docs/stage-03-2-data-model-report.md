@@ -641,7 +641,7 @@ P1 is **separate from T1 and T2**. It tests the property model, not developer re
 - **Additive:** only creates `alaliah_*` posts, terms and `aa_*` meta. It never updates, deletes or reassigns WPResidence posts, meta, terms or attachments.
 - **Idempotent and repeatable:** keyed on `aa_legacy_post_id` and `aa_legacy_term_id`. A rerun updates migrated fields only if the new record has not been edited since migration (tracked by a stored hash); edited records are skipped and reported.
 - **References** are assigned once and never changed by reruns.
-- **Coexistence:** the new types have different names and URLs, so both systems run side by side on staging until cutover. Rollback = deactivate `trigon-alaliah-core`.
+- **Coexistence:** the new types have different names and URLs, so both systems run side by side on staging until cutover. Functional rollback = deactivate `trigon-alaliah-core` (the new structures go inactive, but the rows it created stay in the database). Database rollback = restore the staging Backuply backup, or a separately approved cleanup of migration-created `alaliah_*` records only.
 - **Logging:** every write is logged with legacy ID, new ID, field and value source.
 
 **Sequence after approval:**

@@ -13,7 +13,7 @@ Format: `D-NNN · date · area` then the decision and its rationale.
 | 01 Brand understanding | **Complete** |
 | Capability / infrastructure setup | **Mostly complete.** Skills, QA, local WP, 21st and Novamira are verified, and the staging audit is done ([`wordpress-environment-report.md`](./wordpress-environment-report.md)). Open: staging isolation (E1), restorable backup (E3), staging hygiene fixes (E2). These block major WordPress work, not Stage 02 |
 | 02 Visual world / aesthetic direction | **Complete.** Redline approved (D-027, D-028); 02.5b refinements approved (D-029); final refinement 02.5c completed ([`stage-02-5c-final-refinement.md`](./stage-02-5c-final-refinement.md)) with T5 type as the working system (D-030). `alaliah-design-system` is active |
-| 03 Website experience | **In progress.** 03.1 IA approved (D-032). 03.2 data model approved (D-034); implementation plan approved (D-035). `trigon-alaliah-core` data layer being built **locally**; nothing deployed or migrated; the backup gate (E3) precedes any staging write |
+| 03 Website experience | **In progress.** 03.1 IA approved (D-032). 03.2 data model approved (D-034); implementation plan approved (D-035). `trigon-alaliah-core` built and tested locally; approved for the staging-validation gate (D-036). Nothing deployed or migrated yet. Next phase after staging validation: **03.3 High-fidelity page experience** (four pages) |
 | 04 Motion & interaction | Locked until Stage 03 is approved |
 | 05 Implementation | Locked until Stage 04 is approved. No production theme or plugin is built before then; architecture is set by D-021 – D-025 |
 
@@ -239,3 +239,17 @@ Approved from 02.5b: the three intensity levels (Functional, Editorial, Immersiv
   - **P1** (legacy 31013) tests the property data model. Its building and sub-community are created only once the hierarchy is confirmed; otherwise only the verified levels are used and the building is flagged.
   - No test is claimed to prove Project → Property.
 - **Backup gate before the first staging write:** a fresh staging backup (hosting snapshot preferred), an independent database export, and confirmation that the backup files are readable and complete. Then stop and report readiness.
+
+**D-036 · 2026-10-07 · Stage 03.2 staging-validation gate**
+- **Environments:** staging (`alaliah.trigonsolutions.co`) is the only writable Novamira environment. Its existing Novamira connection and Application Password are not changed, replaced, revoked or reconfigured. Production (`alaliahinternational.com`) is not an execution environment in this phase: no Novamira connection, no deployment, no write-capable tools. Production comparison uses only public, non-mutating sources (frontend, public REST).
+- **Backup gate:** a fresh full Backuply backup of staging is accepted, once verified from staging as completed, listed as available for restore, and covering database and files. Do not restore it; do not create another staging clone; never place a database dump in a web-accessible directory. An off-server export is preferable but not required.
+- **Confirmations:**
+  - `aa_property_agency` stays hidden from the public REST representation;
+  - property slugs come from the current title; the legacy slug is kept for redirects and audit only;
+  - the structural taxonomy is labelled **Locations**; the editorial CPT is **Areas**;
+  - "Saas Properties" stays exactly as stored until its official spelling is independently verified.
+- **Write protection order:** the migration never intentionally invokes a mutation path against legacy posts, meta, taxonomies or attachments (primary); the write guard is the second line, with the documented `wp_set_object_terms()` limit; the legacy fingerprint is the final integrity alarm.
+- **Rollback terminology:** deactivating `trigon-alaliah-core` is a *functional* rollback; created rows remain. A database rollback is a Backuply restore, or a separately approved cleanup of migration-created `alaliah_*` records only. No cleanup tool is built now.
+- **Sequence:** confirm staging host and DB → verify backup → read-only fingerprint baseline → **stop** → ZIP from Git → deploy → activate → `setup` → full dry run → fingerprint check → full dry-run report → **stop** → execute T1/T2 and P1 only → QA → **stop** before broad migration (implementation plan §11).
+- **Next phase:** once staging validation passes, Stage **03.3 High-fidelity page experience / visual design** begins with four real pages: Homepage, Search/Buy results, Property detail, Area detail. They use the Redline system and real Al Aliah data where possible, and are the next visual approval gate (hero, search, cards, map, property-detail hierarchy, developer/project relationships in the UI, area storytelling, typography, motion opportunities, image treatment, mobile). Broad theme implementation stays gated.
+

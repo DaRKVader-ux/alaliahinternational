@@ -38,7 +38,9 @@ WP_USER=admin WP_PASS=… node tools/qa/admin-check.mjs http://localhost:8890 <o
 
 ## Known limits
 
-- The write guard cannot pre-empt `wp_set_object_terms()` (WordPress has no pre-hook). A stray term assignment is written, then the run aborts and the legacy fingerprint reports it.
+- **Protection order.** The migration code never intentionally invokes a mutation path against legacy posts, meta, taxonomies or attachments; the executor refuses any taxonomy that is not the plugin's own. The write guard is the second line. The legacy fingerprint is the final integrity alarm, not the primary protection.
+- The write guard cannot pre-empt `wp_set_object_terms()` (WordPress has no pre-hook). A stray term assignment from other code is written, then the run aborts and the legacy fingerprint reports it.
+- **Rollback.** Deactivating the plugin is a *functional* rollback only: the new structures go inactive, but the rows it created stay in the database. A database rollback means restoring the staging Backuply backup, or a separately approved cleanup of migration-created `alaliah_*` records. No cleanup tool exists.
 - `duplicate_gallery` is recomputed for every record at the end of a migration run, but an admin edit to one gallery does not refresh the flag on the other listing. Run `wp alaliah quality scan`.
 - Amenities are not migrated until the amenity map is approved (`Mapping::AMENITY_MAP_APPROVED`).
 - Legacy URL redirects are planned in the report but not served. Serving them belongs to the theme/launch stage.
