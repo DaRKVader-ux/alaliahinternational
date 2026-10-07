@@ -130,10 +130,34 @@ An MCP endpoint that can write files and execute PHP on a public host is high-va
 The cloned `wp-content/backuply/backups-Cv3OcR/` on staging still holds three **production** Backuply archives (2026-09-17 ×2, 2026-10-01; about 540 MB each) with full production database copies, including users and personal data. They are behind deny-all (HTTP 403), on the same hosting account as production. **Do not remove during Stage 03.2.** Later task: owner decides keep or delete; deletion is a hosting/security cleanup with its own approval.
 
 ### E7. Legacy fingerprint moves with front-end traffic
-Any front-end view of a legacy listing or developer page changes legacy post meta: Elementor writes `_elementor_page_assets` on first view, and Essential Addons (`_eael_post_view_count`) and WPResidence (`wpestate_total_views`, `wpestate_detailed_views`) count views. Confirmed 2026-10-07: two public GETs added two `_elementor_page_assets` rows. The in-run check (before/after one run) is unaffected unless a visit lands mid-run, which fails safe. Cross-session comparisons need these keys excluded (proposed fingerprint change, pending approval).
+Any front-end view of a legacy listing or developer page changes legacy post meta: Elementor writes `_elementor_page_assets` on first view, and Essential Addons (`_eael_post_view_count`) and WPResidence (`wpestate_total_views`, `wpestate_detailed_views`) count views. Confirmed 2026-10-07: two public GETs added two `_elementor_page_assets` rows. The in-run check (before/after one run) is unaffected unless a visit lands mid-run, which fails safe. Cross-session comparisons exclude these keys: they are tracked in a separate `volatile_meta` section (D-037).
 
 ### E8. Staging emits a UTF-8 BOM
 REST and WP-CLI output on staging start with a byte-order mark (seen before `trigon-alaliah-core` was installed; the plugin's files have none). Some PHP file in the legacy stack starts with a BOM. Harmless for browsers; strict JSON clients can fail. Locate before the new theme ships.
+
+---
+
+## Content and data findings (raised by Stage 03.3)
+
+No data or migration scope is expanded for these (D-038). Detail: [`stage-03-3-page-experience.md`](./stage-03-3-page-experience.md) §6.
+
+### C1. Room tags for the room index
+The property room index (Redline's optional enhanced gallery) needs a room tag on every gallery image. The 03.2 model stores none. The specimen tagged the 16 photos of 31521 by hand. Without tags, a listing falls back to the standard gallery. **Decide with the visual approval:** if the room index is approved, an attachment-level room field is added to `trigon-alaliah-core` and editors tag photos. If not, nothing changes.
+
+### C2. Licence and permit numbers in free-text descriptions
+Legacy descriptions carry a trade licence number and ADM permit numbers inside the text. The specimen does not show them. They should be verified into the permit fields and removed from the description text during editorial review.
+
+### C3. Description voice
+Legacy descriptions use boilerplate the brand rejects ("Discover luxury living…", "perfect home"). Listings need an editorial rewrite before launch; the structured titles already replace the slogans.
+
+### C4. Legacy listing anomalies
+- Amenity noise: a back yard and a garden on a tower apartment. This reinforces keeping the amenity map unexecuted until reviewed.
+- 31571 (Al Raha villa for rent) is linked in WPResidence as a sub-unit of 32101 (a Dubai project). The specimen ignores the link; it is not migrated.
+- "West Yas" appears only in description text, so sub-communities are not structured.
+- 31023 is typed as an apartment, but its photos show a villa. This is a `possible_wrong_type` candidate, like 30967; an editor must confirm.
+
+### C5. Photo privacy before publication
+Listing photos show vehicle number plates (4 of 47 sampled) and one third-party "for sale" sign with a phone number. The specimen copies are pixelated. Production needs a pre-publication photo check in the editorial workflow.
 
 ---
 
