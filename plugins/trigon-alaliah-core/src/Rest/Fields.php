@@ -106,8 +106,15 @@ final class Fields {
 	public static function data( int $id, bool $edit = false ): array {
 		$type = get_post_type( $id );
 		$out  = array();
+		// Contact fields are private by default: shown to editors in the edit context, and publicly
+		// only when explicitly allowed (decision pending on which office contacts are public).
+		$contacts_allowed = (array) apply_filters( 'trigon_alaliah_public_contact_fields', array(), $id );
+		$can_edit         = $edit && current_user_can( 'edit_post', $id );
 		foreach ( Schema::meta_fields_for( $type ) as $key => $def ) {
 			if ( empty( $def['public'] ) ) {
+				continue;
+			}
+			if ( ! empty( $def['contact'] ) && ! $can_edit && ! in_array( $def['public'], $contacts_allowed, true ) ) {
 				continue;
 			}
 			$v = get_post_meta( $id, $key, true );

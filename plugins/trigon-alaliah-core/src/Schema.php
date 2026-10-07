@@ -142,10 +142,10 @@ final class Schema {
 			'aa_role'                        => array( 'label' => 'Role', 'objects' => array( self::AGENT ), 'store' => 'string', 'input' => 'text', 'group' => 'agent', 'public' => 'role' ),
 			'aa_brn'                         => array( 'label' => 'BRN', 'objects' => array( self::AGENT ), 'store' => 'string', 'input' => 'text', 'group' => 'agent', 'public' => 'brn' ),
 			'aa_languages'                   => array( 'label' => 'Languages (comma separated)', 'objects' => array( self::AGENT ), 'store' => 'array', 'input' => 'list', 'group' => 'agent', 'public' => 'languages' ),
-			'aa_phone'                       => array( 'label' => 'Phone', 'objects' => array( self::AGENT ), 'store' => 'string', 'input' => 'text', 'group' => 'agent', 'public' => 'phone' ),
-			'aa_mobile'                      => array( 'label' => 'Mobile', 'objects' => array( self::AGENT ), 'store' => 'string', 'input' => 'text', 'group' => 'agent', 'public' => 'mobile' ),
-			'aa_whatsapp'                    => array( 'label' => 'WhatsApp', 'objects' => array( self::AGENT ), 'store' => 'string', 'input' => 'text', 'group' => 'agent', 'public' => 'whatsapp' ),
-			'aa_email'                       => array( 'label' => 'Email', 'objects' => array( self::AGENT ), 'store' => 'string', 'input' => 'email', 'group' => 'agent', 'public' => 'email' ),
+			'aa_phone'                       => array( 'label' => 'Phone', 'objects' => array( self::AGENT ), 'store' => 'string', 'input' => 'text', 'group' => 'agent', 'public' => 'phone', 'contact' => true ),
+			'aa_mobile'                      => array( 'label' => 'Mobile', 'objects' => array( self::AGENT ), 'store' => 'string', 'input' => 'text', 'group' => 'agent', 'public' => 'mobile', 'contact' => true ),
+			'aa_whatsapp'                    => array( 'label' => 'WhatsApp', 'objects' => array( self::AGENT ), 'store' => 'string', 'input' => 'text', 'group' => 'agent', 'public' => 'whatsapp', 'contact' => true ),
+			'aa_email'                       => array( 'label' => 'Email', 'objects' => array( self::AGENT ), 'store' => 'string', 'input' => 'email', 'group' => 'agent', 'public' => 'email', 'contact' => true ),
 			'aa_is_office'                   => array( 'label' => 'Company office contact', 'objects' => array( self::AGENT ), 'store' => 'boolean', 'input' => 'checkbox', 'group' => 'agent', 'public' => 'is_office' ),
 
 			// Area.

@@ -410,8 +410,15 @@ $scalars = array();
 array_walk_recursive( $a, static function ( $v ) use ( &$scalars ) { $scalars[] = (string) $v; } );
 ok( ! in_array( '31013', $scalars, true ), 'REST does not expose the legacy ID as a value' );
 ok( ! isset( $data['meta']['aa_price'] ), 'raw meta not in REST' );
+$agent_edit = rest_get( '/wp/v2/team/' . $agent, array( 'context' => 'edit' ) )->get_data()['alaliah'] ?? array();
+ok( isset( $agent_edit['email'] ), 'editors see agent contact fields in the edit context' );
 wp_set_current_user( 0 );
 ok( rest_get( '/wp/v2/team/' . $agent )->get_status() >= 400, 'draft agent (with contact values) not visible over REST without login' );
+$agent_public = Fields::data( $agent );
+ok( ! array_intersect( array( 'phone', 'mobile', 'whatsapp', 'email' ), array_keys( $agent_public ) ), 'agent contact fields are not in public output by default' );
+add_filter( 'trigon_alaliah_public_contact_fields', $allow_phone = static fn() => array( 'phone' ) );
+ok( isset( Fields::data( $agent )['phone'] ) && ! isset( Fields::data( $agent )['email'] ), 'an explicit allow-list exposes only the named contact field' );
+remove_filter( 'trigon_alaliah_public_contact_fields', $allow_phone );
 $reports = '';
 foreach ( glob( $tmp . '/*/*' ) as $f ) {
 	$reports .= (string) file_get_contents( $f );
