@@ -1,0 +1,25 @@
+/* Trigon Al Aliah Core: edit screens. Logical properties only (RTL-ready). */
+.aa-fields { display: grid; grid-template-columns: repeat( auto-fill, minmax( 16rem, 1fr ) ); gap: 1rem 1.5rem; }
+.aa-field { display: grid; grid-template-columns: minmax( 0, 1fr ); gap: .35rem; align-content: start; min-inline-size: 0; }
+.aa-field--gallery, .aa-field--floorplans, .aa-field--permits, .aa-field--sources, .aa-field--terms, .aa-field--richtext, .aa-field--rating, .aa-field--textarea { grid-column: 1 / -1; }
+.aa-label { font-weight: 600; }
+.aa-sublabel { display: block; font-weight: 600; margin-block: .5rem .25rem; }
+.aa-readonly { padding-block: .25rem; }
+.aa-field select, .aa-field input[type="text"], .aa-field input[type="url"], .aa-field input[type="email"] { inline-size: 100%; max-inline-size: 100%; box-sizing: border-box; }
+.aa-field input[type="number"] { inline-size: 100%; max-inline-size: 12rem; box-sizing: border-box; }
+.aa-sortable { display: flex; flex-wrap: wrap; gap: .75rem; list-style: none; margin: 0 0 .75rem; padding: 0; }
+.aa-item { position: relative; display: grid; gap: .25rem; background: #fff; border: 1px solid #c3c4c7; padding: .35rem; cursor: grab; }
+.aa-item img { display: block; inline-size: 75px; block-size: 75px; object-fit: cover; }
+.aa-item-controls { display: flex; gap: .5rem; justify-content: center; }
+.aa-item-controls .button-link { min-inline-size: 24px; min-block-size: 24px; }
+.aa-plans .aa-plan { inline-size: 16rem; }
+.aa-plan details { font-size: 12px; }
+.aa-plan details label { display: block; margin-block-start: .35rem; }
+.aa-plan details input { inline-size: 100%; }
+.aa-repeater .aa-row { display: grid; grid-template-columns: repeat( auto-fill, minmax( 11rem, 1fr ) ); gap: .5rem 1rem; align-items: end; padding: .75rem; margin-block-end: .5rem; border: 1px solid #dcdcde; background: #f6f7f7; }
+.aa-repeater .aa-row label { display: grid; gap: .2rem; }
+.aa-repeater .aa-row .aa-inline { display: flex; gap: .4rem; align-items: center; }
+.aa-term-group { display: inline-grid; gap: .25rem; margin-inline-end: 2rem; vertical-align: top; }
+.aa-flags { list-style: disc; margin-inline-start: 1.25rem; }
+.aa-flags .aa-warning { color: #8a5300; }
+.aa-media-preview img { inline-size: 120px; block-size: auto; }
