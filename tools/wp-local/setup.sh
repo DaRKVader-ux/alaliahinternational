@@ -9,7 +9,7 @@
 # Not a production setup. Nothing here is committed to the target project.
 set -euo pipefail
 
-WP_TAG="7.1.2"        # latest stable at time of writing; bump deliberately
+WP_TAG="7.1.3"        # matches staging (auto-updated 2026-10-07); bump deliberately
 SQLITE_TAG="v3.0.2"
 DIR="${1:?usage: setup.sh <target-dir> [port]}"
 PORT="${2:-8881}"
