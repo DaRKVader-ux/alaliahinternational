@@ -10,6 +10,8 @@ Brand equity and voice belong to `alaliah-brand-system`, accessibility to `alali
 
 **Provisional items:** the type families (T5, until a Stage 05 licence decision), the crimson value (Q1, logo master) and the motion durations (Stage 04).
 
+> **D-039 overrides (2026-10-07), in force now:** locked colours `#222222` (text, dark surfaces), `#941F27` (brand, active signal), `#FFFFFF` (ground, inverse, CTA), `#FF8E47` (hover and secondary emphasis; 2.3:1 on white, so never text, focus or sole cue on light surfaces). Neutrals derive from `#222222`. Crimson `#B0122C` and the Redline colour table below are retired. Image-led, property-led layouts replace type-led and documentation-style composition. Arabic/RTL screens are deferred. The Stage 03.3 v2 specimen (`docs/stage-03-3-v2/`) is under review; once approved, this skill is rewritten from it. Until then, where this file conflicts with D-039, D-039 wins.
+
 ## Idea
 Architectural *intelligence*, not architectural documentation. Precision comes from composition, anchored information and a map-led sense of place. There are no drafting lines, ticks, coordinates or CAD styling.
 

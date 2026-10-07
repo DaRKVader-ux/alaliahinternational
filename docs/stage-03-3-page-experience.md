@@ -1,6 +1,6 @@
 # Stage 03.3: High-fidelity page experience
 
-**Status:** awaiting visual approval. Nothing here is a decision until approved (D-038). No theme work has started.
+**Status:** not approved (D-039). Superseded by v2: [`stage-03-3-v2-page-experience.md`](./stage-03-3-v2-page-experience.md). Kept as a record; the data findings in §6 still apply.
 
 **Specimen:** `docs/stage-03-3/specimen.html` (with `specimen.js` and `img/`). Open it directly or serve the folder (`python3 -m http.server` from `docs/stage-03-3`). The bar at the top switches page, listing state (rich or sparse), Desktop or Mobile 390, an RTL check, and per-page notes.
 

@@ -159,6 +159,24 @@ Legacy descriptions use boilerplate the brand rejects ("Discover luxury living�
 ### C5. Photo privacy before publication
 Listing photos show vehicle number plates (4 of 47 sampled) and one third-party "for sale" sign with a phone number. The specimen copies are pixelated. Production needs a pre-publication photo check in the editorial workflow.
 
+### C6. Off-plan facts that live only in description text
+31083 (Reportage Village, Khalifa City) states "Payment Plan 70/30, Handover Q3 2028" in its description, but its handover and payment fields are empty. The v2 specimen shows "Ask us" rather than reading the text. The same pattern holds for furnishing ("Fully furnished" in the titles of 30967 and 31013) and for 30967's size (4,473 sq ft in text, 0 in the field). These need an editor pass into the structured fields before launch.
+
+### C7. Room types the UAE buyer asks about have no fields
+Maid's room, driver's room, majlis and study appear only in titles and descriptions (31521, 31495, 31571). They are commercially important in Abu Dhabi. **Proposal for after visual approval:** a small "rooms" multi-select on the property type in `trigon-alaliah-core`. Not built.
+
+### C8. Developer relationships are Dubai-only
+Only two developer → project links are verified (Binghatti → Aquarise, Danube → Bayz 102), and both are Dubai. 31083's address names "Reportage Village" and Reportage Properties is in the directory, but the link is unverified (03.2 report item 6). The homepage's "Featured Developers" is therefore Dubai-led on an Abu Dhabi-led brand until Abu Dhabi links are confirmed.
+
+### C9. Madhmoun permits
+No verified permit exists for any listing. The only stored value (`madhmoun-permit` 123564) is on a Dubai record (32101), where Madhmoun does not apply. The v2 property page shows a marked placeholder permit block; production shows the block only for a verified, display-approved permit. **Needed:** permit numbers per Abu Dhabi listing, and a rule for Dubai listings (Trakheesi or DLD permit).
+
+### C10. 31571 location conflict
+31571 is filed under Al Raha, but its address is "Faya at Bloom Gardens, Al Muntazah". Its townhouse photos are not used as Al Raha place imagery in v2. Editor to confirm the area.
+
+### C11. Reference sites unreachable from cloud sessions
+oiaproperties.com and 11tanjung.com are blocked by the environment's egress policy, and so is cdnjs (npm is allowed). The v2 reference study relied on search summaries; the 11 Tanjung intro and facilities behaviour could not be observed. Add these domains to the environment's allowed list, or capture screen recordings, if a closer study is needed.
+
 ---
 
 ## Production findings (raised by the staging audit; production is read-only)
