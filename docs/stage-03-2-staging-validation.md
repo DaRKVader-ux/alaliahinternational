@@ -137,3 +137,62 @@ Agency text is kept (Rainbow Properties, Danube Properties, Binghatti Properties
 - **Not yet exercised on MariaDB:** the write path (inserts, meta, term assignment) and the compare-and-swap reference allocation (used only for hand-created listings). T1/T2 and P1 exercise the write path; the CAS path would be exercised only by creating a listing by hand.
 
 **Status (steps 5–11): stopped for approval.** No T1/T2, P1 or broad migration has run.
+
+## Corrections and controlled execution · 2026-10-07 (D-037)
+
+### Code changes (commit `db52f00`)
+- **Fingerprint:** `legacy_meta` (protected) now excludes exactly `_elementor_page_assets`, `_eael_post_view_count`, `wpestate_total_views`, `wpestate_detailed_views`; those four are hashed in `volatile_meta`, reported but never blocking. `_edit_lock`, previously excluded, is now **protected** like every other key.
+- **30967:** migration flag `possible_wrong_type`; type unchanged.
+- **Amenity map** (unexecuted; implementation plan §8.7): pools neutral unless explicitly `private-pool`; `fully-furnished` proposes `aa_furnishing = furnished` (audited as `feature_fields`, fill-if-empty, never overwrites).
+- Local suite on WordPress 7.1.3: **293 passed, 0 failed**.
+
+### Write log (continued)
+| # | Time (UTC) | What | Where | Reverse |
+|---|---|---|---|---|
+| W8 | 06:18 | Upload `trigon-alaliah-core-db52f00.zip` (64,516 B, sha256 `c1636f9f…19d93863d53`, verified on server) | `wp-content/uploads/trigon-deploy/` | Deleted in W10 |
+| W9 | 06:18 | `wp plugin install <zip> --force`; 30 files, manifest identical to the Git build; plugin stayed active | `wp-content/plugins/trigon-alaliah-core/` | Reinstall `c357e56` |
+| W10 | 06:19 | Delete ZIP and folder | `wp-content/uploads/` | — |
+| W11 | 06:19 | Side effect of W9: Elementor cleared its page-asset cache, deleting the two `_elementor_page_assets` rows of W7 (volatile key) | Legacy post meta | None needed |
+| W12 | 06:19 | Protected baseline `baseline-pre-t1t2-p1.json` | `wp-content/trigon-migration/` (deny-all) | Delete the file |
+| W13 | 06:20 | `migrate run --set=t1t2 --execute` (run `20261007-062010-t1t2-run`) | 3 location terms, 2 developers, 2 projects (drafts), shadow terms, `aa_*` meta | Database rollback only |
+| W14 | 06:20 | `migrate run --set=p1 --execute` (run `20261007-062018-p1-run`) | 2 location terms, 1 agent, 1 property (drafts), `aa_*` meta | Database rollback only |
+| W15 | 06:2x | Side effect of QA page views (31013, 32101, 32018): 3 new `_elementor_page_assets` rows | Legacy post meta (volatile) | None needed |
+
+Pre-execution checks: environment re-confirmed (staging home/siteurl/docroot/database, WordPress 7.1.3, 0 `alaliah_*` posts, no lock, next reference 1012).
+
+### Created on staging (all drafts)
+| Record | New ID | Legacy |
+|---|---|---|
+| Danube Properties (developer) | 32816 | 32018 |
+| Binghatti Developers (developer) | 32817 | 32040 |
+| Bayz 102 (project) | 32818 | 32078 |
+| Binghatti Aquarise (project) | 32819 | 32101 |
+| Al Aliah International (agent, office) | 32820 | 30966 |
+| Fully Furnished 1bd, Marina Square (property, **AA-1004**) | 32821 | 31013 |
+
+Location terms: UAE › Dubai › Business Bay; UAE › Abu Dhabi › Al Reem Island. No amenity terms. No area posts.
+
+### QA results
+| Check | Result |
+|---|---|
+| T1 | Bayz 102 → Danube: canonical meta and shadow term `d-32816` agree; UAE › Dubai › Business Bay; off-plan; June 2029; 70/30 |
+| T2 | Binghatti Aquarise → Binghatti: meta and shadow `d-32817` agree; plan 70/30 · 20% · 50% · 30%; permit 123564 unverified, not public |
+| Developers | identity verified (both); About and content empty; Binghatti legacy text in `aa_about_legacy`; logos reuse 32019 / 32041; derived: Danube 1 project, 0 listings; Binghatti areas = Business Bay; flags `not_ready_to_publish`, `missing_logo_alt`, `logo_quality` |
+| P1 data | AA-1004; rent/ready/available/apartment/residential; 105,000 yearly; 1 bd / 2 ba / 915; office agent; UAE › Abu Dhabi › Al Reem Island; Marina Square / Marina Blue Tower **not** created, proposal in the audit only; no developer, project or shadow terms |
+| AA-1004 URL | `get_permalink()` = `/property/fully-furnished-1bd-marina-square-vacant-aa-1004/`; canonical, bare `/property/aa-1004/` and an old-slug variant all route to post 32821; unknown `aa-9999` → 404; public HTTP 404 while draft (correct). The 301 response itself needs a published listing (verified locally) |
+| Gallery reuse | 9 legacy attachment IDs in legacy order; thumbnail reused; attachment parents unchanged (still 31013) |
+| Floor plans | none stored; display empty; editor shows no rows, the add control and the empty-list marker |
+| Furnishing | empty. Staging's 31013 has no `fully-furnished` feature (only its title says so), so no transformation was proposed; nothing is inferred from titles |
+| Admin editing | every meta-box group of property, project, developer and agent renders server-side with no PHP notices; quality boxes list the expected flags; Data Quality page renders flags and relationship check, no contact values. Browser QA of wp-admin on staging needs a staging login (not used) |
+| REST (edit context) | public names only; no `aa_` or legacy keys; no legacy IDs as values; developer/project `null`; 9 gallery images (all alt empty); floor_plans `[]`; permits `[]`; `url` and `link` canonical; 123564 and agency text absent; About hidden; derived counts correct |
+| REST (anonymous) | drafts → 401; collections `[]` |
+| Data-quality flags | P1: missing_coordinates, missing_permit, missing_alt, building_unconfirmed, rent_period_assumed. Aquarise: unverified_permit, unit_types_missing, missing_alt, legacy_notes_to_merge |
+| Shadow indexes | `relations rebuild --verify` equivalent: **0 drift** |
+| Protected fingerprint | `verify-legacy` vs W12: **unchanged** (all 7 protected sections) |
+| Volatile report | 60 → 63 rows: the 3 `_elementor_page_assets` rows of W15. Reported, not blocking |
+| WPResidence site | home, legacy listings and developer pages 200; 14 `estate_property`, 17 `estate_developer`, 1 `estate_agent`, all published; 31013 title and price unchanged; Azizi legacy title unchanged; theme `wpresidence-child` and WPResidence core active |
+
+### Not done
+No broad migration, no redirects, no amenities, no area posts, nothing on production. Production Backuply archives on staging untouched (E6).
+
+**Status: Stage 03.2 controlled validation passed. Stopped.**

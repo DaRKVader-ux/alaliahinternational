@@ -13,7 +13,7 @@ Format: `D-NNN · date · area` then the decision and its rationale.
 | 01 Brand understanding | **Complete** |
 | Capability / infrastructure setup | **Mostly complete.** Skills, QA, local WP, 21st and Novamira are verified, and the staging audit is done ([`wordpress-environment-report.md`](./wordpress-environment-report.md)). Open: staging isolation (E1), restorable backup (E3), staging hygiene fixes (E2). These block major WordPress work, not Stage 02 |
 | 02 Visual world / aesthetic direction | **Complete.** Redline approved (D-027, D-028); 02.5b refinements approved (D-029); final refinement 02.5c completed ([`stage-02-5c-final-refinement.md`](./stage-02-5c-final-refinement.md)) with T5 type as the working system (D-030). `alaliah-design-system` is active |
-| 03 Website experience | **In progress.** 03.1 IA approved (D-032). 03.2 data model approved (D-034); implementation plan approved (D-035). `trigon-alaliah-core` built and tested locally; approved for the staging-validation gate (D-036). Nothing deployed or migrated yet. Next phase after staging validation: **03.3 High-fidelity page experience** (four pages) |
+| 03 Website experience | **In progress.** 03.1 IA approved (D-032). 03.2 data model approved (D-034); implementation plan approved (D-035). `trigon-alaliah-core` deployed to staging; T1/T2 and P1 executed and QA passed (D-037, [`stage-03-2-staging-validation.md`](./stage-03-2-staging-validation.md)). Broad migration, redirects and amenities not run. Next: **03.3 High-fidelity page experience** (four pages) |
 | 04 Motion & interaction | Locked until Stage 03 is approved |
 | 05 Implementation | Locked until Stage 04 is approved. No production theme or plugin is built before then; architecture is set by D-021 – D-025 |
 
