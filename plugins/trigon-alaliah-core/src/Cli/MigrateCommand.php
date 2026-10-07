@@ -94,8 +94,11 @@ final class MigrateCommand {
 		}
 		$base = json_decode( (string) file_get_contents( $file ), true ); // phpcs:ignore WordPress.WP.AlternativeFunctions
 		$cmp  = Fingerprint::compare( $base, $now );
+		foreach ( $cmp['volatile_changes'] as $name => $v ) {
+			\WP_CLI::warning( "Volatile legacy meta changed since baseline ({$v['before']['rows']} → " . ( $v['after']['rows'] ?? '?' ) . ' rows). Page-view counters and caches only; not blocking.' );
+		}
 		if ( $cmp['same'] ) {
-			\WP_CLI::success( 'Legacy data unchanged since ' . $base['created'] . '.' );
+			\WP_CLI::success( 'Protected legacy data unchanged since ' . $base['created'] . '.' );
 			return;
 		}
 		\WP_CLI::error( 'Legacy data differs: ' . implode( ', ', array_keys( $cmp['differences'] ) ) );

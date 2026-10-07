@@ -267,6 +267,19 @@ eq( $azizi['meta']['aa_about_legacy'] ?? null, 'A leading developer offering a w
 $venice = array_values( array_filter( $by( $plan_full, 'project' ), static fn( $i ) => 32060 === $i['legacy_id'] ) )[0];
 ok( empty( $venice['links']['aa_developer_id'] ) && in_array( 'provisional_relationship', $venice['flags'], true ), 'Azizi Venice is not linked to Azizi (T3 provisional, flagged)' );
 
+// Revised amenity map (D-037): fully-furnished is a field, pools are neutral unless explicitly private.
+$am = $plan_full['plan']['amenities'];
+eq( $am['approved'], false, 'amenity map still unapproved' );
+ok( ! array_key_exists( 'fully-furnished', $am['proposal'] ), 'fully-furnished is not an amenity' );
+eq( $am['fields']['fully-furnished'] ?? null, array( 'aa_furnishing', 'furnished' ), 'fully-furnished proposed as aa_furnishing = furnished' );
+eq( array( $am['proposal']['pool'], $am['proposal']['swimming-pool'], $am['proposal']['private-pool'] ), array( array( 'general', 'Swimming pool' ), array( 'general', 'Swimming pool' ), array( 'home', 'Private pool' ) ), 'pool/swimming-pool → neutral Swimming pool; private-pool → Private pool' );
+$p1_item = $by( $plan_p1, 'property' )[0];
+eq( $p1_item['audit']['feature_fields'][0]['to'] ?? null, array( 'aa_furnishing' => 'furnished' ), '31013: furnishing transformation recorded in the audit' );
+eq( $p1_item['fill_if_empty'], array(), '31013: nothing filled while the map is unapproved' );
+$i30967 = array_values( array_filter( $by( $plan_full, 'property' ), static fn( $i ) => 30967 === $i['legacy_id'] ) )[0];
+ok( in_array( 'possible_wrong_type', $i30967['flags'], true ) && array( 'apartment' ) === $i30967['terms'][ Schema::TAX_TYPE ], '30967 flagged possible_wrong_type; type left as apartment' );
+ok( ! isset( $i30967['audit']['feature_fields'] ), '30967: no private pool inferred from its title' );
+
 // Redirect map uses the same URL rule as the live permalink (checked again after P1 runs).
 $redirect_31013 = array_values( array_filter( $plan_full['plan']['redirects'], static fn( $r ) => '/properties/fully-furnished-1bd-marina-square-vacant/' === $r['from'] ) )[0]['to'] ?? '';
 eq( $redirect_31013, home_url( '/property/fully-furnished-1bd-marina-square-vacant-aa-1004/' ), 'legacy URL of 31013 maps to /property/{slug}-aa-1004/' );
@@ -359,6 +372,8 @@ eq( array_map( 'intval', (array) get_post_meta( $p1, 'aa_gallery', true ) ), $le
 eq( (int) get_post_meta( $p1, '_thumbnail_id', true ), (int) get_post_meta( 31013, '_thumbnail_id', true ), 'featured image reuses the legacy thumbnail' );
 eq( (int) wp_get_post_parent_id( $legacy_gallery[0] ), 31013, 'attachment parent unchanged (still the legacy post)' );
 eq( get_post_meta( $p1, 'aa_floor_plans', true ), '', 'no floor plans stored' );
+eq( (string) get_post_meta( $p1, 'aa_furnishing', true ), '', 'furnishing not written (amenity map unapproved)' );
+eq( count( get_terms( array( 'taxonomy' => Schema::TAX_AMENITY, 'hide_empty' => false ) ) ), 0, 'no amenity terms created' );
 eq( FloorPlans::for_display( $p1 ), array(), 'floor plans render as nothing' );
 $flags = Quality::all( $p1 );
 foreach ( array( 'missing_coordinates', 'missing_permit', 'missing_alt', 'building_unconfirmed', 'rent_period_assumed' ) as $f ) {
@@ -579,6 +594,32 @@ ok( ! isset( Fields::data( $binghatti )['rating'] ) || null === Fields::data( $b
 
 // ------------------------------------------------------------------ 11. WriteGuard
 
+t_section( '11a. Fingerprint: protected vs volatile legacy meta' );
+wp_cache_flush();
+$fp0 = Fingerprint::compute();
+ok( isset( $fp0['sections']['volatile_meta'] ), 'fingerprint has a volatile_meta section' );
+$vid1 = add_post_meta( 31013, '_eael_post_view_count', '7' );
+$vid2 = add_post_meta( 31013, '_elementor_page_assets', 'a:0:{}' );
+$vid3 = add_post_meta( 32018, 'wpestate_total_views', '3' );
+$vid4 = add_post_meta( 32018, 'wpestate_detailed_views', 'a:0:{}' );
+$c = Fingerprint::compare( $fp0, Fingerprint::compute() );
+ok( $c['same'] && isset( $c['volatile_changes']['volatile_meta'] ), 'the four volatile keys are reported but do not fail the check' );
+$pid = add_post_meta( 31013, '_edit_lock', '1:1' );
+$c   = Fingerprint::compare( $fp0, Fingerprint::compute() );
+eq( array_keys( $c['differences'] ), array( 'legacy_meta' ), 'any other legacy meta change (even _edit_lock) fails the protected check' );
+$pid2 = update_post_meta( 31013, 'property_price', '105001' );
+delete_post_meta( 31013, '_edit_lock' );
+update_post_meta( 31013, 'property_price', '105000' );
+foreach ( array( '_eael_post_view_count', '_elementor_page_assets' ) as $k ) {
+	delete_post_meta( 31013, $k );
+}
+delete_post_meta( 32018, 'wpestate_total_views' );
+delete_post_meta( 32018, 'wpestate_detailed_views' );
+$c = Fingerprint::compare( $fp0, Fingerprint::compute() );
+ok( $c['same'] && ! $c['volatile_changes'], 'reverting the test writes restores both sections' );
+$r = cli( "alaliah migrate verify-legacy --baseline={$baseline_file}" );
+ok( 0 === $r->return_code && false !== strpos( $r->stdout . $r->stderr, 'Protected legacy data unchanged' ), 'verify-legacy reports the protected result' );
+
 t_section( '11. Write guard' );
 $cases = array(
 	'legacy meta'      => static fn() => update_post_meta( 31013, 'property_price', '1' ),
@@ -696,6 +737,22 @@ ok( empty( $acts['create'] ) && empty( $acts['update'] ), 'full rerun creates an
 $after = db_state();
 unset( $state['options'], $after['options'] );
 eq( $after, $state, 'full rerun leaves the database identical' );
+
+// Approved-map behaviour of feature → field (simulated): fills an empty field, never overwrites.
+$fill_plan = ( new Planner() )->plan( 'full', array( 31002, 31023 ) );
+foreach ( $fill_plan['items'] as &$fi ) {
+	if ( 'property' === $fi['entity'] ) {
+		$fi['fill_if_empty'] = array( 'aa_furnishing' => 'furnished' );
+	}
+}
+unset( $fi );
+$p002 = migrated( Schema::PROPERTY, 31002 );
+$p023 = migrated( Schema::PROPERTY, 31023 );
+update_post_meta( $p002, 'aa_furnishing', 'unfurnished' ); // An editor's structured value.
+( new \Trigon\AlaliahCore\Migration\Executor( 'test-fill', true ) )->run( $fill_plan );
+eq( array( get_post_meta( $p002, 'aa_furnishing', true ), get_post_meta( $p023, 'aa_furnishing', true ) ), array( 'unfurnished', 'furnished' ), 'feature-derived furnishing fills an empty field and never overwrites an existing value' );
+eq( slugs( migrated( Schema::PROPERTY, 31521 ), Schema::TAX_AMENITY ), array(), 'no amenities attached (map unapproved)' );
+ok( in_array( 'possible_wrong_type', Quality::all( migrated( Schema::PROPERTY, 30967 ) ), true ) && array( 'apartment' ) === slugs( migrated( Schema::PROPERTY, 30967 ), Schema::TAX_TYPE ), '30967 carries possible_wrong_type; type unchanged' );
 
 // Data Quality screen renders.
 wp_set_current_user( $admin->ID );

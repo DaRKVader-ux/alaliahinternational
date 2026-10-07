@@ -73,6 +73,8 @@ final class Mapping {
 		31083 => array( 'field_description_mismatch' ),
 		31094 => array( 'field_description_mismatch' ),
 		31013 => array( 'building_unconfirmed' ),
+		// Editorial review only: "4 Master Bedroom with Private Pool" typed Apartment. The type is not changed.
+		30967 => array( 'possible_wrong_type' ),
 	);
 
 	/** Unconfirmed location proposals (recorded in the audit only; never created by the migration). */
@@ -115,13 +117,23 @@ final class Mapping {
 
 	/**
 	 * Proposed amenity map: legacy property_features slug → [group, name] or null (dropped).
-	 * NOT APPROVED: amenities are not migrated until this map is reviewed and the flag set.
+	 * NOT APPROVED: amenities (and the feature-to-field map below) are not migrated until this
+	 * map is reviewed and the flag set. Revised 2026-10-07 (D-037).
 	 */
 	public const AMENITY_MAP_APPROVED = false;
 
 	public const AMENITY_GROUPS = array(
 		'home'     => 'In the home',
 		'building' => 'Building and community',
+		'general'  => 'General', // Neutral: says nothing about private or shared use.
+	);
+
+	/**
+	 * Legacy features that are not amenities but fill a structured field: slug → [meta key, value].
+	 * Applied only when that field is empty; an existing structured value is never overwritten.
+	 */
+	public const FEATURE_FIELD_MAP = array(
+		'fully-furnished' => array( 'aa_furnishing', 'furnished' ),
 	);
 
 	public const AMENITY_MAP = array(
@@ -142,15 +154,15 @@ final class Mapping {
 		'laundry'                        => array( 'home', 'Laundry room' ),
 		'media-room'                     => array( 'home', 'Media room' ),
 		'meeting-facilities'             => array( 'building', 'Meeting rooms' ),
-		'pool'                           => array( 'building', 'Swimming pool' ),
+		'pool'                           => array( 'general', 'Swimming pool' ), // Neutral; never inferred as private.
+		'private-pool'                   => array( 'home', 'Private pool' ),       // Only when the legacy feature says so explicitly.
 		'sports-facilities'              => array( 'building', 'Sports facilities' ),
-		'swimming-pool'                  => array( 'building', 'Swimming pool' ),
+		'swimming-pool'                  => array( 'general', 'Swimming pool' ),
 		'washer-and-dryer'               => array( 'home', 'Washer and dryer' ),
 		// Dropped: US-template utilities, parent groups, marketing phrases, ambiguous items.
 		'chair-accessible'               => null,
 		'electricity'                    => null,
 		'fireplace'                      => null,
-		'fully-furnished'                => null, // Furnishing is a field, set by an editor.
 		'heating'                        => null,
 		'high-floor-with-stunning-views' => null,
 		'high-end-restaurants-and-cafes' => null,

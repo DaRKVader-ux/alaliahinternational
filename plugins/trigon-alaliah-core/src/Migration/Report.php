@@ -63,6 +63,8 @@ final class Report {
 		}
 		if ( isset( $report['legacy_check'] ) ) {
 			$lines[] = 'Legacy data unchanged: ' . ( $report['legacy_check']['same'] ? 'YES' : 'NO: ' . implode( ', ', array_keys( $report['legacy_check']['differences'] ) ) );
+			$vol     = $report['legacy_check']['volatile_changes'] ?? array();
+			$lines[] = 'Volatile legacy meta (page-view counters and caches, not blocking): ' . ( $vol ? 'changed (' . $vol['volatile_meta']['before']['rows'] . ' → ' . ( $vol['volatile_meta']['after']['rows'] ?? '?' ) . ' rows)' : 'unchanged' );
 		}
 		if ( ! empty( $report['error'] ) ) {
 			$lines[] = 'ERROR: ' . $report['error'];

@@ -70,7 +70,7 @@ foreach ( array( 'apartments' => 'Apartments', 'townhouse' => 'Townhouse', 'vill
 foreach ( array( 'active' => 'Active', 'hot-offer' => 'hot offer', 'new-offer' => 'new offer', 'sold' => 'Sold' ) as $s => $nme ) {
 	$term( 'property_status', $nme, $s );
 }
-foreach ( array( 'balcony', 'garden', 'pool', 'gym', 'wifi', 'heating', 'investor-friendly', 'rooftop-terrace' ) as $s ) {
+foreach ( array( 'balcony', 'garden', 'pool', 'gym', 'wifi', 'heating', 'investor-friendly', 'rooftop-terrace', 'fully-furnished', 'private-pool' ) as $s ) {
 	$term( 'property_features', ucwords( str_replace( '-', ' ', $s ) ), $s );
 }
 $term( 'property_county_state', 'United Arab Emirates', 'united-arab-emirates' );
@@ -148,7 +148,9 @@ foreach ( $P as $id => $d ) {
 	wp_set_object_terms( $pid, array( $c ), 'property_city' );
 	wp_set_object_terms( $pid, array( $a ), 'property_area' );
 	wp_set_object_terms( $pid, $statuses, 'property_status' );
-	wp_set_object_terms( $pid, array( 'balcony', 'wifi', 'investor-friendly' ), 'property_features' );
+	// Explicit features for the furnishing and pool rules (30967's title says private pool, its feature is plain 'pool').
+	$extra_features = array( 31013 => array( 'fully-furnished' ), 31002 => array( 'fully-furnished' ), 31023 => array( 'fully-furnished' ), 31521 => array( 'private-pool' ), 30967 => array( 'pool' ) );
+	wp_set_object_terms( $pid, array_merge( array( 'balcony', 'wifi', 'investor-friendly' ), $extra_features[ $id ] ?? array() ), 'property_features' );
 	$meta = array(
 		'property_price'        => $price,
 		'property_label_before' => $label,

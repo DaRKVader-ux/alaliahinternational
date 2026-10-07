@@ -413,6 +413,23 @@ final class Planner {
 		);
 		$permits = $this->permits_from_legacy( $id, $audit );
 
+		// Feature → structured field (e.g. fully-furnished → aa_furnishing = furnished). Audited
+		// always; written only once the amenity map is approved, and only into an empty field.
+		$feature_fields = array();
+		foreach ( $audit['legacy_values']['property_features'] as $slug ) {
+			if ( isset( Mapping::FEATURE_FIELD_MAP[ $slug ] ) ) {
+				list( $key, $value ) = Mapping::FEATURE_FIELD_MAP[ $slug ];
+				$audit['feature_fields'][] = array(
+					'from'   => 'property_features/' . $slug,
+					'to'     => array( $key => $value ),
+					'status' => Mapping::AMENITY_MAP_APPROVED ? 'applied unless the field already has a value' : 'proposed (amenity map not approved)',
+				);
+				if ( Mapping::AMENITY_MAP_APPROVED ) {
+					$feature_fields[ $key ] = $value;
+				}
+			}
+		}
+
 		return array(
 			'entity'    => 'property',
 			'post_type' => Schema::PROPERTY,
@@ -444,6 +461,7 @@ final class Planner {
 			'terms'     => $terms,
 			'location'  => $this->area_key( $id ),
 			'flags'     => array_values( array_unique( $flags ) ),
+			'fill_if_empty' => $feature_fields,
 			'audit'     => $audit,
 		);
 	}
@@ -480,7 +498,7 @@ final class Planner {
 	private function amenity_report(): array {
 		$unmapped = array();
 		foreach ( $this->src->all_terms( 'property_features' ) as $t ) {
-			if ( ! array_key_exists( $t->slug, Mapping::AMENITY_MAP ) ) {
+			if ( ! array_key_exists( $t->slug, Mapping::AMENITY_MAP ) && ! array_key_exists( $t->slug, Mapping::FEATURE_FIELD_MAP ) ) {
 				$unmapped[] = $t->slug;
 			}
 		}
@@ -488,6 +506,7 @@ final class Planner {
 			'approved' => Mapping::AMENITY_MAP_APPROVED,
 			'note'     => Mapping::AMENITY_MAP_APPROVED ? 'Approved map applied.' : 'Proposed map only: amenities are NOT migrated until the map is approved.',
 			'proposal' => Mapping::AMENITY_MAP,
+			'fields'   => Mapping::FEATURE_FIELD_MAP,
 			'unmapped' => $unmapped,
 		);
 	}

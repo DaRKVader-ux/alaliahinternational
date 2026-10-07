@@ -96,7 +96,7 @@ All taxonomies share these arguments:
 | `alaliah_status` | property | no | Available, Under offer, Rented, Sold, Withdrawn |
 | `alaliah_category` | property | no | Residential, Commercial |
 | `alaliah_type` | property | no | Apartment, Villa, Townhouse, Penthouse, Duplex, Office, Retail, Warehouse, Land |
-| `alaliah_amenity` | property, project | yes | Parents: In the home; Building and community. Children are created from the approved term map (dry run phase 2) |
+| `alaliah_amenity` | property, project | yes | Parents: In the home; Building and community; General (neutral). Children are created from the approved term map (§8.7) |
 | `alaliah_rel_developer` | property, project | no | None; derived |
 | `alaliah_rel_project` | property | no | None; derived |
 
@@ -297,7 +297,7 @@ Each phase is the same in plan and run; the difference is a single write gate.
    - every referenced attachment file exists;
    - the baseline fingerprint is recorded.
 2. **Locations:** UAE › emirates › communities from `property_city`, `property_area` and the `cityparent` options. Spelling and slug corrections are applied, each with an audit entry; conflicts (Al Reef Downtown) are resolved to the listing value and audited.
-3. **Amenities:** applies the **approved** term map, a reviewed artefact produced from the first dry run. Unmapped legacy terms are reported, not created.
+3. **Amenities:** applies the **approved** term map (§8.7), a reviewed artefact produced from the first dry run. Unmapped legacy terms are reported, not created.
 4. **Developers** (all 17): name (Azizi corrected; others as stored), slug (`azizi-developments`; others kept), logo attachment reused, `aa_about_legacy`, identity classification, `post_status = draft`.
 5. **Agent:** the office record (draft).
 6. **Projects** (32060, 32078, 32101):
@@ -366,6 +366,18 @@ Only the original values of fields the migration read are stored there; contact 
 | `p1` (approved) | **Property data-model test.** Location terms UAE › Abu Dhabi › Al Reem Island; the office agent; property 31013 → AA-1004. The building and sub-community are recorded as a proposal only (flag `building_unconfirmed`) |
 | `full` | Everything in §8.2, with T1 and T2 links only |
 
+### 8.7 Amenity map (revised 2026-10-07, D-037; not yet approved for execution)
+Source of truth: `Mapping::AMENITY_MAP`, `Mapping::FEATURE_FIELD_MAP`. Nothing below runs until `AMENITY_MAP_APPROVED` is set by a separate approval.
+
+| Legacy feature | Result |
+|---|---|
+| `balcony`, `back-yard`, `front-yard`, `garden`, `built-in-wardrobes`, `central-air` + `central-air-conditioning`, `equipped-kitchen`, `garage-attached`, `laundry`, `media-room`, `washer-and-dryer` | In the home (duplicates merged) |
+| `24-7-security`, `basketball-court`, `elevator` (Lift), `gym` + `fully-equipped-gym`, `meeting-facilities`, `sports-facilities` | Building and community |
+| `pool`, `swimming-pool` | **Swimming pool**, group General (neutral: neither private nor shared is implied) |
+| `private-pool` (explicit only) | **Private pool**, In the home. Never inferred from the property type or title |
+| `fully-furnished` | **Not an amenity.** Proposes `aa_furnishing = furnished`, only when the furnishing field is empty; an existing structured value is never overwritten. The transformation is recorded in the record's migration audit (`feature_fields`) |
+| Utilities, US-template items, marketing phrases, ambiguous items (19 slugs, e.g. `electricity`, `heating`, `investor-friendly`, `wifi`, `hot-bath`) | Dropped, listed in the report |
+
 T1 and T2 prove Developer → Project → Area. P1 proves the property model. **No test proves Project → Property**: no verified unit-to-project relationship exists yet.
 
 ## 9. Proving legacy data is untouched
@@ -377,7 +389,9 @@ T1 and T2 prove Developer → Project → Area. P1 proves the property model. **
 - the `post_parent` and hashes of all 553 attachments;
 - the `taxonomy_{id}` area options.
 
-**Pass condition:** the before and after fingerprints are identical. The check runs at preflight and after every execute, and its result goes into the report.
+**Protected and volatile sections (D-037).** Exactly four legacy meta keys are rewritten by ordinary front-end page views: `_elementor_page_assets`, `_eael_post_view_count`, `wpestate_total_views`, `wpestate_detailed_views`. They are tracked in a separate `volatile_meta` section: changes are reported, never blocking. Every other legacy meta key, `_edit_lock` included, stays in the protected `legacy_meta` section.
+
+**Pass condition:** the protected sections of the before and after fingerprints are identical. The check runs at preflight and after every execute, and its result goes into the report.
 
 **Order of protection.** The fingerprint is the final integrity alarm, not the primary protection:
 1. **By construction:** the migration code only calls write APIs with `alaliah_*` post types, `alaliah_*` taxonomies and `aa_*` meta. It never intentionally invokes a mutation path (insert, update, delete, term assignment) against legacy posts, meta, taxonomies or attachments. The executor checks each taxonomy against the plugin's own list before assigning terms.

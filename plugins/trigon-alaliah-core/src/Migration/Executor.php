@@ -288,6 +288,12 @@ final class Executor {
 			}
 			wp_set_object_terms( $id, array( $loc ), Schema::TAX_LOCATION, false );
 		}
+		// Feature-derived values (approved amenity map only) never overwrite an existing structured value.
+		foreach ( $item['fill_if_empty'] ?? array() as $key => $value ) {
+			if ( '' === (string) get_post_meta( $id, $key, true ) ) {
+				update_post_meta( $id, $key, $value );
+			}
+		}
 		if ( ! empty( $item['thumbnail'] ) && 'attachment' === get_post_type( (int) $item['thumbnail'] ) ) {
 			update_post_meta( $id, '_thumbnail_id', (int) $item['thumbnail'] );
 		}
