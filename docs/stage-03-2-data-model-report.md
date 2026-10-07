@@ -1,381 +1,621 @@
-# Stage 03.2: Data and Content Model Report
+# Stage 03.2: Data Model and Migration Plan
 
-**Status:** presented 2026-10-06 for approval. Discovery and recommendation only: **nothing has been mutated or migrated.**
-**Source:** staging WordPress (`alaliah.trigonsolutions.co`, table prefix `wp8g_`), read through Novamira `execute-php` with read-only queries on 2026-10-06. Staging is a production clone (D-015), so these figures describe the current live data.
-**Privacy:** agent contact fields and any owner or user fields were counted, never printed.
+**Status:** revision 2, presented 2026-10-07 for approval. Path B was approved in principle (D-033). This revision applies the client's 24 requirements. **Nothing has been migrated, created, linked or changed.** Every staging query was read-only.
+**Source:** staging WordPress (`alaliah.trigonsolutions.co`, prefix `wp8g_`), a production clone. Queried 2026-10-06/07 through Novamira `execute-php`, after confirming `home` = staging on each session.
+**Privacy:** agent contact values and owner fields were counted, never printed.
+
+**Contents:**
+1. Summary
+2. Source of truth and inventory
+3. Final content model
+4. Post types
+5. Taxonomies
+6. Fields
+7. Required legacy custom fields
+8. Developer inventory
+9. Developer classification and logos
+10. Relationship strategy
+11. Project model
+12. Area hierarchy
+13. Floor plans
+14. Property admin UX
+15. Search model
+16. Media reuse
+17. Data-quality flags
+18. Migration mapping
+19. Proposed test relationships
+20. Dry-run migration plan
+21. Points to confirm
+22. Approval requested
+
+**Appendix:** legacy data detail.
 
 ---
 
 ## 1. Summary
 
-| Question | Answer |
+| | |
 |---|---|
-| Source of truth (Q3) | **WordPress itself.** No feed, importer, CRM sync or portal integration exists (§2) |
-| Inventory (Q4) | **14 published listings**: 11 Abu Dhabi, 3 Dubai. 6 rent, 3 ready sale, 5 off-plan, 0 commercial (§3) |
-| Data quality | Usable as seed content, not as a model. No usable coordinates, no listing references, no projects, no developer links, purpose and completion mixed in one taxonomy, 4 of 14 listings misclassified or self-contradictory (§5) |
-| Recommendation | **Path B: migrate into Trigon-owned types managed by `trigon-alaliah-core`.** No strong technical reason favours A; the small dataset makes B cheap now and A costly later (§7) |
+| Architecture | WPResidence legacy data → migration layer (WP-CLI, dry-run by default) → Trigon-owned structures in `trigon-alaliah-core` → presented by `alaliah-trigon`. WPResidence is not a runtime dependency after cutover |
+| Inventory | 14 published `estate_property` records. **11 are listings** (Abu Dhabi). **3 are Dubai project records** that become `alaliah_project`. 17 developers, 1 agent record, 13 areas, 261 listing images |
+| Developers | All 17 inventoried. **3 verified** from site evidence (Danube, Binghatti, Azizi); **14 need review**; 0 demo, 0 duplicate, 0 invalid. All migrate as **drafts**; none is published automatically |
+| Test relationships | Danube → Bayz 102, Binghatti → Binghatti Aquarise, Azizi → Azizi Venice (lower confidence). **No unit-level listing has a verifiable developer**, so the Developer → Project → Property chain cannot yet be proven with a real property (§19) |
+| References | `AA-1001` to `AA-1011` for the 11 listings, assigned by original publish date; legacy IDs kept separately |
+| Safety | Additive, repeatable, idempotent, non-destructive. Legacy posts, meta and media are never edited, reassigned or deleted |
 
-## 2. Source of truth (Q3)
+## 2. Source of truth and inventory
 
-Evidence that WordPress is the only record:
-- **Plugins:** none of the 20 active plugins imports, syncs or exports listings. The MLS Import add-on bundled with WPResidence was **never installed**; only a leftover option (`mlsimport_onboarding_current_step = welcome`) remains.
-- **Scheduled jobs:** no import or sync jobs. The only WPResidence job is `prefix_wpestate_cron_generate_pins_daily` (map pin cache).
-- **Listing references:** `property_internal_id` and `mls` are empty on all 14 listings, so no external ID exists to match against.
-- **Authorship:** every listing was entered by hand (authors 1 and 3, Feb to Apr 2026).
-- **Forms:** three WPForms forms (Contact Us, Register Interest, Request Consultation) carry an unconnected Constant Contact provider. That covers leads, not listings.
+**Source of truth: WordPress.**
+- No import plugin is installed. The MLS Import add-on was never installed; one leftover onboarding option remains.
+- No sync or import jobs run.
+- No external IDs exist (`mls` and `property_internal_id` are empty).
+- Every record was entered by hand.
 
-**Consequence:** D-004's "idempotent importer" becomes a **one-time migration**. From then on, WordPress admin is the system of record. **The editing experience for agents becomes part of the product** (§8.5).
-
-## 3. Inventory (Q4)
-
-Published `estate_property` posts: **14**. There are no drafts, private or pending listings. The figures below count the *published* records; their real-world availability was not verified.
-
-### By purpose
-| Purpose | Count | Listings |
-|---|---|---|
-| **Rent** | 6 | 30967, 31002, 31013, 31023, 31521, 31571 |
-| **Buy: ready** | 3 | 30964, 31082, 31495 |
-| **Buy: off-plan** | 5 | 31083, 31094 (Abu Dhabi); 32060, 32078, 32101 (Dubai) |
-| **Buy total** | **8** | Ready + off-plan |
-| **Commercial** | **0** | No commercial category or listing exists |
-
-Three of the five off-plan records (the Dubai ones) are project pages, not units: they have no price, bedrooms or size (§5).
-
-### By emirate
-| Emirate | Count |
+| Inventory | Count |
 |---|---|
-| Abu Dhabi | 11 |
-| Dubai | 3 |
+| Rent | 6 |
+| Buy: ready | 3 |
+| Buy: off-plan units (Abu Dhabi) | 2 (31083, 31094) |
+| Off-plan project records (Dubai) | 3 (32060, 32078, 32101) → projects |
+| Commercial | 0 |
+| By emirate (all 14 records) | Abu Dhabi 11, Dubai 3 |
+| By area | Al Raha 3; Al Khalidiya, Al Reef Downtown, Business Bay 2 each; Al Reem Island, Khalifa City, Madinat Al Riyad, Yas Island, Dubai South 1 each |
+| By type (as stored) | Apartments 10, Villa 3, Townhouse 1; at least 2 mistyped |
+| By developer (structured) | 0. By site evidence: Danube 1, Binghatti 1, Azizi 1 (all Dubai project records) |
+| Featured | 3 (31002, 31023, 31495) |
 
-### By area or community
-| Area | Emirate | Count |
+## 3. Final content model
+
+```
+                 ┌──────────────── alaliah_developer ────────────────┐
+                 │  logo · about · sources · review status · rating  │
+                 └───────────────┬───────────────────────────────────┘
+                                 │ 1:n (required on project)
+                 ┌───────────────▼──────────────── alaliah_project ──┐
+                 │  handover · payment plan · permit · brochure ...  │
+                 └───────────────┬───────────────────────────────────┘
+                                 │ 1:n (optional on property)
+┌─ alaliah_agent ─┐  n:1 ┌───────▼──────────── alaliah_property ──────┐
+│  people/office  │◀─────│  reference · price · beds · plans · permit │
+└─────────────────┘      └───────┬────────────────────────────────────┘
+                                 │ n:1 (required)
+                 ┌───────────────▼── alaliah_location (taxonomy) ─────┐
+                 │  UAE › Emirate › Community › Sub-community/Building│
+                 └───────────────┬────────────────────────────────────┘
+                                 │ 1:1 for emirate and community terms
+                         alaliah_area (editorial story post)
+```
+
+**Rules:**
+- Developer, Project, Property and Area are separate entities.
+- A property may have no project; it can then carry a developer directly.
+- When a property has a project, its developer **comes from the project** and cannot contradict it.
+- Every relationship has a reverse link (§10).
+
+## 4. Post types
+
+| Post type | Public URL (IA §5, approved) | Notes |
 |---|---|---|
-| Al Raha | Abu Dhabi | 3 |
-| Al Khalidiya | Abu Dhabi | 2 |
-| Al Reef Downtown | Abu Dhabi | 2 |
-| Al Reem Island | Abu Dhabi | 1 |
-| Khalifa City | Abu Dhabi | 1 |
-| Madinat Al Riyad | Abu Dhabi | 1 |
-| Yas Island | Abu Dhabi | 1 |
-| Business Bay | Dubai | 2 |
-| Dubai South | Dubai | 1 |
-| Saadiyat ("Sadiyat Island"), Dubai Creek, Dubai Investment Park, JBR | | 0 (terms exist, no listings) |
+| `alaliah_property` | `/property/{slug}-{reference-number}/` | e.g. `/property/five-bedroom-villa-yas-island-1010/`. The URL carries the reference, never the legacy ID |
+| `alaliah_project` | `/projects/{slug}/` | First-class entity |
+| `alaliah_developer` | `/developers/{slug}/` | Archive titled "All Developers" |
+| `alaliah_area` | `/areas/{emirate}/{community}/` | Editorial page for a location term |
+| `alaliah_agent` | `/team/{slug}/` | People; one "office" record for the company contact |
+| `alaliah_insight` | `/insights/{slug}/` | Registered now, content later |
 
-### By developer
-| Developer | Count | How known |
-|---|---|---|
-| Azizi | 1 (32060) | Title and description text only |
-| Danube | 1 (32078) | `property-agency` text and description |
-| Binghatti | 1 (32101) | `property-agency` text and description |
-| **Not recorded** | **11** | No structured developer link exists for any listing |
+**Internal names never appear in URLs.** Each type sets its own public `rewrite` slug and `has_archive`. Query variables use public names (e.g. `?developer=`), and REST routes sit under `/wp-json/alaliah/v1/` with public field names.
 
-None of the 17 `estate_developer` records is linked to any listing (no meta, no taxonomy). The two Abu Dhabi off-plan units (31083 Khalifa City, 31094 Al Raha) name no developer anywhere.
+## 5. Taxonomies
 
-### By property type
-| Type (as stored) | Count | Note |
-|---|---|---|
-| Apartments | 10 | Includes 31023 ("5-bedroom Villa") and 32060 ("Waterfront Villas"), so stored types are wrong in at least 2 cases |
-| Villa | 3 | |
-| Townhouse | 1 | |
-
-### Featured
-3 listings carry `prop_featured = 1`: 31002, 31023 and 31495.
-
-## 4. Current data model (WPResidence)
-
-### 4.1 Post types
-| Post type | Rewrite | Published | Role | Migrate? |
+| Taxonomy (internal) | Public slug | Applies to | Terms | Editable |
 |---|---|---|---|---|
-| `estate_property` | `/properties/` | 14 | Listings | **Yes** |
-| `estate_developer` | `/estate_developer/` | 17 | Developers (logo + name) | **Yes, as drafts for verification** |
-| `estate_agent` | `/agents/` | 1 | One generic agent, "Al Aliah International" | Yes (as the company contact); real agent profiles needed |
-| `estate_review` | (private) | 17 | Theme demo testimonials (Q9) | **No: never publish** |
-| `membership_package` | (private) | 17 | Theme front-end submission packages | No |
-| `wpestate-studio` | | 3 | Elementor property templates | No (legacy presentation) |
-| `elementor_library`, `elementor-hf` | | 33 / 3 | Page-builder templates | No |
-| `page` | | 27 (+3 drafts) | Legacy pages (W9) | Content review only |
-| `attachment` | | 553 | Media, of which 261 are listing images | Reused in place |
+| `alaliah_location` | `area` (archives redirect to `/areas/…`) | property, project, agent | UAE › Abu Dhabi, Dubai › communities › sub-communities and buildings | Yes |
+| `alaliah_purpose` | `purpose` | property | Sale, Rent | Yes (single choice) |
+| `alaliah_completion` | `completion` | property, project | Ready, Off-plan | Yes (single choice) |
+| `alaliah_status` | `status` | property | Available, Under offer, Rented, Sold, Withdrawn | Yes (single choice) |
+| `alaliah_category` | `category` | property | Residential, Commercial | Yes |
+| `alaliah_type` | `type` | property | Apartment, Villa, Townhouse, Penthouse, Duplex, Office, Retail, Warehouse, Land (studio = 0 bedrooms) | Yes (single choice) |
+| `alaliah_amenity` | `amenity` | property, project | Two parents: "In the home" and "Building and community"; about 25 curated terms | Yes |
+| `alaliah_rel_developer` | none (not public) | property, project | One term per developer, **maintained automatically** from relationships | No (system) |
+| `alaliah_rel_project` | none | property | One term per project, maintained automatically | No (system) |
 
-**No project post type exists.** Off-plan projects are stored as property posts.
+The two `alaliah_rel_*` taxonomies are hidden **shadow taxonomies**. They let search filter by developer or project with a fast `tax_query` instead of `meta_query`, and give the derived counts for the "All Developers" archive (§15).
 
-### 4.2 Taxonomies on properties
-| Taxonomy | Hierarchical | Terms | Content | Problem |
-|---|---|---|---|---|
-| `property_action_category` | yes | 3 | **Off Plan (5), Ready (slug `sell`, 3), Rent (6)** | Mixes *purpose* (sale or rent) with *completion* (ready or off-plan) |
-| `property_category` | yes | 3 | Apartments (10), Villa (3), Townhouse (1) | No commercial types; misclassifications |
-| `property_city` | yes | 2 | Abu Dhabi (11), Dubai (3) | Separate from area; no hierarchy |
-| `property_area` | yes | 13 | Communities (§3) | The area-to-city link lives in an option (`taxonomy_{term_id}['cityparent']`), not in the taxonomy. **Al Reef Downtown is mapped to Dubai** there, while its listings say Abu Dhabi. "Sadiyat" is misspelled |
-| `property_county_state` | yes | 1 | "United Arab Emirates" on 6 of 14 | Redundant |
-| `property_features` | yes | 41 | Mixed amenities | Duplicates (Balcony/balcony, Central Air vs Central air conditioning, Pool vs Swimming Pool, Smoke detector vs Smoke detectors, Gym vs Fully-equipped gym); US-template items (Heating, Natural Gas, Fireplace); marketing phrases ("Investor-Friendly", "High-end restaurants and cafés"); unit features and building amenities mixed |
-| `property_status` | yes | 5 | Active (11), hot offer (3), new offer (1), open house, Sold | Marketing labels, not a lifecycle. The 3 Dubai records have none |
+## 6. Fields
 
-**Agent and developer taxonomies** (10 more, e.g. `property_city_agent`, `property_area_developer`) contain only theme demo terms: New York, Manhattan, Queens, Tripoli, Barcelona, São Paulo, Toronto, Gurugram, "Foreclosures". **None of them migrates.**
+Registered meta (typed, sanitised, REST schema). All carry the `aa_` prefix.
 
-**Area term data** (in `taxonomy_{id}` options): `cityparent`, a featured image (11 of 13 set, mostly WhatsApp photos), country, zoom. Latitude and longitude are empty on every term.
-
-### 4.3 Property meta: 124 keys
-Every listing carries all 124 keys (WPResidence writes defaults). By use:
-
-| Group | Keys | Filled | Notes |
+### 6.1 Property (`alaliah_property`)
+| Field | Type | Required | Notes |
 |---|---|---|---|
-| **Core listing data** | `property_price` | 11/14 | AED; empty on the 3 Dubai project records |
-| | `property_bedrooms`, `property_bathrooms` | 14/14 | 0 on 2 project records (meaning "not applicable", stored as zero) |
-| | `property_size` | 14/14 stored; **11 meaningful** | Square feet (`wp_estate_measure_sys = ft`); 0 on 3 listings means "unknown". Built-up area and plot area are not distinguished (31495: 11,510 sq ft) |
-| | `property_rooms` | 14/14 | Redundant with bedrooms |
-| | `property_label_before` | 1/14 | "Yearly" on one rental; rent period otherwise implicit |
-| | `property_address` | 11/14 | Free text, e.g. "Marina Square, Al Reem Island, Abu Dhabi" |
-| | `hidden_address` | 14/14 | Theme's composed address string |
-| | `property_country` | 14/14 | Always "United Arab Emirates" |
-| | `property_latitude`, `property_longitude` | 14/14 stored, **0 usable** | 13 are `0,0`; 30964 holds `40.7079, -74.0109` (lower Manhattan, a theme default) |
-| | `prop_featured` | 3/14 = 1 | Boolean |
-| | `property_agent` | 14/14 | All point to the one generic agent (30966) |
-| | `property_agent_secondary` | 9/14 | Serialized array, same agent |
-| **Off-plan (site-added custom fields)** | `property-handover` | 3/14 | Free text: "Q1 2029", "June 2029", "Q2, 2027" |
-| | `overall-payment-plan` | 3/14 | "85/15", "70/30" |
-| | `payment-on-booking`, `payment-during-construction`, `payment-on-handover` | 2–3/14 | Percent strings |
-| | `property-agency` | 6/14 | **Mixed meaning:** developer names on Dubai records (Danube, Binghatti), a broker on 32060 ("Rainbow Properties", although the project is Azizi's), and "Al Aliah International Real Estate" on 3 others |
-| | `property-external-construction` | 3/14 | Misused: holds project description text |
-| | `madhmoun-permit` | 1/14 | One value ("123564") on a **Dubai** record. Madhmoun is Abu Dhabi's listing system, so the value and field both need verification |
-| | `stories-number`, `structure-type` | 14/14 | Always "Not Available" |
-| **Media** | `wpestate_property_gallery` | 14/14 | Serialized ordered array of attachment IDs |
-| | `image_to_attach` | 14/14 | Comma-separated duplicate of the gallery |
-| | `_thumbnail_id` | 14/14 | Cover image |
-| | `use_floor_plans`, `plan_*` | flag set on 3; plans 0 | **No floor plans exist** |
-| | `embed_video_*`, `embed_virtual_tour`, `property_custom_video` | 0 | Unused |
-| **Analytics** | `wpestate_total_views`, `_eael_post_view_count` | 14/14 | View counters (e.g. 102–329) |
-| | `wpestate_detailed_views` | 14/14 | Serialized per-day views |
-| **Theme presentation** | `page_header_*`, `topbar_*`, `sidebar_*`, `header_*`, `local_*`, `page_custom_*`, `min/max_height`, `google_camera_angle`, `property_theme_slider`, `rev_slider`, `rs_page_bg_color`, `page_show_adv_search`, `page_use_float_search`, `adv_filter_*`, `current_adv_filter_*`, `keep_min/max` | default values | Layout settings only: **not data** |
-| **Empty everywhere** | `mls`, `property_internal_id`, `property_zip`, `property-year`, `property-date`, `property-garage*`, `property-basement`, `property-roofing`, `exterior-material`, energy and EPC fields (8), `property_hoa`, `property_year_tax`, `property_lot_size`, `property_second_price*`, subunit fields, `property_booking_shortcode` | 0 | US-template fields; none apply |
-| **Private** | `owner_notes`, `property_user` | 0 | Empty; values not printed |
+| `aa_reference` | string | Auto | `AA-1001`…; immutable, unique, read-only in admin (§18.2) |
+| `aa_legacy_post_id` | integer | Migrated only | Source `estate_property` ID; private |
+| `aa_price` | integer (AED) | Yes for available listings | Null, never 0, when unknown |
+| `aa_rent_period` | enum: yearly, monthly | Rent only | Default yearly |
+| `aa_bedrooms` | integer | Yes | 0 = studio |
+| `aa_bathrooms` | integer | Yes | |
+| `aa_size_builtup` | decimal (sq ft) | Recommended | |
+| `aa_size_plot` | decimal (sq ft) | Optional | Villas and townhouses |
+| `aa_furnishing` | enum: furnished, unfurnished, partly furnished | Optional | |
+| `aa_property_agency` | text | Optional | Migrated exactly (§7) |
+| `aa_handover` | text | Off-plan | Migrated exactly (§7) |
+| `aa_handover_year` | integer | Optional | For filtering only; suggested from `aa_handover` and confirmed by an editor, never auto-saved |
+| `aa_project_id` | post ID | Optional | |
+| `aa_developer_id` | post ID | Optional | Editable only when no project is set; otherwise shows the project's developer read-only |
+| `aa_agent_id` | post ID | Yes | |
+| `aa_building` | term ID | Optional | A building-level `alaliah_location` term |
+| `aa_lat`, `aa_lng` | decimal | Optional | Rejected if `0,0` or outside UAE bounds |
+| `aa_geo_precision` | enum: exact, building, community | Auto | Community when no coordinates are given |
+| `aa_payment_plan_overall`, `aa_payment_on_booking`, `aa_payment_during_construction`, `aa_payment_on_handover` | text | Optional | Migrated exactly (§7) |
+| `aa_madhmoun_permit` | text | Optional; flagged when missing | Never generated (§7) |
+| `aa_gallery` | ordered attachment IDs | Recommended | |
+| `aa_floor_plans` | ordered list of items | Optional | §13 |
+| `aa_video_url` | URL | Optional | YouTube or Vimeo |
+| `aa_brochure_id` | attachment ID (PDF) | Optional | |
+| `aa_is_featured` | boolean | Optional | |
+| `aa_headline` | text | Disabled | Reserved; enabled only if approved later |
+| `aa_quality_flags` | array | System | §17 |
 
-**Serialized or theme-specific data to unpack, not copy:**
-- `wpestate_property_gallery` and `property_agent_secondary`, which are PHP-serialized arrays;
-- `wpestate_detailed_views`;
-- the area `taxonomy_{id}` options;
-- Redux theme options (`wpresidence_admin`: currency AED, symbol "د.إ", measure sq ft).
+Featured image: core `_thumbnail_id`. Description: core post content.
 
-### 4.4 Developers (17)
-Arada, Azizi ("Developements", misspelled), Binghatti, Burtville, Damac, Danube, Dubai Properties, Ellington, Emaar, MAG, Meraas, Nakheel, Nine Yards, Omniyat, Reportage, Saas, Sobha.
-- **Content:** 0 to 12 words of text each; all 23 developer meta fields (address, licence, website, social links and so on) are **empty on all 17**.
-- **Logos:** 17 present, but of mixed quality. Several are **screenshots** (e.g. `Screenshot-2026-04-06-164422.png`), sizes range from 183×51 to 2560×1809, and formats are mixed.
-- **Links to listings:** none.
-- **Coverage:** mostly Dubai-based developers; Arada is Sharjah-based and Reportage is the only Abu Dhabi-based one. Abu Dhabi's largest developers are absent, which conflicts with Abu Dhabi as the lead market (D-032).
-- **Verdict:** a name list, not data. Each record needs verification and an approved logo before publishing (D-031).
+### 6.2 Project (`alaliah_project`)
+- `aa_developer_id` (required)
+- location term (required)
+- completion
+- `aa_handover`, `aa_handover_year`
+- the four payment-plan text fields
+- `aa_madhmoun_permit` plus room for other emirates' permits (§7)
+- `aa_price_from` (optional; manual and sourced, or derived from linked units when any exist)
+- `aa_unit_types` (text, e.g. "Studio to 4-bedroom")
+- `aa_gallery`, `aa_floor_plans`, `aa_brochure_id`, `aa_masterplan_id`, `aa_video_url`
+- amenities
+- `aa_legacy_post_id`, `aa_review_status`
 
-### 4.5 Agents (1)
-"Al Aliah International", with phone, mobile, email, position and `agent_custom_data` filled (values withheld). There are no individual agent profiles and no BRN fields. The IA's agent-led trust depends on real profiles (Q9).
+### 6.3 Developer (`alaliah_developer`)
+- `aa_logo_id` (Media Library)
+- `aa_about` (rich text)
+- `aa_sources` (list of URL and note pairs)
+- `aa_website`
+- `aa_review_status`: verified, needs review, probable demo/test, duplicate, invalid/incomplete
+- `aa_review_note`
+- `aa_rating_*` (source, URL, score, count, retrieved date, refresh policy; D-032; empty at launch)
+- `aa_legacy_post_id`
 
-### 4.6 Media and galleries
-| Measure | Value |
+### 6.4 Agent (`alaliah_agent`)
+- `aa_role`
+- `aa_brn` (empty until supplied, Q9)
+- `aa_languages`
+- `aa_phone`, `aa_whatsapp`, `aa_email`
+- `aa_is_office` (true for the company contact)
+- `aa_legacy_post_id`
+
+### 6.5 Area (`alaliah_area`)
+- `aa_location_term_id` (1:1 with an emirate- or community-level term)
+- `aa_hero_id`
+- `aa_name_ar` (verified Arabic name; empty until supplied)
+- story content
+- `aa_legacy_term_id`
+
+## 7. Required legacy custom fields
+
+All seven are kept as text and migrated **exactly**: only leading and trailing spaces are trimmed. All values found:
+
+| Legacy key (label) | New field | Values on record | Notes |
+|---|---|---|---|
+| `property-agency` (Property Agency) | `aa_property_agency` | 31495 "Al Aliah international Real Estate"; 31521, 31571 "Al Aliah International Real Estate"; 32060 "Rainbow Properties"; 32078 "Danube Properties"; 32101 "Binghatti Properties" | Copied as written, including the casing difference. Not treated as the developer: on 32060 it names the presenting broker, not Azizi. Normalising into an agency entity can come later |
+| `property-handover` (Property Handover) | `aa_handover` | 31094 "Q1 2029"; 32078 "June 2029"; 32101 "Q2, 2027" | Text kept; `aa_handover_year` is suggested (2029, 2029, 2027) for an editor to confirm |
+| `madhmoun-permit` (Madhmoun Permit) | `aa_madhmoun_permit` | 32101 "123564" | **Flag:** the only value sits on a Dubai record, while Madhmoun is Abu Dhabi's system. Copied unchanged and marked unverified |
+| `overall-payment-plan` | `aa_payment_plan_overall` | 31094 "85/15"; 32078 "70/30"; 32101 "70/30" | |
+| `payment-on-booking` | `aa_payment_on_booking` | 31094 "10%"; 32101 "20%" | |
+| `payment-during-construction` | `aa_payment_during_construction` | 31094 "75%"; 32078 "70%"; 32101 "50%" | |
+| `payment-on-handover` | `aa_payment_on_handover` | 31094 "15%"; 32078 "30%"; 32101 "30%" | |
+
+**Consistency checks:**
+- The parts add up to 100% and agree with the overall split on 31094, 32078 and 32101.
+- **31094** also lists four other payment plans in its description (e.g. "30% DP – 70% on HO"), which disagree with the fields. Flag for editor.
+- **31083** states "Payment Plan 70 / 30" and "Handover Q3 2028" in its description, but its fields are empty. Flag: an editor copies them if correct. The migration does not parse descriptions into fields.
+
+**Permit model:**
+- `aa_madhmoun_permit` is a first-class field, kept empty when missing, with no frontend placeholder.
+- For later per-emirate permits, the Compliance group is built as a list keyed by authority, so a Dubai permit field (`aa_dubai_permit`) can be added without remodelling. That field is **not created now**.
+- Which permit each listing must show is a client and legal question (§21).
+
+## 8. Developer inventory
+
+All 17 `estate_developer` records, status `publish`, none trashed or draft.
+
+| ID | Name (as stored) | Slug | Created | Text | Logo (attachment) | Site evidence |
+|---|---|---|---|---|---|---|
+| 31714 | Burtville Developments | burtville-developments | 2026-03-15 | none | 31251 · PNG 183×51 · 9 KB · parented to the Homepage | Homepage and All Developers logo strip only |
+| 32010 | Reportage Properties | reportage-properties | 2026-04-06 | none | 32012 · PNG 408×280 · 7 KB | Logo strip only |
+| 32013 | Nine Yards Developments | nine-yards-developments | 2026-04-06 | none | 32014 · JPEG 200×200 · 4 KB | None |
+| 32016 | Saas Properties | saas-properties | 2026-04-06 | none | 32017 · PNG 1376×1376 · 115 KB | Logo strip only |
+| 32018 | Danube Properties | danube-properties | 2026-04-06 | none | 32019 · JPEG 500×500 · 47 KB | **32078 text: "The project by Danube Properties"; agency field "Danube Properties"** |
+| 32020 | Emaar Properties | emaar-properties | 2026-04-06 | none | 32021 · PNG 2560×1440 · 58 KB | Logo strip; legacy Elementor templates |
+| 32022 | Damac Properties | damac-properties | 2026-04-06 | none | 32023 · JPEG 500×500 · 18 KB | Logo strip; legacy templates |
+| 32024 | Nakheel | nakheel | 2026-04-06 | none | 32025 · JPEG 482×334 · 8 KB | Logo strip |
+| 32026 | Sobha Realty | sobha-realty | 2026-04-06 | none | 32027 · PNG 2560×1809 · 48 KB | Logo strip |
+| 32028 | Meraas | meraas | 2026-04-06 | 10 words | 32029 · JPEG 770×770 · 40 KB | Logo strip; legacy templates |
+| 32030 | Dubai Properties | dubai-properties | 2026-04-06 | 10 words | 32031 · PNG 350×200 · 29 KB | None |
+| 32034 | Azizi Developements | azizi-developements | 2026-04-06 | 12 words | 32035 · PNG 591×293 (**screenshot**) | **32060: project "Azizi Venice"** (name only) |
+| 32036 | Ellington Properties | ellington-properties | 2026-04-06 | 11 words | 32037 · PNG 356×142 · 3 KB | Logo strip |
+| 32038 | MAG Property Development | mag-property-development | 2026-04-06 | 10 words | 32039 · PNG 366×202 (**screenshot**) | None |
+| 32040 | Binghatti Developers | binghatti-developers | 2026-04-06 | 9 words | 32041 · PNG 428×229 (**screenshot**) | **32101: project "Binghatti Aquarise"; agency field "Binghatti Properties"** |
+| 32043 | Omniyat | omniyat | 2026-04-06 | 10 words | 32044 · PNG 800×800 · 12 KB | None |
+| 32045 | Arada | arada | 2026-04-06 | 12 words | 32046 · WebP 1500×1500 · 13 KB | None |
+
+**Common to all 17:**
+- Excerpt empty.
+- All 23 WPResidence developer fields (address, licence, website, social links, coordinates and so on) are **empty**.
+- No taxonomy terms (the developer taxonomies hold only demo terms such as New York and Tripoli, unattached).
+- No property or project references to their IDs.
+- No alt text on any logo.
+- One logo file each, no duplicates (checked by file hash).
+- The existing descriptions are one generic sentence each, unsourced and containing superlatives ("A leading developer…", "An ultra-luxury developer…").
+
+**Legacy pages that show developers:**
+- "All Developers" (page 29), plus a published duplicate (32112);
+- draft "Developers List" (22997) and "Developers" (31712);
+- a logo strip on the Homepage (18811);
+- legacy Elementor templates.
+
+None is migrated; each is redirected or replaced at cutover.
+
+## 9. Developer classification and logos
+
+| Classification | Count | Developers | Basis |
+|---|---|---|---|
+| **Verified** | 3 | Danube Properties, Binghatti Developers, Azizi Developments | Identity corroborated by listing or project content on this site |
+| **Needs review** | 14 | Arada, Burtville, Damac, Dubai Properties, Ellington, Emaar, MAG, Meraas, Nakheel, Nine Yards, Omniyat, Reportage, SAAS, Sobha | Real-looking records entered by staff; no corroborating site content; About text and logos still need sourcing |
+| Probable demo/test | 0 | | None match theme demo content; all were created by site staff in Mar–Apr 2026 |
+| Duplicate | 0 | | No duplicate names or logo files |
+| Invalid/incomplete | 0 | | Every record has at least a name and a logo |
+
+**Migration status:**
+- All 17 migrate to `alaliah_developer` as **draft**, with `aa_review_status` set as above. "Verified" means *identity confirmed*, not *ready to publish*.
+- Publishing is an editorial step once About text is sourced and the logo is approved.
+- A dedicated `needs-review` post status is not used. WordPress custom statuses are poorly supported in the admin, so draft plus the review field shows the same thing more reliably.
+- **Name corrections, proposed and applied by an editor:** "Azizi Developements" → "Azizi Developments", "Saas Properties" → "SAAS Properties". Slugs follow and the old slugs redirect.
+- **Coverage gap:** most of the 17 are Dubai developers (Nine Yards' base is not confirmed), Arada is Sharjah-based, and Reportage is the only Abu Dhabi-based one. The main Abu Dhabi developers are missing. This is a content task, not a migration task.
+
+**Logo flags** (inspected visually; all show the right brand mark):
+| Flag | Developers |
 |---|---|
-| Listing images | 261 JPEGs, 33.5 MB; all files present |
-| From WhatsApp exports | **167 of 261** (64%) |
-| Width ≥ 2400 px | **0** (Tier A/B threshold) |
-| Width 1600–2399 | 43 |
-| Width 1280–1599 | 124 |
-| Width < 1280 | 94 |
-| Alt text filled | **0 of 261** |
-| Images shared between listings | 23: listing 31082 (2BR, AED 1,170,000) reuses 23 of the photos of 30964 (studio, AED 699,000), both in Al Reef Downtown. One of the two has the wrong photos |
-| Per-photo room tags | None (Room index needs them; it stays optional) |
-| Registered image sizes | 23 (mostly theme-specific); regenerated for the new theme |
+| Screenshot | Azizi, MAG, Binghatti |
+| Low resolution (shorter side under 250 px or under 10 KB) | Burtville (183×51), Nine Yards (200×200, unreadable tagline), Ellington (356×142, 3 KB), Reportage (408×280, 7 KB), Nakheel (482×334, 8 KB) |
+| Non-standard version | Nakheel (white on a black box), Arada (cropped frame from a tile) |
+| No transparency (white box) | Danube, Damac, Meraas, Nine Yards (JPEG) and the three screenshots |
+| Missing alt text | All 17 |
+| Incorrect or duplicate | None found |
 
-### 4.7 Legacy code dependencies
-- **WPCode snippet** (published): registers the `[wpres_meta key="…"]` shortcode, which prints any property meta. It is used in 4 posts and in Elementor data on 143 post-meta rows (Studio property templates). It dies with the legacy templates and is not needed by the new theme.
-- **WPResidence Studio templates** (3) render the current property pages. Switching theme breaks them (W9), which is expected.
+**Developer admin:** a "Developer Logo" Media Library field (`aa_logo_id`) with guidance: SVG or transparent PNG, at least 800 px wide.
 
-## 5. Data-quality findings per listing
+## 10. Relationship strategy
 
-| ID | Title (as stored) | Issues |
+| Link | Stored on | Reverse | Mechanism |
+|---|---|---|---|
+| Project → Developer | `aa_developer_id` (required) | Developer → Projects | Query by `alaliah_rel_developer` term |
+| Property → Project | `aa_project_id` (optional) | Project → Properties (units) | `alaliah_rel_project` term |
+| Property → Developer | Derived from the project; `aa_developer_id` only when there is no project | Developer → Properties | `alaliah_rel_developer` term, synced on save from either source |
+| Property → Area | `alaliah_location` term (required) | Area → Properties | Taxonomy |
+| Project → Area | `alaliah_location` term (required) | Area → Projects | Taxonomy |
+| Developer → Areas | **Derived**: the union of its projects' and properties' locations | Area → Developers | Computed and cached; never typed |
+| Property → Agent | `aa_agent_id` | Agent → Listings | Meta |
+
+**Rules:**
+- **No relationship is created from inference.** A link exists only when an editor sets it, or when the migration applies a link that was approved in the test plan (§19).
+- When a project's developer changes, its units' shadow terms re-sync automatically.
+- Unlinked records are valid. They raise a "missing developer" or "missing project" flag (§17); they are never hidden or rejected.
+
+## 11. Project model
+
+- **First-class entity** with its own URL, gallery, floor plans, payment plan, handover, permit and brochure.
+- **Units** are `alaliah_property` posts linked by `aa_project_id`. A project page lists its available units and shows "No units currently listed" when there are none, which is true of all three seeds.
+- **Payment plan and handover** live on the project. A unit may override them in its own fields; if a unit field is empty, the project value is shown, labelled as the project's.
+- **Seed projects from the legacy Dubai records:**
+
+| Legacy | Project | Developer | Area | Carried over |
+|---|---|---|---|---|
+| 32060 "…Azizi Venice…" | Azizi Venice | Azizi Developments (lower confidence, §19) | Dubai South | Description, 16 gallery images, agency "Rainbow Properties", amenities |
+| 32078 "…Bayz 102…" | Bayz 102 | Danube Properties | Business Bay | Description, 18 images, handover June 2029, plan 70/30 (70% / 30%), agency |
+| 32101 "…Binghatti Aquarise…" | Binghatti Aquarise | Binghatti Developers | Business Bay | Description, 8 images, handover Q2 2027, plan 70/30 (20% / 50% / 30%), permit (unverified), agency |
+
+- **Corrections in the move:**
+  - 32060's stored type "Apartments" and its title "Waterfront Villas" both describe unit mixes, so they become `aa_unit_types` text.
+  - The bedroom, price and size values of 0 are dropped as non-data.
+- **Abu Dhabi off-plan units** 31083 (Khalifa City, 312 townhouses) and 31094 (Al Raha, Brabus interior option) stay **properties** with no project or developer until the client names them. Neither is inferred from the description.
+
+## 12. Area hierarchy
+
+```
+UAE
+├─ Abu Dhabi
+│  ├─ Al Khalidiya
+│  ├─ Al Raha
+│  ├─ Al Reef Downtown        ← corrected from Dubai (legacy area option)
+│  ├─ Al Reem Island
+│  │  └─ Marina Square
+│  │     └─ Marina Blue Tower  (building; from 31013 text, editor to confirm)
+│  ├─ Khalifa City
+│  ├─ Madinat Al Riyad
+│  ├─ Saadiyat Island          ← "Sadiyat Island" corrected; 0 listings
+│  └─ Yas Island
+└─ Dubai
+   ├─ Business Bay
+   ├─ Dubai Creek             (0 listings)
+   ├─ Dubai Investment Park   (0 listings)
+   ├─ Dubai South
+   └─ Jumeirah Beach Residence ← "Jumairah" corrected; 0 listings
+```
+
+**Migration rules:**
+- **Conflicts are flagged, never resolved silently.** The emirate comes from each listing's own `property_city` term. When that disagrees with the legacy area's `cityparent` option, the record is flagged and the listing's value is proposed.
+  - Al Reef Downtown is the one conflict: the option says Dubai, while both of its listings and the geography say Abu Dhabi.
+- **Spelling and slug fixes** keep the legacy slug in `aa_legacy_term_id`, with redirects: `sadiyat` → `saadiyat-island`, `al-reem` → `al-reem-island`, `jbr` → `jumeirah-beach-residence`, `dip` → `dubai-investment-park`.
+- **Area images** (featured images on 11 of 13 terms, mostly WhatsApp photos) are reused as `aa_hero_id`, flagged "photography tier C".
+- **Empty areas** migrate as terms. Their Area posts stay draft until written.
+
+## 13. Floor plans
+
+**Image-only must work:** upload image, save property, and the floor plan appears on the frontend.
+
+| Aspect | Design |
+|---|---|
+| Storage | `aa_floor_plans`: an ordered list of items `{ id, title?, level?, unit_type?, bedrooms?, area?, note? }`. Only `id` (a Media Library attachment) is required |
+| Validation | An item saves with just an image. Optional fields are trimmed; empty ones are not stored |
+| Admin | A "Floor Plans" box: **Add floor plan** opens the Media Library (multi-select, upload or pick existing). Plans show as a thumbnail row: drag to reorder, × to remove, and a collapsed "Add details" disclosure per plan for the optional fields |
+| Frontend | Each plan renders as an image with a link to view it full size. Labels appear only for fields that hold values; nothing renders for empty fields. With no plans, the module is absent. With one, a single image; with several, a list in the editor's order |
+| Accessibility | Alt text defaults to "Floor plan", plus the title when set, plus the property's structured title. An editor can override it |
+| Reuse | The same structure is used on projects |
+| Migration | WPResidence floor-plan data (`plan_*`) is empty on every listing, so **nothing migrates**. The `use_floor_plans` flag (set on 3) carries no data and is not migrated. If any gallery image is actually a floor plan, an editor moves it (the attachment is reused, not copied) |
+
+## 14. Property admin UX
+
+One screen, eight boxes in this order. Taxonomies such as purpose, status and type render as single-choice dropdowns inside the boxes, not as WordPress's default checkbox panels.
+
+| Box | Fields |
+|---|---|
+| **Property** | Title, Reference (read-only), Purpose, Status, Property type, Category, Price (+ rent period when Rent) |
+| **Property details** | Bedrooms, Bathrooms, Built-up area, Plot area, Furnishing, Property agency, Handover (+ handover year) |
+| **Location** | Emirate › Area › Building (dependent dropdowns on `alaliah_location`), Project, Latitude, Longitude (with UAE bounds check) |
+| **Relationships** | Developer (read-only when a project is set, with "from project"), Project, Agent |
+| **Payment plan** | Overall payment plan, Payment on booking, Payment during construction, Payment on handover. Shown when Completion is Off-plan or any value exists |
+| **Compliance** | Madhmoun permit; space reserved for other emirates' permits |
+| **Media** | Featured image, Property gallery (sortable), Floor plans (§13), Video URL, Brochure (PDF) |
+| **Marketing** | Description (editor), Amenities, Featured property. The marketing headline is hidden until approved |
+
+**Data-quality panel:** a side panel on each property listing its open flags (§17), each linked to the field it concerns. Flags never block saving.
+
+## 15. Search model
+
+**Standard WordPress queries only.** No external search system. No fixed listing threshold: the architecture is revisited only if measured query times or query complexity call for it (Query Monitor on staging).
+
+| Filter | Stored as | Query |
 |---|---|---|
-| 30964 | Luxurious Studio for Sale Prime Location… | Slug says "stunning-2bhk-apartment"; stored 1 bed; Manhattan coordinates; its photos are reused by 31082 |
-| 30967 | Fully Furnished Luxury 4 Master Bedroom with Private Pool | Typed Apartment; size 0 |
-| 31002 | Stunning 2BHK with Balcony… | |
-| 31013 | Fully Furnished 1bd \| Marina Square \| Vacant | |
-| 31023 | Spacious 5-bedroom Villa… | **Typed Apartment** |
-| 31082 | Investor Deal \| 2BR \| High ROI… | **Photos belong to 30964**; "High ROI" is an unsupported claim |
-| 31083 | Luxurious 4 Bd Townhouse \| Private Pool \| 10% discount | Off-plan, no developer, project, handover or payment plan |
-| 31094 | Luxury Apartment \| Beach Access \| Invest Now | Off-plan, no developer or project recorded |
-| 31495 | Premium 5 Master Bedroom Villa… | Size 11,510 sq ft, probably plot rather than built-up area |
-| 31521 | 5 Master Bedroom + Maid Villa… | |
-| 31571 | Lavish spacious 3BR + Balcony… | No features |
-| 32060 | Premium Luxury Waterfront Villas… Azizi Venice | **A project, not a unit**; typed Apartment; no price; "agency" field names a broker |
-| 32078 | Premium 1-4 Bedroom Apartments at Bayz 102 | **A project**; beds, price and size 0 |
-| 32101 | Premium Luxury Apartments at Binghatti Aquarise | **A project**; permit field holds an unverified value |
+| Purpose, completion, status, category, type | Taxonomy | `tax_query` |
+| Area (any level, including children) | `alaliah_location` | `tax_query` with `include_children` |
+| Developer, project | Shadow taxonomies (§5) | `tax_query`; no `meta_query` |
+| Amenities | Taxonomy | `tax_query` |
+| Price, bedrooms, bathrooms, built-up area, plot area | Numeric meta | One `meta_query` range per active filter, typed `NUMERIC` |
+| Handover year | Integer meta | Same |
+| Latitude, longitude | Decimal meta | Map bounds; few listings carry them yet |
 
-**Cross-cutting issues:**
-- **Coordinates:** none usable (Q3, A5 confirmed). Maps run at community level.
-- **Listing references:** none exist. The new model assigns them (§8.2).
-- **Titles:** sales-style titles ("Exclusive Offer", "Invest Now", "10% discount", "High ROI") conflict with the brand voice (D-027 study §12). Structured titles are generated from data; the marketing headline is optional and edited.
-- **Rent period:** stated once ("Yearly") and implied elsewhere.
-- **Advertising permits:** recorded on 1 listing, a Dubai one, in an Abu Dhabi-named field. The client should confirm which permit each listing must display (Abu Dhabi and Dubai use different systems).
+Categorical filters never touch `postmeta`, so a typical search combines several fast taxonomy joins with at most a few numeric ranges. Counts for the developer archive and area pages come from shadow and location term counts, which cost no extra queries.
 
-## 6. Gaps against the approved IA (Stage 03.1)
+## 16. Media reuse
 
-| IA requires | Current data | Gap |
+- **No file is copied, re-uploaded or regenerated by the migration.** New records store existing attachment IDs: featured images, galleries (unserialized from `wpestate_property_gallery`), developer logos, area images, and floor plans when added.
+- **No attachment is reassigned.** `post_parent` is left unchanged, even where an image is parented to another listing (23 images of 31082 belong to 30964) or to the Homepage (the Burtville logo). The new model never relies on `post_parent`.
+- **Not migrated as data:** alt text (0 of 261 exist). Missing alt text is flagged. The image-size regeneration for the new theme is a separate Stage 05 step.
+- **Media facts:** 261 listing images, 33.5 MB. 167 are WhatsApp exports; none is 2,400 px or wider; 94 are under 1,280 px.
+
+## 17. Data-quality flags
+
+The flags are computed by a validation layer in `trigon-alaliah-core` and stored in `aa_quality_flags`. They are recomputed on save and during migration.
+
+| Flag | Rule | Records flagged today |
 |---|---|---|
-| Project entity | None | Create; seed from the 3 Dubai records |
-| Developer → Project → Property links | None | Create links; fill by hand for the 5 off-plan records |
-| Area hierarchy (emirate › community) | Separate city and area taxonomies; link in options; one wrong | Single hierarchical location taxonomy |
-| Purpose and completion as separate facets | Mixed in one taxonomy | Split |
-| Commercial category | None | Add (empty at launch) |
-| Persistent `{ref}` in property URLs | None | Assign |
-| Area posts for community stories | Term images only | Create Area posts; write copy |
-| Listing lifecycle (active, under offer, let, sold, withdrawn) | Marketing labels | Replace |
-| Coordinates | None usable | Community-level until entered |
-| Room tags (Room index) | None | Optional; add per photo when the Room index is used |
-| Alt text | 0 of 261 | Required (WCAG); write during migration QA |
-| Agents with BRN | One generic agent | Client content (Q9) |
+| Missing developer | Off-plan property or project with no developer | 31083, 31094 |
+| Missing project | Off-plan property with no project | 31083, 31094 |
+| Missing coordinates | No `aa_lat`/`aa_lng` | All 11 listings |
+| Invalid or demo coordinates | Legacy value was `0,0` or outside UAE bounds (not migrated) | 30964 (lower Manhattan); the other 10 were `0,0` |
+| Missing permit | No permit on an advertised listing | All 11 listings (requirement to be confirmed, §21) |
+| Unverified permit | Permit present but unconfirmed, or on the wrong emirate | Binghatti Aquarise (project) |
+| Possible wrong type | Type disagrees with title or bedrooms (e.g. "Villa" in title, typed Apartment) | 31023, 30967 (4-bed "with Private Pool" typed Apartment); 30964 (title "Studio", slug "2bhk", 1 bedroom) |
+| Duplicate gallery | Image used by more than one listing | 31082 ↔ 30964 (23 images) |
+| Missing area | No location term | none |
+| Area conflict | Listing emirate ≠ legacy area mapping | Al Reef Downtown (2 listings) |
+| Missing size | Built-up area empty or 0 | 30967 |
+| Possible plot vs built-up | Villa over 8,000 sq ft with no plot area | 31495 (11,510 sq ft) |
+| Missing price | Available listing without price | none among listings |
+| Project-like record | Property with no price, beds or size, but a project name | 32060, 32078, 32101 (resolved by moving them to projects) |
+| Field vs description mismatch | Payment or handover stated differently in text and fields | 31083, 31094 |
+| Sales-style title | "Exclusive Offer", "Invest Now", "% discount", "High ROI" and similar | 31082, 31083, 31094, 31495, plus the 3 projects |
+| Missing alt text | Any gallery or plan image without alt | All 11 listings |
+| Developer not publish-ready | Review status not verified, no About text, or logo flagged | All 17 developers |
 
-## 7. Path comparison: A (preserve `estate_*`) vs B (Trigon-owned model)
+**Data Quality screen** (Tools › Data Quality, for editors):
+- totals per entity;
+- a count per flag, each linking to a filtered admin list;
+- records needing review;
+- after a migration run, the dry-run or run summary.
 
-| Criterion | A. Re-register `estate_*` in our plugin | B. Migrate into Trigon-owned types |
+It is read-only and fixes nothing automatically.
+
+## 18. Migration mapping
+
+### 18.1 Records
+| Legacy | Example | New | Transformation | Validation | Risk |
+|---|---|---|---|---|---|
+| `estate_property` (11 listings) | 31521 "5 Master Bedroom + Maid Villa…" | `alaliah_property` (draft) | Copy content, author and date. Title kept for the editor; a structured title is proposed beside it | Purpose, type, location and agent present | Low |
+| `estate_property` (32060, 32078, 32101) | 32078 "…Bayz 102…" | `alaliah_project` (draft) | Map per §11 | Developer link per test plan | Medium: one judgement call per record |
+| `estate_developer` (17) | 32018 Danube Properties | `alaliah_developer` (draft) | Name, slug, logo, legacy text into `aa_about` marked "unsourced" | Review status set | Low |
+| `estate_agent` (1) | 30966 "Al Aliah International" | `alaliah_agent` (draft, `aa_is_office`) | Name and image; contact fields copied in the database, never printed | | Low |
+| `property_area` terms (13) + `property_city` (2) | `al-reef-downtown` | `alaliah_location` | Build the hierarchy; fix spellings; flag conflicts | Each community has one parent emirate | Medium: Al Reef Downtown |
+| Area term images | Al Raha → att. 31976 | `alaliah_area.aa_hero_id` | Reference the attachment | Attachment exists | Low |
+| `estate_review` (17 demo), `membership_package` (17), Studio and Elementor templates, the 10 demo agent/developer taxonomies | | Not migrated | | | None |
+
+### 18.2 References
+| Legacy | New | Rule |
 |---|---|---|
-| Independence from WPResidence | Achievable only by registering the same names, while inheriting its data shape | **Complete**: our names, our schema |
-| Coexistence on staging during the build | **Conflicts**: both plugins register the same post types and taxonomies while WPResidence is active | **Clean**: old and new run side by side; compare, then switch |
-| Rollback | Hard: shared tables and names | **Simple**: deactivate the new plugin; legacy data untouched |
-| Data shape | Keeps 124 keys (≈ 90 presentation or empty), serialized galleries, purpose and completion mixed, area-to-city link in options, mirrored demo taxonomies | Typed, registered meta (REST schema); one location taxonomy; clean facets |
-| Fit to the approved IA | Needs projects, links and areas added anyway, mixing two models | **Native fit**: Developer, Project, Property, Area |
-| Migration effort | Low for data, high for cleanup | **Low overall**: 14 listings, 17 developers, 1 agent, 13 areas, 261 images (reused in place) |
-| URL continuity | Keeps `/properties/{slug}/` | Needs about 45 redirects (14 listings, 17 developers, 1 agent, terms). Production is `noindex` (P1), so little equity is at risk |
-| Long-term cost | Every future feature works around WPResidence's model | Owned and documented |
-| Strong reason against? | | **None found.** The only argument for A is avoiding migration, and the data needs human correction either way (§5) |
+| `estate_property` ID (e.g. 31521) | `aa_legacy_post_id` = 31521 | Private; used for idempotency and redirects |
+| None | `aa_reference` | `AA-` plus a sequence from 1001, assigned **once** in ascending original publish date (ties broken by legacy ID) and stored with a counter option. Never regenerated; read-only in admin; unique index check on save |
+| Planned assignment | 30964 → AA-1001, 30967 → 1002, 31002 → 1003, 31013 → 1004, 31023 → 1005, 31082 → 1006, 31083 → 1007, 31094 → 1008, 31495 → 1009, 31521 → 1010, 31571 → 1011 | Projects carry no listing reference |
 
-**Recommendation: Path B.** The dataset is small enough that migration costs hours, not weeks, and the data needs human review regardless. A would carry the legacy shape forward and cannot coexist with WPResidence while the legacy pages are still needed on staging.
+### 18.3 Fields
+| Legacy key | Example | New field or taxonomy | Transformation | Validation | Risk |
+|---|---|---|---|---|---|
+| `property_action_category` | "Off Plan" / "Ready" (`sell`) / "Rent" | `alaliah_purpose` + `alaliah_completion` | Rent → Rent + Ready; Ready → Sale + Ready; Off Plan → Sale + Off-plan | Exactly one each | Low |
+| `property_category` | "Apartments" | `alaliah_type` (+ `alaliah_category` Residential) | Apartments → Apartment, Villa → Villa, Townhouse → Townhouse | Type vs title check | Medium (flagged records) |
+| `property_city` + `property_area` (+ `cityparent`) | Abu Dhabi + Al Reef Downtown | `alaliah_location` (one term) | Assign the community term; its parent gives the emirate | Conflict check | Medium |
+| `property_status` | "Active", "hot offer" | `alaliah_status` | Active → Available; "hot offer" and "new offer" dropped | One status | Low |
+| `property_features` (41 terms) | "balcony", "Central Air" | `alaliah_amenity` | Curated map: merge duplicates; drop US-template items (Heating, Natural Gas, Fireplace) and marketing items; assign each to "In the home" or "Building and community". The full term map is produced by the dry run for approval | Every kept term mapped | Medium: editorial |
+| `property_price` | "420000" | `aa_price` | Integer; empty → null | Above 0 | Low |
+| `property_label_before` | "Yearly" | `aa_rent_period` | Yearly → yearly; empty on Rent → yearly (flagged "assumed") | Rent only | Low |
+| `property_bedrooms`, `property_bathrooms` | "5", "6" | `aa_bedrooms`, `aa_bathrooms` | Integer | 0 to 20 | Low |
+| `property_size` | "5948" | `aa_size_builtup` | Decimal; 0 → null | Above 0 | Low |
+| `property_rooms` | "5" | | Not migrated (duplicates bedrooms) | | None |
+| `property_address` | "Marina Square, Al Reem Island, Abu Dhabi" | Building term proposal | Proposed building or sub-community terms for editor approval | | Low |
+| `property_latitude/longitude` | "0", "40.7078…" | | **Not migrated** (all invalid); invalid-coordinates flag | UAE bounds | None |
+| `prop_featured` | "1" | `aa_is_featured` | Boolean | | Low |
+| `property_agent` | "30966" | `aa_agent_id` | Map to the new agent ID | Target exists | Low |
+| `property_agent_secondary` | serialized | | Not migrated (same agent) | | None |
+| `property-agency` | "Danube Properties" | `aa_property_agency` | Exact (trim only) | | Low |
+| `property-handover` | "Q2, 2027" | `aa_handover` (+ suggested `aa_handover_year`) | Exact; year suggested only | | Low |
+| `madhmoun-permit` | "123564" | `aa_madhmoun_permit` | Exact; flagged unverified | | Medium (emirate mismatch) |
+| `overall-payment-plan` and the 3 parts | "70/30", "20%" | `aa_payment_*` | Exact (trim only) | Parts sum to 100% (check, not enforced) | Low |
+| `property-external-construction` | project description text | Project description (for the 3 projects) | Appended under the description for an editor to merge | | Low |
+| `wpestate_property_gallery` | serialized ID list | `aa_gallery` | Unserialize; keep order; check each attachment exists | Duplicate check | Low |
+| `image_to_attach` | "31003,31004,…" | | Not migrated (duplicates the gallery) | Cross-check only | None |
+| `_thumbnail_id` | "31549" | `_thumbnail_id` | Same attachment | Exists | Low |
+| `use_floor_plans`, `plan_*` | "1" / empty | `aa_floor_plans` | Nothing to migrate | | None |
+| Post content | listing description | `post_content` | Copied; Elementor and shortcode markup stripped if present | | Low |
+| Analytics (`wpestate_total_views`, `_eael_post_view_count`, `wpestate_detailed_views`) | "253" | | Not migrated | | None |
+| ≈ 90 theme presentation and empty US-template keys | `page_header_*`, `energy_class`… | | Not migrated | | None |
 
-## 8. Target model (Path B, for approval)
+## 19. Proposed test relationships (not written)
 
-Names are prefixed to avoid collisions. Post type keys are kept within WordPress's 20-character limit.
+These are only for links verifiable from content on this site.
 
-### 8.1 Post types (`trigon-alaliah-core`)
-| Post type | Rewrite (IA §5) | Purpose |
+| Test | Developer | Project (from legacy record) | Area | Evidence | Confidence |
+|---|---|---|---|---|---|
+| **T1** | Danube Properties (32018) | **Bayz 102** (32078) | Dubai › Business Bay | Description: "The project by Danube Properties in Business Bay"; agency field "Danube Properties"; project name | High |
+| **T2** | Binghatti Developers (32040) | **Binghatti Aquarise** (32101) | Dubai › Business Bay | Project name contains the developer's name; agency field "Binghatti Properties" | High |
+| **T3** | Azizi Developments (32034) | **Azizi Venice** (32060) | Dubai › Dubai South | Project name only; the description credits "Rainbow Properties" as the presenting agency, not the developer | Medium: approve explicitly or drop |
+
+**What the tests prove:**
+- the forward links Developer → Project → Area;
+- the reverse links Area → Projects → Developer and Developer → Projects;
+- the derived "Projects with Al Aliah" count;
+- the derived developer areas;
+- shadow-term filtering.
+
+**What they cannot prove yet:** Project → **Property** (unit). None of the three projects has a unit listing, and no Abu Dhabi unit names its developer or project.
+
+**Two ways to complete the chain, neither invented:**
+- **(a)** The client names the developer and project for 31083 (Khalifa City townhouses) or 31094 (Al Raha apartments with a Brabus interior option). That gives a full Abu Dhabi Developer → Project → Property → Area test.
+- **(b)** For one T1 or T2 project, the client supplies a real available unit to list as a property.
+
+**Area and building test** (no developer required): 31013 → Marina Blue Tower → Marina Square → Al Reem Island → Abu Dhabi, from its own description. The building term is created only with editor confirmation.
+
+## 20. Dry-run migration plan
+
+**Tool:** `wp alaliah migrate`, part of `trigon-alaliah-core`, deployed only through the approved Git → ZIP route.
+
+| Phase | Action | Writes in dry run |
 |---|---|---|
-| `alaliah_property` | `/property/{slug}-{ref}/` | Units for sale or rent |
-| `alaliah_project` | `/projects/{slug}/` | Developments (mostly off-plan) |
-| `alaliah_developer` | `/developers/{slug}/` | Developers |
-| `alaliah_area` | `/areas/{emirate}/{community}/` | Editorial story for an emirate or community; paired with a location term |
-| `alaliah_agent` | `/team/{slug}/` | People |
-| `alaliah_insight` | `/insights/{slug}/` | Articles |
+| 0. Preflight | Confirm staging `home`, backup verified (E3), WPResidence data readable, attachment files present | None |
+| 1. Locations | Build the planned term tree; list corrections and conflicts | None |
+| 2. Amenities | Propose the full term map for approval | None |
+| 3. Developers | Plan 17 drafts, review statuses and logo flags | None |
+| 4. Agent | Plan the office record | None |
+| 5. Projects | Plan 3 projects from the Dubai records | None |
+| 6. Properties | Plan 11 properties: references, fields, links, galleries | None |
+| 7. Relationships | Apply only links on the approved test list (§19) | None |
+| 8. Validation | Compute every flag (§17) | None |
+| 9. Redirects | List legacy URL → new URL pairs | None |
+| 10. Report | Print a summary and write a JSON and CSV report to a private location outside the web root, or to stdout | Report only |
 
-### 8.2 Taxonomies
-| Taxonomy | Applies to | Terms |
+**Options:**
+- `--dry-run` is the default; `--execute` is required to write.
+- `--only=developers|projects|properties|…` runs one phase.
+- `--ids=…` limits the run to specific legacy records (for the T1–T3 test).
+- `--report=<path>` sets where the report is written.
+
+**Guarantees when executing (later, after approval):**
+- **Additive:** only creates `alaliah_*` posts, terms and `aa_*` meta. It never updates, deletes or reassigns WPResidence posts, meta, terms or attachments.
+- **Idempotent and repeatable:** keyed on `aa_legacy_post_id` and `aa_legacy_term_id`. A rerun updates migrated fields only if the new record has not been edited since migration (tracked by a stored hash); edited records are skipped and reported.
+- **References** are assigned once and never changed by reruns.
+- **Coexistence:** the new types have different names and URLs, so both systems run side by side on staging until cutover. Rollback = deactivate `trigon-alaliah-core`.
+- **Logging:** every write is logged with legacy ID, new ID, field and value source.
+
+**Sequence after approval:**
+1. Build and deploy the model.
+2. Dry run (full).
+3. Review the report together.
+4. Execute T1–T3 only (`--ids`).
+5. QA the relationships on staging.
+6. Approve broad migration.
+7. Execute the rest.
+8. Editorial review using the Data Quality screen.
+9. Cutover and redirects (separate approval).
+
+## 21. Points to confirm
+
+1. **Developer URL.** The approved IA (D-031, D-032) uses `/developers/{slug}/`. The brief's example shows `/developer/aldar/`. This report keeps `/developers/{slug}/`, which matches the "All Developers" archive at `/developers/`. Confirm, or switch detail pages to the singular.
+2. **Permits.** Which permit each listing must show: Madhmoun for Abu Dhabi, and whether Dubai records need a DLD permit field now. Also whether "123564" on Binghatti Aquarise is a real permit and for which authority.
+3. **T3 (Azizi → Azizi Venice):** include, or drop for lack of explicit text.
+4. **Developer and project for 31083 and 31094** to complete a full property-level test.
+5. **Al Reef Downtown** as Abu Dhabi: confirm. The listings say Abu Dhabi; the legacy area setting says Dubai.
+6. **Name corrections:** Azizi Developments and SAAS Properties.
+
+## 22. Approval requested
+
+- **The content model:**
+  - post types (§4), taxonomies including the shadow taxonomies (§5), and fields (§6);
+  - the seven legacy custom fields kept as text (§7);
+  - the developer classification and draft-only migration (§9);
+  - the relationship rules (§10) and the project model (§11);
+  - the area hierarchy and corrections (§12);
+  - floor plans (§13), the admin layout (§14) and the search model (§15).
+- **Media reuse without copying or reassigning** (§16).
+- **The validation flags and Data Quality screen** (§17).
+- **The mapping** (§18) and the reference scheme `AA-1001`… (§18.2).
+- **Test relationships T1, T2 and T3** (§19).
+- **The dry-run plan and execution sequence** (§20).
+
+Nothing is built, created, linked or migrated until this is approved and the backup gate (E3) is met.
+
+---
+
+## Appendix: legacy data detail
+
+### A. Legacy post types
+| Post type | Published | Fate |
 |---|---|---|
-| `alaliah_location` (hierarchical) | property, project, agent | Emirate › community › sub-community or building. Seeded from the current city and area terms, with Al Reef Downtown corrected to Abu Dhabi and "Sadiyat" to "Saadiyat Island" |
-| `alaliah_purpose` | property | Sale, Rent |
-| `alaliah_completion` | property, project | Ready, Off-plan |
-| `alaliah_category` | property | Residential, Commercial |
-| `alaliah_type` | property | Apartment, Villa, Townhouse, Penthouse, Duplex, Office, Retail, Warehouse… Studio is expressed as 0 bedrooms, not a type |
-| `alaliah_feature` | property | Unit features (curated and de-duplicated; about 20) |
-| `alaliah_amenity` | project, property | Building or community amenities (pool, gym, security…) |
+| `estate_property` | 14 | 11 → properties, 3 → projects |
+| `estate_developer` | 17 | → developers (draft) |
+| `estate_agent` | 1 | → agent (office) |
+| `estate_review` | 17 (theme demo) | Not migrated; never published |
+| `membership_package` | 17 | Not migrated |
+| `wpestate-studio` | 3 | Not migrated (legacy templates) |
+| `elementor_library` / `elementor-hf` | 33 / 3 | Not migrated |
+| `page` | 27 (+3 draft) | Content review only (W9) |
+| `attachment` | 553 (261 listing images) | Reused in place |
 
-### 8.3 Property fields (registered meta, typed, exposed in REST)
-| Field | Type | From |
+### B. Legacy property meta (124 keys)
+| Group | Keys | Fate |
 |---|---|---|
-| `aa_ref` | string, unique, immutable | `AA-` + legacy post ID for migrated listings (e.g. `AA-31521`); new listings receive the next sequence |
-| `aa_price` | integer AED | `property_price` (empty → null, never 0) |
-| `aa_rent_period` | enum: yearly, monthly | Default yearly; `property_label_before` |
-| `aa_bedrooms` | integer, 0 = studio | `property_bedrooms` |
-| `aa_bathrooms` | integer | `property_bathrooms` |
-| `aa_size_builtup` | number, sq ft | `property_size` (0 → null) |
-| `aa_size_plot` | number, sq ft | New; editor confirms for villas (31495) |
-| `aa_furnishing` | enum: furnished, unfurnished, partly | New (titles mention furnishing; set by editor) |
-| `aa_listing_state` | enum: active, under offer, let, sold, withdrawn | Replaces `property_status` |
-| `aa_is_featured` | boolean | `prop_featured` |
-| `aa_project_id` | post ID | New |
-| `aa_developer_id` | post ID, only when there is no project | New |
-| `aa_agent_id` | post ID | `property_agent` |
-| `aa_lat`, `aa_lng`, `aa_geo_precision` | numbers; enum: exact, building, community | `0,0` and non-UAE values are rejected; precision defaults to community |
-| `aa_address_display` | string | `property_address`, cleaned |
-| `aa_permit_number`, `aa_permit_authority`, `aa_permit_verified` | string; enum; boolean | `madhmoun-permit`, after verification |
-| `aa_headline` | string, optional | Edited marketing headline; the structured title is generated |
-| `aa_gallery` | ordered attachment IDs | `wpestate_property_gallery` (unserialized) |
-| `aa_floorplans` | attachment IDs | None at present |
-| `aa_legacy_id` | integer, private | Source `estate_property` ID, for redirects and audit |
+| Core data | `property_price`, `_bedrooms`, `_bathrooms`, `_size`, `_address`, `_label_before`, `prop_featured`, `property_agent` | Mapped (§18.3) |
+| Site custom fields | `property-agency`, `property-handover`, `madhmoun-permit`, `overall-payment-plan`, `payment-on-booking`, `payment-during-construction`, `payment-on-handover` | **Mapped exactly** (§7) |
+| Misused or derived | `property-external-construction`, `hidden_address`, `image_to_attach`, `property_rooms`, `property_agent_secondary`, `property_country` | Merged, cross-checked or dropped as listed |
+| Invalid | `property_latitude`, `property_longitude` | Not migrated; flagged |
+| Media | `wpestate_property_gallery`, `_thumbnail_id`, `use_floor_plans`, `plan_*` (empty) | Galleries mapped; plans empty |
+| Analytics | `wpestate_total_views`, `_eael_post_view_count`, `wpestate_detailed_views` | Not migrated |
+| Presentation and empty US-template fields | ≈ 90 keys (`page_header_*`, `topbar_*`, `sidebar_*`, energy and EPC, HOA, garage, roofing, `mls`, `property_internal_id`…) | Not migrated |
+| Private | `owner_notes`, `property_user` | Empty; not migrated |
 
-**Per attachment:** `aa_room` (Room index, optional), `aa_is_render` (labels "Developer render"), `aa_tier` (A/B/C/D, see `alaliah-design-system`), plus core alt text.
-
-### 8.4 Project and developer fields
-- **Project:**
-  - developer (required);
-  - location;
-  - completion;
-  - handover (`aa_handover_quarter`, as a date plus a "Q" display);
-  - payment plan (booking %, during construction %, on handover %, with a summary such as "70/30");
-  - unit types;
-  - starting price (derived from units when any exist);
-  - brochure;
-  - masterplan;
-  - amenities;
-  - description;
-  - gallery.
-
-  The three Dubai records seed Azizi Venice, Bayz 102 and Binghatti Aquarise.
-- **Developer:**
-  - logo (approved);
-  - about (sourced);
-  - source references;
-  - website;
-  - external rating block (source, URL, score, count, retrieved date, refresh policy, per D-032; empty at launch);
-  - `aa_verified` (blocks publishing until checked).
-
-### 8.5 Admin editing (WordPress is now the record)
-- **Native meta boxes in `trigon-alaliah-core`.** These carry validation (no 0 for unknown values, UAE coordinate bounds, required facets per purpose) and an editor checklist of **QA flags**: missing alt text, size 0, type versus title mismatch, sales-style title words, photos reused by another listing, missing permit.
-- **No ACF dependency** (it is not active; ACF Pro would be a paid licence and a third-party runtime dependency). This is the recommendation; ACF Pro remains the alternative if faster admin UI matters more than independence.
-
-### 8.6 Search storage (W4)
-At 14 listings, D-006's default applies: `WP_Query` on taxonomies plus typed meta. A denormalised index table is deferred until active listings exceed roughly 1,000 or the measured search-response budget fails. The schema keeps price, beds, size and coordinates as typed numbers, so the table can be added later without remodelling.
-
-## 9. Field mapping (WPResidence → Trigon)
-
-| WPResidence | Trigon | Action |
-|---|---|---|
-| `estate_property` post (title, content, slug, date, author) | `alaliah_property` | Copy. Title regenerated; old title kept as `aa_headline` only when the editor approves |
-| `property_action_category` | `alaliah_purpose` + `alaliah_completion` | Split: Rent → Rent/Ready; Ready (`sell`) → Sale/Ready; Off Plan → Sale/Off-plan |
-| `property_category` | `alaliah_type` + `alaliah_category` | Map; fix 31023 and 32060 by hand |
-| `property_city` + `property_area` + area `cityparent` | `alaliah_location` | Merge into one hierarchy; correct Al Reef Downtown and Saadiyat |
-| `property_county_state`, `property_country` | | Drop (implied) |
-| `property_features` | `alaliah_feature` / `alaliah_amenity` | De-duplicate and split; drop US-template and marketing terms |
-| `property_status` | `aa_listing_state` | Active → active; marketing labels dropped |
-| `property_price`, `_bedrooms`, `_bathrooms`, `_size` | `aa_price`, `aa_bedrooms`, `aa_bathrooms`, `aa_size_builtup` | Copy; zeros become null where they mean "unknown" |
-| `property_latitude/longitude` | `aa_lat/lng` | **Not migrated** (none valid) |
-| `prop_featured` | `aa_is_featured` | Copy |
-| `property_agent` | `aa_agent_id` | Copy |
-| `wpestate_property_gallery`, `_thumbnail_id` | `aa_gallery`, featured image | Unserialize; attachments reused in place (no re-upload) |
-| Off-plan custom fields (handover, payment plan) | Project fields | Move to the project; 3 Dubai records become projects |
-| `property-agency`, `property-external-construction` | Project developer / description | Resolve by hand |
-| `madhmoun-permit` | `aa_permit_*` | Copy as unverified |
-| `estate_developer` (title, logo) | `alaliah_developer` (draft, unverified) | Copy name and logo; fix "Azizi Developments" |
-| `estate_agent` | `alaliah_agent` | Copy as the company contact |
-| Theme presentation, analytics, empty US fields (≈ 100 keys) | | **Not migrated**; they stay on the legacy posts untouched |
-| `estate_review`, `membership_package`, agent and developer taxonomies | | **Not migrated** |
-
-## 10. Migration plan (after approval; nothing runs before then)
-
-1. **Gate:** a verified, restorable backup (E3) and staging write boundaries respected (E1).
-2. **Code in Git:** `trigon-alaliah-core` registers the new types, taxonomies and fields. It is deployed through the approved ZIP route (D-023).
-3. **Migration as a WP-CLI command in the plugin** (`wp alaliah migrate`):
-   - **dry run by default**, printing a diff report;
-   - idempotent, keyed on `aa_legacy_id`;
-   - writes only new records;
-   - **never edits or deletes legacy posts**;
-   - logs every write.
-4. **Human review queue:** the 14 listings, 3 projects and 17 developers go through the QA flags in §8.5. Developers stay draft until verified.
-5. **Redirects:** `/properties/{slug}/` → `/property/{slug}-{ref}/`, `/estate_developer/{slug}/` → `/developers/{slug}/`, `/agents/…` → `/team/…`, area and city archives → `/areas/…`, all as stored 301s (SiteSEO redirections or the plugin).
-6. **Side-by-side QA** on staging, then the theme switch (W9). The legacy WPResidence data stays in the database until migration is approved as complete.
-7. **Rollback:** deactivate `trigon-alaliah-core`; legacy posts are unchanged.
-
-## 11. Decisions requested
-1. **Path B**, Trigon-owned types, as specified in §8.
-2. **Naming:** the `alaliah_*` post types and taxonomies and the `aa_*` meta prefix.
-3. **Listing references:** `AA-{legacy ID}` for migrated listings, sequential for new ones.
-4. **Admin fields:** native meta boxes (recommended) or ACF Pro.
-5. **Search storage:** standard queries now, with the index table deferred to the threshold in §8.6.
-6. **Not migrated:** demo reviews, membership packages, theme presentation meta, view counters, invalid coordinates.
-
-**Content needed from the client** (not blockers for approving the model):
-- Developers and projects for 31083 and 31094.
-- Which of 30964 and 31082 has the correct photos.
-- Built-up versus plot area for 31495.
-- Whether the three Dubai project records stay live (B1).
-- Advertising permit numbers per listing.
-- Verified developer logos.
-- Real agent profiles with BRN (Q9).
+### C. Legacy code dependencies
+- **WPCode `[wpres_meta]` shortcode:** used in 4 posts and in legacy Elementor property templates. Retired with them.
+- **WPResidence Studio templates:** render current property pages; they break at the theme switch (W9), which is expected.
+- **WPForms forms** (Contact Us, Register Interest, Request Consultation): an unconnected Constant Contact provider; lead handling is W7.

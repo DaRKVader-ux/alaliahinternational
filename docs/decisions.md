@@ -13,7 +13,7 @@ Format: `D-NNN · date · area` then the decision and its rationale.
 | 01 Brand understanding | **Complete** |
 | Capability / infrastructure setup | **Mostly complete.** Skills, QA, local WP, 21st and Novamira are verified, and the staging audit is done ([`wordpress-environment-report.md`](./wordpress-environment-report.md)). Open: staging isolation (E1), restorable backup (E3), staging hygiene fixes (E2). These block major WordPress work, not Stage 02 |
 | 02 Visual world / aesthetic direction | **Complete.** Redline approved (D-027, D-028); 02.5b refinements approved (D-029); final refinement 02.5c completed ([`stage-02-5c-final-refinement.md`](./stage-02-5c-final-refinement.md)) with T5 type as the working system (D-030). `alaliah-design-system` is active |
-| 03 Website experience | **In progress.** 03.1 information architecture **approved** (D-032). 03.2 data and content-model report presented ([`stage-03-2-data-model-report.md`](./stage-03-2-data-model-report.md)); recommends Path B (Trigon-owned model); awaiting approval. Nothing migrated |
+| 03 Website experience | **In progress.** 03.1 IA approved (D-032). 03.2 Path B approved in principle (D-033); revised data model and migration plan presented ([`stage-03-2-data-model-report.md`](./stage-03-2-data-model-report.md)); awaiting approval. Nothing built, created, linked or migrated |
 | 04 Motion & interaction | Locked until Stage 03 is approved |
 | 05 Implementation | Locked until Stage 04 is approved. No production theme or plugin is built before then; architecture is set by D-021 – D-025 |
 
@@ -189,3 +189,19 @@ Approved from 02.5b: the three intensity levels (Functional, Editorial, Immersiv
 - **Multilingual:** the architecture stays English/Arabic-ready; WPML vs Polylang is deferred to implementation planning. W2 does not block Stage 03.1.
 - **Licence information:** ORN, BRN and licence numbers are required verified content for implementation, not blockers for IA approval.
 - **Gate:** Q3 and Q4 are the primary blockers before Stage 03.2 data architecture is finalised.
+
+**D-033 · 2026-10-07 · Stage 03.2: Path B approved in principle, with requirements**
+- **Path B:** legacy WPResidence data → migration layer → Trigon-owned structures in `trigon-alaliah-core` → `alaliah-trigon`. WPResidence is not a runtime dependency after migration. Legacy records are not mutated or deleted.
+- **Naming:** `alaliah_*` post types and taxonomies; `aa_*` fields. Internal prefixes never appear in public URLs.
+- **References:** new immutable Al Aliah references (`AA-1001`…), independent of title, slug, URL and legacy ID. The legacy ID is kept as `aa_legacy_post_id`.
+- **Developers:** all existing `estate_developer` records are inventoried and classified (verified, needs review, probable demo/test, duplicate, invalid/incomplete). Legitimate records migrate as drafts; none is published unverified.
+- **Relationships:** the model supports Developer → Projects → Properties → Areas with reverse links. Relationships are never inferred. 2–3 verified test relationships are proposed before broad migration.
+- **Projects** are first-class; the three Dubai project-like records map to `alaliah_project`.
+- **Custom fields kept as text and migrated exactly:** Property Agency, Property Handover, Madhmoun Permit, and the four payment-plan fields (grouped as "Payment Plan" in the admin). Permit numbers are never generated, and empty permits show no placeholder.
+- **Floor plans:** image-only upload must work; metadata is optional, and empty labels never render.
+- **Admin:** a focused property editor grouped into Property, Details, Location, Relationships, Payment Plan, Compliance, Media and Marketing.
+- **Locations:** UAE › emirate › community hierarchy. Incorrect legacy relationships are flagged, not copied.
+- **Search:** standard WordPress queries; no external search; no fixed listing threshold.
+- **Validation:** a migration validation layer and a Data Quality admin screen.
+- **Media:** existing attachments are reused; no files are duplicated.
+- **Migration safety:** dry-run by default, additive, repeatable, idempotent, non-destructive; old and new coexist on staging until cutover.
