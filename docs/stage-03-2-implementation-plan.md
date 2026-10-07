@@ -67,7 +67,7 @@ All post types share these arguments:
 
 | Key | Public rewrite slug | `has_archive` | `rest_base` | `supports` | Menu | Notes |
 |---|---|---|---|---|---|---|
-| `alaliah_property` | `property` | `false` (listing pages are search landings, IA §5) | `properties` | title, editor, thumbnail, author, revisions | "Properties" | Permalink filter appends `-{reference number}`: `/property/{slug}-1010/` |
+| `alaliah_property` | `property` | `false` (listing pages are search landings, IA §5) | `properties` | title, editor, thumbnail, author, revisions | "Properties" | `/property/{base-slug}-aa-1010/` per the URL rule in §6.1 |
 | `alaliah_project` | `projects` | `projects` | `projects` | title, editor, thumbnail, revisions | "Projects" | |
 | `alaliah_developer` | `developers` | `developers` (titled "All Developers") | `developers` | title, editor, thumbnail, revisions | "Developers" | Plural, per D-034 |
 | `alaliah_area` | `areas` | `areas` | `areas` | title, editor, thumbnail, revisions | "Areas" | Custom permalink: `/areas/{emirate}/{community}/` from the paired location term |
@@ -212,6 +212,15 @@ Types and rules are the same as on property.
 - **Migration order:** migrated listings take their numbers from a **deterministic map** built from the full legacy set (ascending original publish date, ties broken by legacy ID). Each listing gets the same reference whichever subset runs first. After the full migration, `aa_reference_next` is set past the highest assigned value.
 - **Immutability:** set once, on first save or on migration. Any later write is rejected and logged. There is no admin input.
 - **Uniqueness:** checked before assignment; a duplicate aborts the save with an error.
+- **Reserved range:** `wp alaliah setup` reserves AA-1001 to AA-1011 for the 11 migrated listings (option `aa_reference_reserved`) and starts `aa_reference_next` at 1012. A listing created by hand before the full migration can never take a migrated listing's number.
+
+**URL rule (D-035):**
+- **Canonical reference:** `AA-1001`, stored in `aa_reference`, displayed as is.
+- **URL token:** the reference in lower case, `aa-1001` (`strtolower(aa_reference)`).
+- **Public URL:** `/property/{base-slug}-aa-1001/`. `{base-slug}` is the post slug, stored *without* the token.
+- **Resolution** is by token only. Any request whose token matches but whose base slug differs, including the bare `/property/aa-1001/`, returns a 301 to the current canonical URL. A title or slug change therefore never breaks a link.
+- **One function generates every property URL:** permalinks, canonical tags, sitemaps, REST `link`, the migration's redirect map, and the legacy redirects (`/properties/{legacy-slug}/` → `aa_legacy_post_id` → that function).
+- **Implementation:** `References::token()`, `PropertyUrls::permalink()` (a `post_type_link` filter), a rewrite rule `^property/(?:.+-)?(aa-\d{4,})/?$` resolving by `aa_reference`, and a `template_redirect` canonical check. Post slugs never contain the token; if a token-like suffix appears in a slug, it is stripped on save.
 
 ### 6.2 Relations
 - **Canonical:** `aa_project_id`, and `aa_developer_id` (on projects, and on properties without a project).
@@ -353,10 +362,11 @@ Only the original values of fields the migration read are stored there; contact 
 ### 8.6 Controlled sets
 | Set | Contents |
 |---|---|
-| `t1t2` (approved) | Location terms UAE › Dubai › Business Bay; developers 32018 (Danube) and 32040 (Binghatti); projects 32078 (Bayz 102 → Danube) and 32101 (Binghatti Aquarise → Binghatti). **No properties** (none is verifiable) |
+| `t1t2` (approved) | **Developer → Project → Area relationship test.** Location terms UAE › Dubai › Business Bay; developers 32018 (Danube) and 32040 (Binghatti); projects 32078 (Bayz 102 → Danube) and 32101 (Binghatti Aquarise → Binghatti). No properties |
+| `p1` (approved) | **Property data-model test.** Location terms UAE › Abu Dhabi › Al Reem Island; the office agent; property 31013 → AA-1004. The building and sub-community are recorded as a proposal only (flag `building_unconfirmed`) |
 | `full` | Everything in §8.2, with T1 and T2 links only |
 
-**Optional, needs separate approval:** a set `area-test` for 31013 → Marina Blue Tower → Marina Square → Al Reem Island. It would exercise the property editor, the reference (AA-1004 from the deterministic map) and floor plans before the full run.
+T1 and T2 prove Developer → Project → Area. P1 proves the property model. **No test proves Project → Property**: no verified unit-to-project relationship exists yet.
 
 ## 9. Proving legacy data is untouched
 
@@ -395,10 +405,10 @@ Only the original values of fields the migration read are stored there; contact 
 |---|---|---|---|
 | 1 | **Backup gate:** a fresh, restorable staging backup (§12) | Client/host plus us | Yes, if it can't be verified |
 | 2 | Build the ZIP from Git; upload via Novamira `create-upload-link`; `run-wp-cli plugin install --activate`; delete the ZIP | Us | |
-| 3 | `wp alaliah setup` (fixed terms) | Us | |
+| 3 | `wp alaliah setup` (fixed terms, reference range reserved) | Us | |
 | 4 | `wp alaliah migrate verify-legacy` (baseline) | Us | |
 | 5 | `wp alaliah migrate plan --set=full` | Us | **Yes: review the report with the client**, including the amenity term map |
-| 6 | `wp alaliah migrate run --execute --set=t1t2` | Us, after approval | |
+| 6 | `wp alaliah migrate run --execute --set=t1t2`, then `--set=p1` | Us, after approval | |
 | 7 | QA: admin editors, relationship inspector, REST payloads, draft-preview URLs (`/developers/danube-properties/`, `/projects/bayz-102/`), shadow terms, derived counts, `verify-legacy` unchanged, the WPResidence site unchanged | Us | **Yes: stop before broad migration** |
 | 8 | (Later approval) `run --execute --set=full`, editorial review, theme, redirects, cutover | | |
 
@@ -422,7 +432,7 @@ Option 3 alone does not prove restorability. **Recommendation:** 1 or 2, plus 3.
 | The WPResidence theme renders the new types crudely in preview | Records stay draft; presentation QA waits for the theme |
 | Amenity mapping is editorial | Produced by the dry run, approved before use |
 | Editors change records between runs | Hash check skips edited records |
-| No property in T1 and T2 | Optional `area-test` set; full chain once a developer is named for 31083 or 31094 |
+| No proof of Project → Property | P1 covers the property model; the full chain waits until a developer and project are named for 31083 or 31094 |
 
 ## 14. Deliverables and stop points
 1. Plugin code in Git (data layer, admin, validation, CLI), with local tests passing.

@@ -121,12 +121,19 @@
 
 | Post type | Public URL (IA §5, approved) | Notes |
 |---|---|---|
-| `alaliah_property` | `/property/{slug}-{reference-number}/` | e.g. `/property/five-bedroom-villa-yas-island-1010/`. The URL carries the reference, never the legacy ID |
+| `alaliah_property` | `/property/{base-slug}-aa-1001/` | e.g. `/property/five-bedroom-villa-yas-island-aa-1010/`. The URL carries the reference token, never the legacy ID (rule below) |
 | `alaliah_project` | `/projects/{slug}/` | First-class entity |
 | `alaliah_developer` | `/developers/{slug}/` | Archive titled "All Developers" |
 | `alaliah_area` | `/areas/{emirate}/{community}/` | Editorial page for a location term |
 | `alaliah_agent` | `/team/{slug}/` | People; one "office" record for the company contact |
 | `alaliah_insight` | `/insights/{slug}/` | Registered now, content later |
+
+**Property URL rule (D-035; one rule everywhere):**
+- **Canonical reference:** `AA-1001`, stored in `aa_reference`, displayed as is.
+- **URL token:** the reference in lower case, `aa-1001` (`strtolower(aa_reference)`).
+- **Public URL:** `/property/{base-slug}-aa-1001/`. `{base-slug}` is the post slug, stored *without* the token.
+- **Resolution** is by token only. Any request whose token matches but whose base slug differs, including the bare `/property/aa-1001/`, returns a 301 to the current canonical URL. A title or slug change therefore never breaks a link.
+- **One function generates every property URL:** permalinks, canonical tags, sitemaps, REST `link`, the migration's redirect map, and the legacy redirects (`/properties/{legacy-slug}/` → `aa_legacy_post_id` → that function).
 
 **Internal names never appear in URLs.** Each type sets its own public `rewrite` slug and `has_archive`. Query variables use public names (e.g. `?developer=`), and REST routes sit under `/wp-json/alaliah/v1/` with public field names.
 
@@ -520,7 +527,7 @@ It is read-only and fixes nothing automatically.
 |---|---|---|---|---|---|
 | `estate_property` (11 listings) | 31521 "5 Master Bedroom + Maid Villa…" | `alaliah_property` (draft) | Copy content, author and date. Title kept for the editor; a structured title is proposed beside it | Purpose, type, location and agent present | Low |
 | `estate_property` (32060, 32078, 32101) | 32078 "…Bayz 102…" | `alaliah_project` (draft) | Map per §11 | Developer link per test plan | Medium: one judgement call per record |
-| `estate_developer` (17) | 32018 Danube Properties | `alaliah_developer` (draft) | Name, slug, logo, legacy text into `aa_about` marked "unsourced" | Review status set | Low |
+| `estate_developer` (17) | 32018 Danube Properties | `alaliah_developer` (draft) | Name (Azizi corrected), slug, logo attachment (reused), `aa_legacy_post_id`. Legacy description → **`aa_about_legacy` only**; `aa_about` stays empty until sourced or editorially approved copy is written | Review status set; `aa_about` empty after migration | Low |
 | `estate_agent` (1) | 30966 "Al Aliah International" | `alaliah_agent` (draft, `aa_is_office`) | Name and image; contact fields copied in the database, never printed | | Low |
 | `property_area` terms (13) + `property_city` (2) | `al-reef-downtown` | `alaliah_location` | Build the hierarchy; fix spellings; flag conflicts | Each community has one parent emirate | Medium: Al Reef Downtown |
 | Area term images | Al Raha → att. 31976 | `alaliah_area.aa_hero_id` | Reference the attachment | Attachment exists | Low |
@@ -589,7 +596,22 @@ The agency field is not cited as evidence for any test (decision 5).
 - **(a)** The client names the developer and project for 31083 (Khalifa City townhouses) or 31094 (Al Raha apartments with a Brabus interior option). That gives a full Abu Dhabi Developer → Project → Property → Area test.
 - **(b)** For one T1 or T2 project, the client supplies a real available unit to list as a property.
 
-**Area and building test** (no developer required): 31013 → Marina Blue Tower → Marina Square → Al Reem Island → Abu Dhabi, from its own description. The building term is created only with editor confirmation.
+### P1: property data-model test (approved, D-035)
+
+P1 is **separate from T1 and T2**. It tests the property model, not developer relationships.
+
+| | |
+|---|---|
+| Record | Legacy 31013 "Fully Furnished 1bd \| Marina Square \| Vacant" (Al Reem Island, rent) |
+| Validates | Property migration; immutable reference **AA-1004** (from the deterministic map); purpose Rent, completion Ready, status Available, type Apartment; agent link (office record); location hierarchy; reuse of its 9 gallery images and featured image; empty floor-plan behaviour; quality flags; admin editing; REST representation |
+| Location | Verified levels only: **UAE › Abu Dhabi › Al Reem Island** |
+| Building | "Marina Blue Tower → Marina Square" is **not created** by the migration. The listing's own text and address name both, but the hierarchy has not been independently confirmed. It is recorded in the audit as a proposal and flagged `building_unconfirmed`; an editor creates the terms in admin once confirmed |
+| Expected flags | missing coordinates, missing permit, missing alt text, building unconfirmed |
+
+**What the tests do and don't prove:**
+- T1 and T2 prove Developer → Project → Area and the reverse links.
+- P1 proves the property model.
+- **None of them proves Project → Property.** No verified unit-to-project relationship exists yet.
 
 ## 20. Dry-run migration plan
 

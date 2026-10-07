@@ -73,7 +73,7 @@ Home ............................................. Immersive
 │   │           Property management /services/property-management/ ... Editorial
 │   ├─ Insights /insights/ › Article /insights/{slug}/ ............. Editorial
 │   └─ Careers /careers/ (only if real) .......... Editorial
-├─ Property   /property/{slug}-{ref}/ ............ Editorial   (Room index when photos are tagged)
+├─ Property   /property/{slug}-aa-1001/ .......... Editorial   (Room index when photos are tagged)
 ├─ Contact    /contact/ .......................... Functional  (header CTA)
 ├─ List your property /list-your-property/ ....... Functional  (stepped flow)
 ├─ Shortlist  /shortlist/ ........................ Functional  (noindex; shareable link)
@@ -176,7 +176,7 @@ Modules in reading order. A module with no legitimate data is **omitted**, never
 | Location + type | `/properties-for-sale/{location}/{type}/` | `/properties-for-rent/al-reem-island/apartments/` | Indexable only above the threshold in §6 |
 | Type landing | `/properties-for-sale/{type}/` | `/properties-for-sale/villas/` | Type and location slugs never collide (reserved list) |
 | Commercial | `/properties-for-rent/commercial/{location?}/` | | Category acts as a type |
-| Property | `/property/{slug}-{ref}/` | `/property/five-bedroom-villa-yas-island-31521/` | `{ref}` is the persistent source ID, so a title change never breaks the link |
+| Property | `/property/{slug}-aa-1001/` | `/property/five-bedroom-villa-yas-island-aa-1010/` | The token is the lower-case Al Aliah reference (`AA-1010`), never the legacy post ID; resolution is by token, so a title change never breaks the link (D-035; rule in the Stage 03.2 report §4) |
 | Project | `/projects/{slug}/` | `/projects/{project-name}/` | Flat: a project's developer or area can change without changing its URL |
 | Areas | `/areas/`, `/areas/{emirate}/`, `/areas/{emirate}/{community}/` | `/areas/abu-dhabi/al-raha/` | Nested: the emirate is part of the identity, and readers see where they are |
 | Developer | `/developers/{slug}/` | `/developers/{developer-name}/` | Archive title "All Developers" |

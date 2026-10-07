@@ -13,7 +13,7 @@ Format: `D-NNN · date · area` then the decision and its rationale.
 | 01 Brand understanding | **Complete** |
 | Capability / infrastructure setup | **Mostly complete.** Skills, QA, local WP, 21st and Novamira are verified, and the staging audit is done ([`wordpress-environment-report.md`](./wordpress-environment-report.md)). Open: staging isolation (E1), restorable backup (E3), staging hygiene fixes (E2). These block major WordPress work, not Stage 02 |
 | 02 Visual world / aesthetic direction | **Complete.** Redline approved (D-027, D-028); 02.5b refinements approved (D-029); final refinement 02.5c completed ([`stage-02-5c-final-refinement.md`](./stage-02-5c-final-refinement.md)) with T5 type as the working system (D-030). `alaliah-design-system` is active |
-| 03 Website experience | **In progress.** 03.1 IA approved (D-032). 03.2 data model **approved** (D-034, [`stage-03-2-data-model-report.md`](./stage-03-2-data-model-report.md)); implementation plan presented ([`stage-03-2-implementation-plan.md`](./stage-03-2-implementation-plan.md)). Nothing built or migrated; the backup gate (E3) precedes any staging write |
+| 03 Website experience | **In progress.** 03.1 IA approved (D-032). 03.2 data model approved (D-034); implementation plan approved (D-035). `trigon-alaliah-core` data layer being built **locally**; nothing deployed or migrated; the backup gate (E3) precedes any staging write |
 | 04 Motion & interaction | Locked until Stage 03 is approved |
 | 05 Implementation | Locked until Stage 04 is approved. No production theme or plugin is built before then; architecture is set by D-021 – D-025 |
 
@@ -229,3 +229,13 @@ Approved from 02.5b: the three intensity levels (Functional, Editorial, Immersiv
 - **Migration** is dry-run by default, additive, idempotent, repeatable and non-destructive.
 - **Sequence:** verified restorable staging backup → deploy alongside WPResidence → full dry run → review report → execute T1 and T2 only → QA → stop before broad migration.
 - **Stage-gating exception:** the data layer of `trigon-alaliah-core` (registration, admin editing, validation and migration tooling) may be built and deployed to staging ahead of Stage 05, so the model can be proven on real data. The theme and all public presentation remain gated (D-026).
+
+**D-035 · 2026-10-07 · Stage 03.2 implementation approved (local build first)**
+- **Scope:** local implementation of `trigon-alaliah-core`: post types, taxonomies, registered meta and schema, admin editing, relationship sync, validation and data quality, migration CLI and automated tests. The `alaliah-trigon` theme and all frontend implementation stay gated.
+- **Developer About:** legacy descriptions map to `aa_about_legacy` only. `aa_about` starts empty and holds only sourced or editorially approved copy.
+- **Property URL rule:** the canonical reference is `AA-1001`. The public URL is `/property/{base-slug}-aa-1001/`, where the token is the lower-case reference. Resolution is by token, with a 301 to the canonical URL. One function produces every property URL, including the redirect map.
+- **Tests:**
+  - T1 and T2 test Developer → Project → Area;
+  - **P1** (legacy 31013) tests the property data model. Its building and sub-community are created only once the hierarchy is confirmed; otherwise only the verified levels are used and the building is flagged.
+  - No test is claimed to prove Project → Property.
+- **Backup gate before the first staging write:** a fresh staging backup (hosting snapshot preferred), an independent database export, and confirmation that the backup files are readable and complete. Then stop and report readiness.
