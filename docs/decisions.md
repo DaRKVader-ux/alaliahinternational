@@ -13,7 +13,7 @@ Format: `D-NNN · date · area` then the decision and its rationale.
 | 01 Brand understanding | **Complete** |
 | Capability / infrastructure setup | **Mostly complete.** Skills, QA, local WP, 21st and Novamira are verified, and the staging audit is done ([`wordpress-environment-report.md`](./wordpress-environment-report.md)). Open: staging isolation (E1), restorable backup (E3), staging hygiene fixes (E2). These block major WordPress work, not Stage 02 |
 | 02 Visual world / aesthetic direction | **Complete.** Redline approved (D-027, D-028); 02.5b refinements approved (D-029); final refinement 02.5c completed ([`stage-02-5c-final-refinement.md`](./stage-02-5c-final-refinement.md)) with T5 type as the working system (D-030). `alaliah-design-system` is active |
-| 03 Website experience | **In progress.** 03.1 IA approved (D-032). 03.2 Path B approved in principle (D-033); revised data model and migration plan presented ([`stage-03-2-data-model-report.md`](./stage-03-2-data-model-report.md)); awaiting approval. Nothing built, created, linked or migrated |
+| 03 Website experience | **In progress.** 03.1 IA approved (D-032). 03.2 data model **approved** (D-034, [`stage-03-2-data-model-report.md`](./stage-03-2-data-model-report.md)); implementation plan presented ([`stage-03-2-implementation-plan.md`](./stage-03-2-implementation-plan.md)). Nothing built or migrated; the backup gate (E3) precedes any staging write |
 | 04 Motion & interaction | Locked until Stage 03 is approved |
 | 05 Implementation | Locked until Stage 04 is approved. No production theme or plugin is built before then; architecture is set by D-021 – D-025 |
 
@@ -205,3 +205,27 @@ Approved from 02.5b: the three intensity levels (Functional, Editorial, Immersiv
 - **Validation:** a migration validation layer and a Data Quality admin screen.
 - **Media:** existing attachments are reused; no files are duplicated.
 - **Migration safety:** dry-run by default, additive, repeatable, idempotent, non-destructive; old and new coexist on staging until cutover.
+
+**D-034 · 2026-10-07 · Stage 03.2 data model approved: final decisions**
+- **URLs:** developer pages stay plural, `/developers/` and `/developers/{slug}/`. Taxonomies have no public archive URLs; internal `alaliah_*` and `aa_*` names never appear in URLs.
+- **Developers:**
+  - all 17 `estate_developer` records migrate to `alaliah_developer` as drafts, preserving name, slug, logo attachment, legacy ID and legacy text;
+  - legacy descriptions are review material only (`aa_about_legacy`), never public copy;
+  - identity (verified, needs review, …) and readiness to publish are separate states. Publishing requires verified identity, an approved logo and approved or sourced About content.
+- **Names:** "Azizi Developements" → "Azizi Developments". "Saas Properties" keeps its stored spelling until the official brand spelling is confirmed.
+- **Relationships:**
+  - verified tests: T1 Danube Properties → Bayz 102 → Business Bay; T2 Binghatti Developers → Binghatti Aquarise → Business Bay;
+  - T3 Azizi Developments → Azizi Venice → Dubai South is provisional and stays unlinked until independently confirmed;
+  - 31083 and 31094 stay unlinked and flagged.
+- **Hard rule:** `aa_property_agency` never populates or suggests `aa_developer_id`.
+- **Projects:** the three Dubai project-style records migrate as `alaliah_project`.
+- **Location:** Al Reef Downtown is corrected to UAE › Abu Dhabi, with the legacy value kept in the migration audit.
+- **Permits:** `123564` is kept exactly in `aa_madhmoun_permit`, marked unverified and never public until confirmed. Compliance is modelled as extensible permit entries (number, authority, system, status, public), not one field per emirate.
+- **Custom fields:** the seven property fields migrate exactly as documented; nothing is extracted from description text.
+- **Floor plans** are image-first.
+- **Shadow taxonomies** (`alaliah_rel_developer`, `alaliah_rel_project`) are derived only. Relationship meta is canonical and wins any disagreement.
+- **Media:** existing attachment IDs are reused, with no copying or reassignment.
+- **References:** `AA-1001…`, immutable; the legacy ID is kept as `aa_legacy_post_id`.
+- **Migration** is dry-run by default, additive, idempotent, repeatable and non-destructive.
+- **Sequence:** verified restorable staging backup → deploy alongside WPResidence → full dry run → review report → execute T1 and T2 only → QA → stop before broad migration.
+- **Stage-gating exception:** the data layer of `trigon-alaliah-core` (registration, admin editing, validation and migration tooling) may be built and deployed to staging ahead of Stage 05, so the model can be proven on real data. The theme and all public presentation remain gated (D-026).

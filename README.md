@@ -14,7 +14,8 @@ Redesign and redevelopment of the Al Aliah International website as a modern Abu
 | [`docs/stage-02-5b-refinement.md`](docs/stage-02-5b-refinement.md) | Stage 02.5b: Redline system refinement ([specimen](docs/stage-02-5b/system.html)) |
 | [`docs/stage-02-5c-final-refinement.md`](docs/stage-02-5c-final-refinement.md) | Stage 02.5c: type, card and map final refinement ([specimen](docs/stage-02-5c/final.html)) |
 | [`docs/stage-03-1-information-architecture.md`](docs/stage-03-1-information-architecture.md) | Stage 03.1: information architecture (approved) |
-| [`docs/stage-03-2-data-model-report.md`](docs/stage-03-2-data-model-report.md) | Stage 03.2: data model, developer inventory and migration plan |
+| [`docs/stage-03-2-data-model-report.md`](docs/stage-03-2-data-model-report.md) | Stage 03.2: data model, developer inventory and migration mapping (approved) |
+| [`docs/stage-03-2-implementation-plan.md`](docs/stage-03-2-implementation-plan.md) | Stage 03.2: data-layer registration and migration tooling plan |
 | [`CLAUDE.md`](CLAUDE.md) | Working rules for AI-assisted development |
 
 | Tool | Purpose |
@@ -22,4 +23,4 @@ Redesign and redevelopment of the Al Aliah International website as a modern Abu
 | `tools/wp-local/setup.sh` | Throwaway local WordPress on SQLite (PHP + git only) |
 | `tools/qa/check.mjs` | Playwright + axe QA at 1920/1440/1024/768/390/375 |
 
-**Current stage:** **03.2**: Path B approved in principle (D-033); revised data model and dry-run migration plan awaiting approval. Nothing built or migrated. Major WordPress work is blocked by staging isolation and backups (open-questions E1, E3).
+**Current stage:** **03.2**: data model approved (D-034); implementation plan for the data layer and migration tooling presented. Nothing built or migrated. Any staging write waits for a verified restorable backup (open-questions E3).

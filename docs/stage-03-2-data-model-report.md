@@ -1,10 +1,11 @@
 # Stage 03.2: Data Model and Migration Plan
 
-**Status:** revision 2, presented 2026-10-07 for approval. Path B was approved in principle (D-033). This revision applies the client's 24 requirements. **Nothing has been migrated, created, linked or changed.** Every staging query was read-only.
+**Status:** **approved 2026-10-07 with final decisions (D-034)**, revision 3. The decisions are in §0, and the sections below are corrected to match. Implementation follows [`stage-03-2-implementation-plan.md`](./stage-03-2-implementation-plan.md). **Nothing has been migrated, created, linked or changed.** Every staging query was read-only.
 **Source:** staging WordPress (`alaliah.trigonsolutions.co`, prefix `wp8g_`), a production clone. Queried 2026-10-06/07 through Novamira `execute-php`, after confirming `home` = staging on each session.
 **Privacy:** agent contact values and owner fields were counted, never printed.
 
 **Contents:**
+0. Final decisions (D-034)
 1. Summary
 2. Source of truth and inventory
 3. Final content model
@@ -25,12 +26,36 @@
 18. Migration mapping
 19. Proposed test relationships
 20. Dry-run migration plan
-21. Points to confirm
-22. Approval requested
+21. Resolved points
+22. Approval record
 
 **Appendix:** legacy data detail.
 
 ---
+
+## 0. Final decisions (D-034, 2026-10-07)
+
+| # | Decision |
+|---|---|
+| 1 | Developer URLs stay plural: `/developers/` and `/developers/{slug}/` |
+| 2 | **All 17** `estate_developer` records migrate into `alaliah_developer`, as drafts. None is discarded for lacking relationships. Name, slug, logo (same attachment), legacy ID and legacy text are preserved |
+| 3 | The existing developer descriptions are **legacy review material only** (`aa_about_legacy`, never displayed). A developer page publishes only once its About content is sourced or editorially approved |
+| 4 | **Verified test relationships:** Danube Properties → Bayz 102 → Business Bay (T1) and Binghatti Developers → Binghatti Aquarise → Business Bay (T2). Azizi Developments → Azizi Venice → Dubai South (T3) is **provisional, medium confidence**, and not treated as verified until independently confirmed |
+| 5 | **Hard rule:** `aa_property_agency` never populates `aa_developer_id`, automatically or by matching names. Agency, brokerage and developer are separate concepts |
+| 6 | 31083 and 31094 stay without developer or project links; they are flagged for editorial review and do not block migration |
+| 7 | The three Dubai project-style records migrate as `alaliah_project`, not as properties |
+| 8 | Al Reef Downtown is corrected to UAE › Abu Dhabi › Al Reef Downtown; the conflicting legacy value is kept in the migration audit |
+| 9 | "Azizi Developements" → "Azizi Developments". "Saas Properties" keeps its stored spelling until the official brand spelling is confirmed from an official source; capitalisation is not changed for style |
+| 10 | `123564` is kept exactly in `aa_madhmoun_permit`, marked **unverified permit**, and never shown publicly until confirmed. Compliance is extensible: number, authority and system per permit, with no one-off field per emirate |
+| 11 | The seven custom property fields migrate exactly as documented (§7); nothing is extracted from description text |
+| 12 | Floor plans are image-first: upload image, save property, and the floor plan appears. All metadata is optional |
+| 13 | Shadow taxonomies are **derived only**. Relationship meta is canonical; shadow terms are rebuilt from it, are never editable, and lose any disagreement (§10) |
+| 14 | Existing attachment IDs are reused; no file is copied, duplicated or reassigned |
+| 15 | `AA-1001…` references are immutable; the legacy ID is kept as `aa_legacy_post_id` |
+| 16 | Migration is dry-run by default, additive, idempotent, repeatable and non-destructive. No WPResidence record, meta, term or attachment is altered or deleted |
+| 17 | **Sequence:** verify a restorable staging backup → deploy the model alongside WPResidence → full dry run → review the report → execute T1 and T2 only → QA relationships, admin and frontend → stop before broad migration |
+
+**Correction from this review (§5):** the public taxonomy slugs proposed in revision 2 would have collided with existing rewrite bases: `type/` (WordPress post formats), `area/` (WPResidence) and `category` (WordPress). Taxonomies therefore get **no public archive URLs**; the approved landing URLs (IA §5) are routed separately.
 
 ## 1. Summary
 
@@ -38,8 +63,8 @@
 |---|---|
 | Architecture | WPResidence legacy data → migration layer (WP-CLI, dry-run by default) → Trigon-owned structures in `trigon-alaliah-core` → presented by `alaliah-trigon`. WPResidence is not a runtime dependency after cutover |
 | Inventory | 14 published `estate_property` records. **11 are listings** (Abu Dhabi). **3 are Dubai project records** that become `alaliah_project`. 17 developers, 1 agent record, 13 areas, 261 listing images |
-| Developers | All 17 inventoried. **3 verified** from site evidence (Danube, Binghatti, Azizi); **14 need review**; 0 demo, 0 duplicate, 0 invalid. All migrate as **drafts**; none is published automatically |
-| Test relationships | Danube → Bayz 102, Binghatti → Binghatti Aquarise, Azizi → Azizi Venice (lower confidence). **No unit-level listing has a verifiable developer**, so the Developer → Project → Property chain cannot yet be proven with a real property (§19) |
+| Developers | All 17 inventoried and all 17 migrate, as **drafts**. **2 have verified identity** from site evidence (Danube, Binghatti); **15 need review**, including Azizi while T3 is provisional; 0 demo, 0 duplicate, 0 invalid. None is published automatically |
+| Test relationships | **Approved:** T1 Danube → Bayz 102 and T2 Binghatti → Binghatti Aquarise. T3 Azizi → Azizi Venice is provisional. **No unit-level listing has a verifiable developer**, so Project → Property cannot yet be proven with a real property (§19) |
 | References | `AA-1001` to `AA-1011` for the 11 listings, assigned by original publish date; legacy IDs kept separately |
 | Safety | Additive, repeatable, idempotent, non-destructive. Legacy posts, meta and media are never edited, reassigned or deleted |
 
@@ -70,7 +95,7 @@
                  ┌──────────────── alaliah_developer ────────────────┐
                  │  logo · about · sources · review status · rating  │
                  └───────────────┬───────────────────────────────────┘
-                                 │ 1:n (required on project)
+                                 │ 1:n (required to publish a project)
                  ┌───────────────▼──────────────── alaliah_project ──┐
                  │  handover · payment plan · permit · brochure ...  │
                  └───────────────┬───────────────────────────────────┘
@@ -107,19 +132,27 @@
 
 ## 5. Taxonomies
 
-| Taxonomy (internal) | Public slug | Applies to | Terms | Editable |
+| Taxonomy (internal) | Public archive URL | Applies to | Terms | Editable |
 |---|---|---|---|---|
-| `alaliah_location` | `area` (archives redirect to `/areas/…`) | property, project, agent | UAE › Abu Dhabi, Dubai › communities › sub-communities and buildings | Yes |
-| `alaliah_purpose` | `purpose` | property | Sale, Rent | Yes (single choice) |
-| `alaliah_completion` | `completion` | property, project | Ready, Off-plan | Yes (single choice) |
-| `alaliah_status` | `status` | property | Available, Under offer, Rented, Sold, Withdrawn | Yes (single choice) |
-| `alaliah_category` | `category` | property | Residential, Commercial | Yes |
-| `alaliah_type` | `type` | property | Apartment, Villa, Townhouse, Penthouse, Duplex, Office, Retail, Warehouse, Land (studio = 0 bedrooms) | Yes (single choice) |
-| `alaliah_amenity` | `amenity` | property, project | Two parents: "In the home" and "Building and community"; about 25 curated terms | Yes |
-| `alaliah_rel_developer` | none (not public) | property, project | One term per developer, **maintained automatically** from relationships | No (system) |
-| `alaliah_rel_project` | none | property | One term per project, maintained automatically | No (system) |
+| `alaliah_location` | None (Area pages are `alaliah_area` posts at `/areas/…`) | property, project, agent | UAE › Abu Dhabi, Dubai › communities › sub-communities and buildings | Yes |
+| `alaliah_purpose` | None | property | Sale, Rent | Yes (single choice) |
+| `alaliah_completion` | None | property, project | Ready, Off-plan | Yes (single choice) |
+| `alaliah_status` | None | property | Available, Under offer, Rented, Sold, Withdrawn | Yes (single choice) |
+| `alaliah_category` | None | property | Residential, Commercial | Yes |
+| `alaliah_type` | None | property | Apartment, Villa, Townhouse, Penthouse, Duplex, Office, Retail, Warehouse, Land (studio = 0 bedrooms) | Yes (single choice) |
+| `alaliah_amenity` | None | property, project | Two parents: "In the home" and "Building and community"; about 25 curated terms | Yes |
+| `alaliah_rel_developer` | None | property, project | One term per developer, **derived** | **Never** (system only) |
+| `alaliah_rel_project` | None | property | One term per project, **derived** | **Never** (system only) |
 
-The two `alaliah_rel_*` taxonomies are hidden **shadow taxonomies**. They let search filter by developer or project with a fast `tax_query` instead of `meta_query`, and give the derived counts for the "All Developers" archive (§15).
+All taxonomies register with `rewrite => false` and `publicly_queryable => false`. Public filtering happens through the IA's landing URLs (`/properties-for-sale/{location}/{type}/`) and the search endpoint, which map public slugs to these taxonomies internally. Internal names never appear in a URL.
+
+**Shadow-taxonomy invariant (D-034):**
+1. `aa_developer_id` (on projects, and on properties without a project) and `aa_project_id` are **canonical**.
+2. `alaliah_rel_developer` and `alaliah_rel_project` terms are **derived** from them on save, on project-developer changes (cascading to units), and by `wp alaliah relations rebuild`.
+3. They are never manually editable: no admin UI and no REST, and term assignment capabilities are denied to all roles.
+4. If meta and terms disagree, **the meta wins** and the terms are rebuilt. The Data Quality screen reports any drift it finds.
+
+They exist only to make developer and project filters and counts cheap (§15).
 
 ## 6. Fields
 
@@ -147,7 +180,8 @@ Registered meta (typed, sanitised, REST schema). All carry the `aa_` prefix.
 | `aa_lat`, `aa_lng` | decimal | Optional | Rejected if `0,0` or outside UAE bounds |
 | `aa_geo_precision` | enum: exact, building, community | Auto | Community when no coordinates are given |
 | `aa_payment_plan_overall`, `aa_payment_on_booking`, `aa_payment_during_construction`, `aa_payment_on_handover` | text | Optional | Migrated exactly (§7) |
-| `aa_madhmoun_permit` | text | Optional; flagged when missing | Never generated (§7) |
+| `aa_madhmoun_permit` | text | Optional | Legacy-compatible field: the migrated value is kept exactly; never displayed directly (§7) |
+| `aa_permits` | list of permit entries | Optional | Canonical compliance data: `{number, authority, system, status, public, source, verified_on, origin}` (§7) |
 | `aa_gallery` | ordered attachment IDs | Recommended | |
 | `aa_floor_plans` | ordered list of items | Optional | §13 |
 | `aa_video_url` | URL | Optional | YouTube or Vimeo |
@@ -159,12 +193,12 @@ Registered meta (typed, sanitised, REST schema). All carry the `aa_` prefix.
 Featured image: core `_thumbnail_id`. Description: core post content.
 
 ### 6.2 Project (`alaliah_project`)
-- `aa_developer_id` (required)
+- `aa_developer_id` (required to **publish**; a draft may lack it and is flagged, e.g. Azizi Venice while T3 is provisional)
 - location term (required)
 - completion
 - `aa_handover`, `aa_handover_year`
 - the four payment-plan text fields
-- `aa_madhmoun_permit` plus room for other emirates' permits (§7)
+- `aa_madhmoun_permit` (legacy-compatible) and `aa_permits` (§7)
 - `aa_price_from` (optional; manual and sourced, or derived from linked units when any exist)
 - `aa_unit_types` (text, e.g. "Studio to 4-bedroom")
 - `aa_gallery`, `aa_floor_plans`, `aa_brochure_id`, `aa_masterplan_id`, `aa_video_url`
@@ -173,10 +207,14 @@ Featured image: core `_thumbnail_id`. Description: core post content.
 
 ### 6.3 Developer (`alaliah_developer`)
 - `aa_logo_id` (Media Library)
-- `aa_about` (rich text)
+- `aa_about` (rich text; approved public copy, empty at migration)
+- `aa_about_legacy` (the existing text, kept for review; never displayed)
+- `aa_about_approved` (boolean, set by an editor)
+- `aa_logo_approved` (boolean, set by an editor)
 - `aa_sources` (list of URL and note pairs)
 - `aa_website`
-- `aa_review_status`: verified, needs review, probable demo/test, duplicate, invalid/incomplete
+- `aa_review_status` (identity): verified, needs review, probable demo/test, duplicate, invalid/incomplete
+- publication readiness (separate from identity, §9): computed from identity, logo approval, About approval and relationships
 - `aa_review_note`
 - `aa_rating_*` (source, URL, score, count, retrieved date, refresh policy; D-032; empty at launch)
 - `aa_legacy_post_id`
@@ -215,10 +253,23 @@ All seven are kept as text and migrated **exactly**: only leading and trailing s
 - **31094** also lists four other payment plans in its description (e.g. "30% DP – 70% on HO"), which disagree with the fields. Flag for editor.
 - **31083** states "Payment Plan 70 / 30" and "Handover Q3 2028" in its description, but its fields are empty. Flag: an editor copies them if correct. The migration does not parse descriptions into fields.
 
-**Permit model:**
-- `aa_madhmoun_permit` is a first-class field, kept empty when missing, with no frontend placeholder.
-- For later per-emirate permits, the Compliance group is built as a list keyed by authority, so a Dubai permit field (`aa_dubai_permit`) can be added without remodelling. That field is **not created now**.
-- Which permit each listing must show is a client and legal question (§21).
+**Permit model (D-034):**
+- **`aa_permits` is canonical.** It is a list of entries, each with:
+  - `number` (text, exactly as issued);
+  - `authority` (e.g. the Abu Dhabi or Dubai regulator; free text until confirmed);
+  - `system` (e.g. `madhmoun`, or `unspecified`);
+  - `status` (`unverified` or `verified`);
+  - `public` (boolean, allowed only when verified);
+  - `source`, `verified_on`, and `origin` (e.g. "legacy madhmoun-permit").
+
+  Abu Dhabi and Dubai each use their own system as an entry. No per-emirate field is created.
+- **`aa_madhmoun_permit` is kept for backward compatibility.** The legacy value is copied into it exactly. When an editor verifies an entry with `system = madhmoun`, its number is mirrored into `aa_madhmoun_permit`. The field itself is never displayed.
+- **Migration of `123564`:**
+  - `aa_madhmoun_permit = "123564"` (exact);
+  - one `aa_permits` entry with `system = unspecified`, `status = unverified`, `public = false`, `origin = legacy madhmoun-permit`.
+
+  It is not labelled Madhmoun, because the record is in Dubai.
+- **Frontend:** only entries that are verified and public render. There are no placeholders. Missing permits are flagged in admin, never invented or inferred.
 
 ## 8. Developer inventory
 
@@ -265,17 +316,32 @@ None is migrated; each is redirected or replaced at cutover.
 
 | Classification | Count | Developers | Basis |
 |---|---|---|---|
-| **Verified** | 3 | Danube Properties, Binghatti Developers, Azizi Developments | Identity corroborated by listing or project content on this site |
-| **Needs review** | 14 | Arada, Burtville, Damac, Dubai Properties, Ellington, Emaar, MAG, Meraas, Nakheel, Nine Yards, Omniyat, Reportage, SAAS, Sobha | Real-looking records entered by staff; no corroborating site content; About text and logos still need sourcing |
+| **Verified** | 2 | Danube Properties, Binghatti Developers | Identity corroborated by explicit project content on this site (T1, T2) |
+| **Needs review** | 15 | Arada, Azizi Developments (T3 provisional), Burtville, Damac, Dubai Properties, Ellington, Emaar, MAG, Meraas, Nakheel, Nine Yards, Omniyat, Reportage, Saas Properties, Sobha | Real-looking records entered by staff; no explicit corroborating site content; About text and logos still need sourcing |
 | Probable demo/test | 0 | | None match theme demo content; all were created by site staff in Mar–Apr 2026 |
 | Duplicate | 0 | | No duplicate names or logo files |
 | Invalid/incomplete | 0 | | Every record has at least a name and a logo |
 
 **Migration status:**
-- All 17 migrate to `alaliah_developer` as **draft**, with `aa_review_status` set as above. "Verified" means *identity confirmed*, not *ready to publish*.
-- Publishing is an editorial step once About text is sourced and the logo is approved.
+- **All 17 migrate** to `alaliah_developer` as **draft**, with `aa_review_status` set as above.
+- **Two separate states (D-034):**
+
+| State | Values | Set by |
+|---|---|---|
+| Identity (`aa_review_status`) | verified, needs review, probable demo/test, duplicate, invalid/incomplete | Editor; migration sets the classification above |
+| Publication readiness (computed) | Ready, or not ready with reasons | System |
+
+- **Readiness rules.** A developer can be published only when **all** of these hold:
+  - identity verified;
+  - logo approved;
+  - About content sourced or editorially approved.
+
+  If it has no linked project or listing, that shows as a warning ("No current listings") but doesn't block publishing, since the IA keeps such developers reachable. A publish guard turns an early publish back into a draft with a notice listing the missing items.
+- The legacy one-line descriptions go to `aa_about_legacy` only.
 - A dedicated `needs-review` post status is not used. WordPress custom statuses are poorly supported in the admin, so draft plus the review field shows the same thing more reliably.
-- **Name corrections, proposed and applied by an editor:** "Azizi Developements" → "Azizi Developments", "Saas Properties" → "SAAS Properties". Slugs follow and the old slugs redirect.
+- **Name corrections:**
+  - "Azizi Developements" → "Azizi Developments", applied during migration. The slug becomes `azizi-developments`, and the old slug is kept for a redirect.
+  - "Saas Properties" migrates **as stored**. The logo shows "SAAS", but capitalisation changes only once the official brand spelling is confirmed from an official source.
 - **Coverage gap:** most of the 17 are Dubai developers (Nine Yards' base is not confirmed), Arada is Sharjah-based, and Reportage is the only Abu Dhabi-based one. The main Abu Dhabi developers are missing. This is a content task, not a migration task.
 
 **Logo flags** (inspected visually; all show the right brand mark):
@@ -294,7 +360,7 @@ None is migrated; each is redirected or replaced at cutover.
 
 | Link | Stored on | Reverse | Mechanism |
 |---|---|---|---|
-| Project → Developer | `aa_developer_id` (required) | Developer → Projects | Query by `alaliah_rel_developer` term |
+| Project → Developer | `aa_developer_id` (required to publish) | Developer → Projects | Query by `alaliah_rel_developer` term |
 | Property → Project | `aa_project_id` (optional) | Project → Properties (units) | `alaliah_rel_project` term |
 | Property → Developer | Derived from the project; `aa_developer_id` only when there is no project | Developer → Properties | `alaliah_rel_developer` term, synced on save from either source |
 | Property → Area | `alaliah_location` term (required) | Area → Properties | Taxonomy |
@@ -303,7 +369,9 @@ None is migrated; each is redirected or replaced at cutover.
 | Property → Agent | `aa_agent_id` | Agent → Listings | Meta |
 
 **Rules:**
-- **No relationship is created from inference.** A link exists only when an editor sets it, or when the migration applies a link that was approved in the test plan (§19).
+- **No relationship is created from inference.** A link exists only when an editor sets it, or when the migration applies an approved test link (T1, T2).
+- **Agency is not developer (hard rule).** `aa_property_agency` never populates or suggests `aa_developer_id`, even when the names match ("Danube Properties" in both). The T1 and T2 links come from the approved test list, not from the agency field.
+- **Shadow terms follow the canonical meta** (§5 invariant).
 - When a project's developer changes, its units' shadow terms re-sync automatically.
 - Unlinked records are valid. They raise a "missing developer" or "missing project" flag (§17); they are never hidden or rejected.
 
@@ -316,7 +384,7 @@ None is migrated; each is redirected or replaced at cutover.
 
 | Legacy | Project | Developer | Area | Carried over |
 |---|---|---|---|---|
-| 32060 "…Azizi Venice…" | Azizi Venice | Azizi Developments (lower confidence, §19) | Dubai South | Description, 16 gallery images, agency "Rainbow Properties", amenities |
+| 32060 "…Azizi Venice…" | Azizi Venice | **Not linked at migration.** T3 is provisional; the link is set only after independent confirmation | Dubai South | Description, 16 gallery images, agency "Rainbow Properties", amenities |
 | 32078 "…Bayz 102…" | Bayz 102 | Danube Properties | Business Bay | Description, 18 images, handover June 2029, plan 70/30 (70% / 30%), agency |
 | 32101 "…Binghatti Aquarise…" | Binghatti Aquarise | Binghatti Developers | Business Bay | Description, 8 images, handover Q2 2027, plan 70/30 (20% / 50% / 30%), permit (unverified), agency |
 
@@ -415,12 +483,12 @@ The flags are computed by a validation layer in `trigon-alaliah-core` and stored
 
 | Flag | Rule | Records flagged today |
 |---|---|---|
-| Missing developer | Off-plan property or project with no developer | 31083, 31094 |
+| Missing developer | Off-plan property or project with no developer | 31083, 31094; project Azizi Venice (T3 provisional) |
 | Missing project | Off-plan property with no project | 31083, 31094 |
 | Missing coordinates | No `aa_lat`/`aa_lng` | All 11 listings |
 | Invalid or demo coordinates | Legacy value was `0,0` or outside UAE bounds (not migrated) | 30964 (lower Manhattan); the other 10 were `0,0` |
 | Missing permit | No permit on an advertised listing | All 11 listings (requirement to be confirmed, §21) |
-| Unverified permit | Permit present but unconfirmed, or on the wrong emirate | Binghatti Aquarise (project) |
+| Unverified permit | A permit entry with `status = unverified` (hidden from the public) | Binghatti Aquarise (project): `123564` |
 | Possible wrong type | Type disagrees with title or bedrooms (e.g. "Villa" in title, typed Apartment) | 31023, 30967 (4-bed "with Private Pool" typed Apartment); 30964 (title "Studio", slug "2bhk", 1 bedroom) |
 | Duplicate gallery | Image used by more than one listing | 31082 ↔ 30964 (23 images) |
 | Missing area | No location term | none |
@@ -432,7 +500,10 @@ The flags are computed by a validation layer in `trigon-alaliah-core` and stored
 | Field vs description mismatch | Payment or handover stated differently in text and fields | 31083, 31094 |
 | Sales-style title | "Exclusive Offer", "Invest Now", "% discount", "High ROI" and similar | 31082, 31083, 31094, 31495, plus the 3 projects |
 | Missing alt text | Any gallery or plan image without alt | All 11 listings |
-| Developer not publish-ready | Review status not verified, no About text, or logo flagged | All 17 developers |
+| Developer identity unverified | `aa_review_status` is not verified | 15 developers |
+| Developer not ready to publish | Identity, logo approval or About approval missing (shown separately from identity) | All 17 developers |
+| Provisional relationship | A relationship candidate awaiting independent confirmation | Azizi Venice (T3) |
+| Shadow drift | Shadow terms disagree with canonical meta (rebuilt automatically) | none (new) |
 
 **Data Quality screen** (Tools › Data Quality, for editors):
 - totals per entity;
@@ -480,9 +551,9 @@ It is read-only and fixes nothing automatically.
 | `prop_featured` | "1" | `aa_is_featured` | Boolean | | Low |
 | `property_agent` | "30966" | `aa_agent_id` | Map to the new agent ID | Target exists | Low |
 | `property_agent_secondary` | serialized | | Not migrated (same agent) | | None |
-| `property-agency` | "Danube Properties" | `aa_property_agency` | Exact (trim only) | | Low |
+| `property-agency` | "Danube Properties" | `aa_property_agency` | Exact (trim only). **Never used to set or suggest a developer** | | Low |
 | `property-handover` | "Q2, 2027" | `aa_handover` (+ suggested `aa_handover_year`) | Exact; year suggested only | | Low |
-| `madhmoun-permit` | "123564" | `aa_madhmoun_permit` | Exact; flagged unverified | | Medium (emirate mismatch) |
+| `madhmoun-permit` | "123564" | `aa_madhmoun_permit` + `aa_permits` entry | Exact copy into `aa_madhmoun_permit`; entry with `system = unspecified`, `status = unverified`, `public = false` | Never displayed until verified | Medium (emirate mismatch) |
 | `overall-payment-plan` and the 3 parts | "70/30", "20%" | `aa_payment_*` | Exact (trim only) | Parts sum to 100% (check, not enforced) | Low |
 | `property-external-construction` | project description text | Project description (for the 3 projects) | Appended under the description for an editor to merge | | Low |
 | `wpestate_property_gallery` | serialized ID list | `aa_gallery` | Unserialize; keep order; check each attachment exists | Duplicate check | Low |
@@ -493,15 +564,17 @@ It is read-only and fixes nothing automatically.
 | Analytics (`wpestate_total_views`, `_eael_post_view_count`, `wpestate_detailed_views`) | "253" | | Not migrated | | None |
 | ≈ 90 theme presentation and empty US-template keys | `page_header_*`, `energy_class`… | | Not migrated | | None |
 
-## 19. Proposed test relationships (not written)
+## 19. Test relationships (approved; not yet written)
 
 These are only for links verifiable from content on this site.
 
 | Test | Developer | Project (from legacy record) | Area | Evidence | Confidence |
 |---|---|---|---|---|---|
-| **T1** | Danube Properties (32018) | **Bayz 102** (32078) | Dubai › Business Bay | Description: "The project by Danube Properties in Business Bay"; agency field "Danube Properties"; project name | High |
-| **T2** | Binghatti Developers (32040) | **Binghatti Aquarise** (32101) | Dubai › Business Bay | Project name contains the developer's name; agency field "Binghatti Properties" | High |
-| **T3** | Azizi Developments (32034) | **Azizi Venice** (32060) | Dubai › Dubai South | Project name only; the description credits "Rainbow Properties" as the presenting agency, not the developer | Medium: approve explicitly or drop |
+| **T1 (approved)** | Danube Properties (32018) | **Bayz 102** (32078) | Dubai › Business Bay | Description: "The project by Danube Properties in Business Bay" | High |
+| **T2 (approved)** | Binghatti Developers (32040) | **Binghatti Aquarise** (32101) | Dubai › Business Bay | Project name and description identify the Binghatti development | High |
+| **T3 (provisional)** | Azizi Developments (32034) | **Azizi Venice** (32060) | Dubai › Dubai South | Project name only | Medium. **Not linked** until independently confirmed |
+
+The agency field is not cited as evidence for any test (decision 5).
 
 **What the tests prove:**
 - the forward links Developer → Project → Area;
@@ -539,7 +612,7 @@ These are only for links verifiable from content on this site.
 **Options:**
 - `--dry-run` is the default; `--execute` is required to write.
 - `--only=developers|projects|properties|…` runs one phase.
-- `--ids=…` limits the run to specific legacy records (for the T1–T3 test).
+- `--set=t1t2` or `--ids=…` limit the run to the approved test records (implementation plan §8).
 - `--report=<path>` sets where the report is written.
 
 **Guarantees when executing (later, after approval):**
@@ -553,38 +626,33 @@ These are only for links verifiable from content on this site.
 1. Build and deploy the model.
 2. Dry run (full).
 3. Review the report together.
-4. Execute T1–T3 only (`--ids`).
-5. QA the relationships on staging.
-6. Approve broad migration.
+4. Execute T1 and T2 only (`--set=t1t2`).
+5. QA relationships, admin and frontend on staging; confirm legacy data untouched.
+6. **Stop.** Approve broad migration.
 7. Execute the rest.
 8. Editorial review using the Data Quality screen.
 9. Cutover and redirects (separate approval).
 
-## 21. Points to confirm
+## 21. Resolved points
 
-1. **Developer URL.** The approved IA (D-031, D-032) uses `/developers/{slug}/`. The brief's example shows `/developer/aldar/`. This report keeps `/developers/{slug}/`, which matches the "All Developers" archive at `/developers/`. Confirm, or switch detail pages to the singular.
-2. **Permits.** Which permit each listing must show: Madhmoun for Abu Dhabi, and whether Dubai records need a DLD permit field now. Also whether "123564" on Binghatti Aquarise is a real permit and for which authority.
-3. **T3 (Azizi → Azizi Venice):** include, or drop for lack of explicit text.
-4. **Developer and project for 31083 and 31094** to complete a full property-level test.
-5. **Al Reef Downtown** as Abu Dhabi: confirm. The listings say Abu Dhabi; the legacy area setting says Dubai.
-6. **Name corrections:** Azizi Developments and SAAS Properties.
+| Question | Resolution (D-034) |
+|---|---|
+| Developer URL | Plural: `/developers/{slug}/` |
+| Permits | `123564` kept as unverified and not public; extensible permit entries (§7) |
+| T3 | Provisional; not linked until confirmed |
+| 31083, 31094 | Left unlinked and flagged |
+| Al Reef Downtown | Abu Dhabi, with the legacy value kept in the audit |
+| Names | Azizi Developments corrected; Saas Properties kept until the official spelling is confirmed |
 
-## 22. Approval requested
+**Still open (not blocking):**
+- the developer and project for 31083 and 31094;
+- independent confirmation for T3;
+- the official spelling of SAAS;
+- the advertising permit requirements per emirate (Q-permits).
 
-- **The content model:**
-  - post types (§4), taxonomies including the shadow taxonomies (§5), and fields (§6);
-  - the seven legacy custom fields kept as text (§7);
-  - the developer classification and draft-only migration (§9);
-  - the relationship rules (§10) and the project model (§11);
-  - the area hierarchy and corrections (§12);
-  - floor plans (§13), the admin layout (§14) and the search model (§15).
-- **Media reuse without copying or reassigning** (§16).
-- **The validation flags and Data Quality screen** (§17).
-- **The mapping** (§18) and the reference scheme `AA-1001`… (§18.2).
-- **Test relationships T1, T2 and T3** (§19).
-- **The dry-run plan and execution sequence** (§20).
+## 22. Approval record
 
-Nothing is built, created, linked or migrated until this is approved and the backup gate (E3) is met.
+Approved 2026-10-07 (D-034), with the decisions in §0. Implementation proceeds per the [implementation plan](./stage-03-2-implementation-plan.md), which stops before any write migration until the backup gate is met, and stops again after the T1 and T2 test.
 
 ---
 
