@@ -13,7 +13,7 @@ Format: `D-NNN · date · area` then the decision and its rationale.
 | 01 Brand understanding | **Complete** |
 | Capability / infrastructure setup | **Mostly complete.** Skills, QA, local WP, 21st and Novamira are verified, and the staging audit is done ([`wordpress-environment-report.md`](./wordpress-environment-report.md)). Open: staging isolation (E1), restorable backup (E3), staging hygiene fixes (E2). These block major WordPress work, not Stage 02 |
 | 02 Visual world / aesthetic direction | **Complete.** Redline approved (D-027, D-028); 02.5b refinements approved (D-029); final refinement 02.5c completed ([`stage-02-5c-final-refinement.md`](./stage-02-5c-final-refinement.md)) with T5 type as the working system (D-030). `alaliah-design-system` is active |
-| 03 Website experience | **In progress.** 03.1 IA approved (D-032). 03.2 data model approved (D-034); implementation plan approved (D-035). `trigon-alaliah-core` deployed to staging; T1/T2 and P1 executed and QA passed (D-037, [`stage-03-2-staging-validation.md`](./stage-03-2-staging-validation.md)). Broad migration, redirects and amenities not run. Next: **03.3 High-fidelity page experience** (four pages) |
+| 03 Website experience | **In progress.** 03.1 IA approved (D-032). 03.2 data model approved (D-034); implementation plan approved (D-035). 03.2 controlled validation **complete** (D-038): T1/T2 and P1 on staging; broad migration, redirects and amenities not run. **03.3 High-fidelity page experience in progress** (Homepage, Search/Buy, Property detail, Area detail) |
 | 04 Motion & interaction | Locked until Stage 03 is approved |
 | 05 Implementation | Locked until Stage 04 is approved. No production theme or plugin is built before then; architecture is set by D-021 – D-025 |
 
@@ -259,4 +259,9 @@ Approved from 02.5b: the three intensity levels (Functional, Editorial, Immersiv
 - **Amenity map (still unexecuted):** `fully-furnished` is not an amenity; it proposes `aa_furnishing = furnished` only when that field is empty, never overwrites a structured value, and is recorded in the migration audit. `pool` / `swimming-pool` → neutral Swimming pool; explicit `private-pool` → Private pool; private pools are never inferred from type or title. Documented in implementation plan §8.7.
 - **Then:** execute T1/T2 and P1 only on staging, QA, stop. No broad migration, no redirects, no amenities, no production.
 - **Next phase:** if T1/T2 and P1 pass, Stage 03.3 (Homepage, Search/Buy results, Property detail, Area detail) begins; the technical migration scope does not expand before that visual gate unless a validation failure requires it.
+
+**D-038 · 2026-10-07 · Stage 03.2 closed; Stage 03.3 opened**
+- Stage 03.2 controlled validation is complete. Not run: broad migration, redirects, amenities. P1 is not published to test the staging 301. The migration and data scope expands only if Stage 03.3 exposes a concrete data-model problem.
+- Agent contact fields are private by default in public REST output; which office or agent contacts become public is a later, explicit decision.
+- Stage 03.3: a high-fidelity, interactive visual specimen of four pages (Homepage as the primary test, Search/Buy results, Property detail, Area detail), desktop and mobile, built on Redline with real staging data and photography. No production theme work; stop for visual approval.
 

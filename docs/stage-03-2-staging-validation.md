@@ -196,3 +196,14 @@ Location terms: UAE › Dubai › Business Bay; UAE › Abu Dhabi › Al Reem Is
 No broad migration, no redirects, no amenities, no area posts, nothing on production. Production Backuply archives on staging untouched (E6).
 
 **Status: Stage 03.2 controlled validation passed. Stopped.**
+
+## Closing correction · 2026-10-07
+
+Agent contact fields (`phone`, `mobile`, `whatsapp`, `email`) are private by default in REST: editors see them in the edit context; public output includes one only if it is named in the `trigon_alaliah_public_contact_fields` filter (empty by default). Which office contacts become public is a later decision. Commit `657baf8`, local suite 296/296.
+
+| # | What | Result |
+|---|---|---|
+| W16 | Upload `trigon-alaliah-core-657baf8.zip` (sha256 `ca13a497…056cebec`, verified), `wp plugin install --force`, ZIP and folder deleted | Manifest identical to Git; plugin active |
+| QA | Agent 32820: anonymous data has `role`, `is_office` only; edit context has the contacts. Protected fingerprint vs `baseline-pre-t1t2-p1.json`: unchanged | Pass |
+
+**Stage 03.2 controlled validation: complete.**
