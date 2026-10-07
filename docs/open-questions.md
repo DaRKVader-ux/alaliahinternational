@@ -118,11 +118,22 @@ Each fix needs approval.
 ### E3. Backup verification: exists, not verified restorable
 Backuply Pro: weekly, rotation 2, **local only** on the same server as both sites. Latest archive 2026-10-01 (made on production, carried into staging). The archives are web-protected (HTTP 403). **No off-site copy, no tested restore**, host-level backups unknown. The D-016 gate is **not met** for major architectural work. Need: off-site copy plus one verified restore (R8).
 
+**Update 2026-10-07:** a fresh Backuply backup made **on staging** (`wp_alaliah.trigonsolutions.co_2026-10-07_05-44-51`) was verified complete, listed for restore and covering database and files ([`stage-03-2-staging-validation.md`](./stage-03-2-staging-validation.md)). Accepted as the Stage 03.2 staging gate (D-036). Still local only (same server); no tested restore.
+
 ### E4. Network access: resolved 2026-10-06
 Both hosts are now allowed. **Gotcha:** Node's built-in `fetch` ignores `HTTPS_PROXY`, so the Novamira proxy (`@automattic/mcp-wordpress-remote`) needs `NODE_USE_ENV_PROXY=1` in its MCP env, otherwise it still gets "Host not in allowlist". `www.alaliahinternational.com` is still blocked (only needed for diagnosing P2).
 
 ### E5. Novamira as an attack surface
 An MCP endpoint that can write files and execute PHP on a public host is high-value to attackers. **Need:** strong per-user credentials (not a shared admin password), HTTPS only, ideally an IP or token restriction, disabled when not in use, and never enabled on production without a separate decision.
+
+### E6. Production backups stored in the staging tree (later hosting/security cleanup)
+The cloned `wp-content/backuply/backups-Cv3OcR/` on staging still holds three **production** Backuply archives (2026-09-17 ×2, 2026-10-01; about 540 MB each) with full production database copies, including users and personal data. They are behind deny-all (HTTP 403), on the same hosting account as production. **Do not remove during Stage 03.2.** Later task: owner decides keep or delete; deletion is a hosting/security cleanup with its own approval.
+
+### E7. Legacy fingerprint moves with front-end traffic
+Any front-end view of a legacy listing or developer page changes legacy post meta: Elementor writes `_elementor_page_assets` on first view, and Essential Addons (`_eael_post_view_count`) and WPResidence (`wpestate_total_views`, `wpestate_detailed_views`) count views. Confirmed 2026-10-07: two public GETs added two `_elementor_page_assets` rows. The in-run check (before/after one run) is unaffected unless a visit lands mid-run, which fails safe. Cross-session comparisons need these keys excluded (proposed fingerprint change, pending approval).
+
+### E8. Staging emits a UTF-8 BOM
+REST and WP-CLI output on staging start with a byte-order mark (seen before `trigon-alaliah-core` was installed; the plugin's files have none). Some PHP file in the legacy stack starts with a BOM. Harmless for browsers; strict JSON clients can fail. Locate before the new theme ships.
 
 ---
 
