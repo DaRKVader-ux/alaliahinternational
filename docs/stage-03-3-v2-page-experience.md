@@ -14,7 +14,7 @@
 
 The IA and art direction (D-040) are unchanged. This pass made five targeted changes and put a real map in place.
 
-- **Map:** real OpenStreetMap vector tiles (OpenFreeMap "liberty" style) rendered by MapLibre 4.7.1. The set is bundled in `map/` by `tools/map/fetch_tiles.py`: 257 tiles, z8–13, plus glyphs, sprite and style.
+- **Map:** real OpenStreetMap vector tiles (OpenFreeMap "liberty" style) rendered by MapLibre 4.7.1. The set is bundled in `map/` by `tools/map/fetch_tiles.py`: 257 tiles, z8–13, plus glyphs, sprite and style. Tiles and glyphs are stored as base64 JSON packs read through an `aa-pack://` protocol, because the artifact host serves no generic binary type. A missing tile or glyph returns empty data, never a failed tile.
   - **Coverage:** the tile box W54.25 S24.15 E54.80 N24.62, which is also the map's `maxBounds`, so no view can reach an unbundled tile.
   - **Labels:** English, else Latin transliteration. Road shields show their `ref`.
   - **Glyphs:** Latin plus the Arabic ranges. Some OSM features carry Arabic in `name:en`, and one missing glyph range blanks the whole tile.

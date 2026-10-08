@@ -9,6 +9,7 @@ tiles and style: OpenFreeMap (MIT/BSD-style). Run from the repo root:
 import json, math, os, shutil, sys, urllib.request, urllib.parse, gzip
 
 OUT = sys.argv[1]
+SRC = os.path.join(OUT, 'src')  # raw .pbf cache: not published, not committed
 BASE = 'https://tiles.openfreemap.org'
 # Abu Dhabi island to Yas, Al Reef and Madinat Al Riyad. map.js uses the same box as maxBounds.
 W, S, E, N = 54.25, 24.15, 54.80, 24.62
@@ -41,7 +42,7 @@ for z in ZOOMS:
     xs, ys = tile_range(z)
     for x in xs:
         for y in ys:
-            p = os.path.join(OUT, 'tiles', str(z), str(x), f'{y}.pbf')
+            p = os.path.join(SRC, 'tiles', str(z), str(x), f'{y}.pbf')
             if not os.path.exists(p):
                 save(p, get(tmpl.replace('{z}', str(z)).replace('{x}', str(x)).replace('{y}', str(y)), binary=True))
             count += 1
@@ -67,23 +68,36 @@ for l in style['layers']:
 for f in fonts:
     for rng in ['0-255', '256-511', '512-767', '768-1023', '7680-7935', '8192-8447',
                 '1536-1791', '1792-2047', '64256-64511', '64512-64767', '64768-65023', '65024-65279']:
-        p = os.path.join(OUT, 'fonts', f, rng + '.pbf')
-        if not os.path.exists(p) and not os.path.exists(os.path.join(OUT, 'fonts', f.replace(' ', '-'), rng + '.pbf')):
+        p = os.path.join(SRC, 'fonts', f, rng + '.pbf')
+        if not os.path.exists(p):
             try: save(p, get(BASE + '/fonts/' + urllib.parse.quote(f) + '/' + rng + '.pbf', binary=True))
             except Exception as e: print('font miss', f, rng, e)
 sp = style['sprite'] if isinstance(style['sprite'], str) else style['sprite'][0]['url']
 for suf in ['.json', '.png', '@2x.json', '@2x.png']:
     save(os.path.join(OUT, 'sprites', 'ofm' + suf), get(sp + suf, binary=True))
-# Font stacks without spaces (safe as published file paths): 'Noto Sans Regular' -> 'Noto-Sans-Regular'
+# The artifact host serves no generic binary type, so tiles and glyphs ship as base64 JSON packs, read by the
+# 'aa-pack' protocol in map.js. Tiles are grouped by zoom and z10 column; glyphs by font and Latin/Arabic blocks.
+import base64
+packs = {}
+for z in ZOOMS:
+    xs, ys = tile_range(z)
+    for x in xs:
+        for y in ys:
+            key = f't{z}-{x >> max(0, z - 10)}'
+            packs.setdefault(key, {})[f'{x}/{y}'] = base64.b64encode(open(os.path.join(SRC, 'tiles', str(z), str(x), f'{y}.pbf'), 'rb').read()).decode()
+ARABIC = {'1536-1791', '1792-2047', '64256-64511', '64512-64767', '64768-65023', '65024-65279'}
 for f in fonts:
-    src, dst = os.path.join(OUT, 'fonts', f), os.path.join(OUT, 'fonts', f.replace(' ', '-'))
-    if os.path.isdir(src):
-        shutil.rmtree(dst, ignore_errors=True)
-        os.rename(src, dst)
-for f in fonts:
-    style['layers'] = json.loads(json.dumps(style['layers']).replace('"' + f + '"', '"' + f.replace(' ', '-') + '"'))
+    for fn in os.listdir(os.path.join(SRC, 'fonts', f)):
+        rng = fn[:-4]
+        key = 'g-' + f.replace(' ', '-') + ('-ar' if rng in ARABIC else '-la')
+        packs.setdefault(key, {})[rng] = base64.b64encode(open(os.path.join(SRC, 'fonts', f, fn), 'rb').read()).decode()
+shutil.rmtree(os.path.join(OUT, 'packs'), ignore_errors=True); os.makedirs(os.path.join(OUT, 'packs'))
+for k, v in packs.items():
+    json.dump(v, open(os.path.join(OUT, 'packs', k + '.json'), 'w'), separators=(',', ':'))
+print('packs', len(packs), {k: len(v) for k, v in packs.items()})
+style['sources']['openmaptiles']['tiles'] = ['aa-pack://t/{z}/{x}/{y}']
 style['sprite'] = 'map/sprites/ofm'
-style['glyphs'] = 'map/fonts/{fontstack}/{range}.pbf'
+style['glyphs'] = 'aa-pack://g/{fontstack}/{range}'
 json.dump(style, open(os.path.join(OUT, 'style.json'), 'w'))
 # Switch the specimen map on
 mj = os.path.join(os.path.dirname(OUT), "map.js"); t = open(mj).read().replace("var BUNDLED = false;", "var BUNDLED = true;"); open(mj, "w").write(t)

@@ -1,5 +1,5 @@
 /* Al Aliah specimen map: MapLibre GL with OpenStreetMap vector tiles (OpenFreeMap), bundled locally
-   under map/ because the artifact host cannot load third-party tiles at runtime.
+   under map/ (style, sprite and JSON packs) because the artifact host cannot load third-party tiles at runtime.
    Familiar map UX: drag, scroll or pinch to zoom, +/− buttons, price pins, a selected state in crimson.
    Listings have no coordinates yet (open question Q3), so pins sit at community positions. */
 (function () {
@@ -15,15 +15,36 @@
   // Set to true by tools/map/fetch_tiles.py once map/ holds the bundled tiles, style, glyphs and sprite.
   var BUNDLED = true;
   var ready = null;
+  // Tiles and glyphs ship as base64 JSON packs (the artifact host serves no generic binary type). The 'aa-pack'
+  // protocol reads them: a missing tile or glyph range returns empty data, so it can never fail a whole tile.
+  var packs = {};
+  function pack(name) {
+    return packs[name] || (packs[name] = fetch(new URL('map/packs/' + name + '.json', location.href).href, { cache: 'force-cache' })
+      .then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; }));
+  }
+  function bytes(s) { var b = atob(s), u = new Uint8Array(b.length); for (var i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u.buffer; }
+  function packKey(url) {
+    var m = url.match(/^aa-pack:\/\/(t|g)\/(.+)$/); if (!m) return null;
+    var a = m[2].split('/');
+    if (m[1] === 't') { var z = +a[0], x = +a[1]; return ['t' + z + '-' + (x >> Math.max(0, z - 10)), x + '/' + a[2]]; }
+    var font = decodeURIComponent(a[0]).split(',')[0].trim().replace(/ /g, '-'), start = parseInt(a[1], 10);
+    return ['g-' + font + ((start >= 1536 && start < 2048) || start >= 64256 ? '-ar' : '-la'), a[1]];
+  }
+  var registered = false;
+  function register() {
+    if (registered) return; registered = true;
+    maplibregl.addProtocol('aa-pack', function (params) {
+      var k = packKey(params.url);
+      if (!k) return Promise.resolve({ data: new ArrayBuffer(0) });
+      return pack(k[0]).then(function (d) { return { data: d[k[1]] ? bytes(d[k[1]]) : new ArrayBuffer(0) }; });
+    });
+  }
   function haveTiles() {
     if (ready) return ready;
+    register();
     ready = fetch(new URL('map/style.json', location.href).href, { cache: 'force-cache' }).then(function (r) { if (!r.ok) throw new Error('no style'); return r.json(); })
       .then(function (style) {
-        // Absolute URLs for the worker; keep {z}/{x}/{y}, {fontstack} and {range} unescaped
-        var abs = function (u) { return new URL(u, location.href).href.replace(/%7B/g, '{').replace(/%7D/g, '}'); };
-        Object.keys(style.sources).forEach(function (k) { var s = style.sources[k]; if (s.tiles) s.tiles = s.tiles.map(abs); });
-        if (style.glyphs) style.glyphs = abs(style.glyphs);
-        if (style.sprite) style.sprite = abs(style.sprite);
+        if (style.sprite) style.sprite = new URL(style.sprite, location.href).href;
         return style;
       });
     return ready;
