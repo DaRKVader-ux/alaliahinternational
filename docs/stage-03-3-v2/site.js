@@ -135,7 +135,7 @@
     var n = gal(x).length, on = isSL(x.id), portrait = /^reem-(bath|hall|kitchen-2|kitchen-3)/.test(x.img);
     return '<article class="pc' + (o.cls ? ' ' + o.cls : '') + '" data-id="' + x.id + '" data-area="' + esc(x.area) + '">' +
       '<div class="pc-media' + (portrait ? ' contain' : '') + '"><img src="' + IMG(x.img) + '" alt="' + esc(x.alt) + '" loading="lazy" width="640" height="480">' +
-      '<span class="pc-tag' + (x.comp === 'offplan' ? ' off' : '') + '">' + PURL(x) + '</span>' +
+      '<span class="pc-tag' + (x.comp === 'offplan' ? ' off' : '') + '">' + PURL(x) + '</span>' + (x.featured ? '<span class="pc-feat">Featured</span>' : '') +
       (x.render ? '<span class="pc-rd">Developer render</span>' : '') +
       '<span class="pc-n" data-pcn>' + ico('grid') + '<span>' + n + '</span><span class="vh"> photos</span></span>' +
       (n > 1 ? '<button type="button" class="pc-nav prev" data-pcnav="-1" aria-label="Previous photo of ' + esc(T(x)) + '">' + ico('arrow') + '</button><button type="button" class="pc-nav next" data-pcnav="1" aria-label="Next photo of ' + esc(T(x)) + '">' + ico('arrow') + '</button>' +
@@ -145,7 +145,8 @@
       '<h3 class="pc-t"><a class="pc-link" href="#property/' + x.id + '">' + esc(T(x)) + '</a></h3>' +
       '<p class="pc-loc">' + ico('pin') + esc(x.area) + ', ' + esc(x.city) + '</p>' + facts(x) +
       '<div class="pc-foot"><span>Ref ' + x.ref + '</span>' +
-      (o.compare ? '<label class="pc-cmp"><input type="checkbox" data-cmp="' + x.id + '"' + (compare.indexOf(x.id) > -1 ? ' checked' : '') + '>Compare</label>' : '<span class="pc-view">View property' + ico('arrow') + '</span>') + '</div></div>' +
+      (o.compare ? '<label class="pc-cmp"><input type="checkbox" data-cmp="' + x.id + '"' + (compare.indexOf(x.id) > -1 ? ' checked' : '') + '>Compare</label>' : '') + '</div>' +
+      '<span class="pc-view" aria-hidden="true">View property' + ico('arrow') + '</span></div>' +
       '<div class="pc-act cpair"><button type="button" class="btn-c" data-wa="' + x.id + '">' + ico('wa') + 'WhatsApp</button><button type="button" class="btn-c" data-call="' + x.id + '">' + ico('call') + 'Call</button></div></article>';
   }
   function pcStep(btn) {
@@ -192,38 +193,7 @@
   /* ============================================================
      Map (stylised geography; approximate, community level only)
      ============================================================ */
-  function mapSVG(o) {
-    var G2 = A.GEO, s = '<svg viewBox="' + (o.vb || '0 40 1040 680') + '" preserveAspectRatio="' + (o.par || 'xMidYMid slice') + '" role="' + (o.interactive ? 'group' : 'img') + '" aria-label="' + esc(o.label) + '">';
-    s += '<rect x="-200" y="-200" width="1440" height="1160" fill="#E3E5E6"/>';
-    Object.keys(G2.land).forEach(function (k) { s += '<path class="m-shelf" d="' + G2.land[k] + '"/>'; });
-    Object.keys(G2.land).forEach(function (k) { s += '<path class="m-land" d="' + G2.land[k] + '"/>'; });
-    G2.minor.forEach(function (d) { s += '<path class="m-minor" d="' + d + '"/>'; });
-    G2.roads.forEach(function (d) { s += '<path class="m-road-c" d="' + d + '"/>'; });
-    G2.roads.forEach(function (d) { s += '<path class="m-road" d="' + d + '"/>'; });
-    Object.keys(G2.comm).forEach(function (n) { var c = G2.comm[n]; s += '<path class="m-comm' + ((o.on || []).indexOf(n) > -1 ? ' on' : '') + '" data-a="' + esc(n) + '" d="' + c.d + '"/>'; });
-    G2.water.forEach(function (w) { s += '<text class="m-wlbl" x="' + w[1] + '" y="' + w[2] + '">' + w[0] + '</text>'; });
-    Object.keys(G2.comm).forEach(function (n) {
-      if (o.labels === 'all' || (o.labels || []).indexOf(n) > -1) { var c = G2.comm[n]; s += '<text class="m-lbl" text-anchor="middle" x="' + c.c[0] + '" y="' + (c.c[1] - 22) + '">' + esc(n) + '</text>'; }
-    });
-    (o.pins || []).forEach(function (p) {
-      var c = G2.comm[p.area]; if (!c) return;
-      var w = Math.round(p.text.length * 7.4 + 22);
-      s += '<g class="pin' + (p.on ? ' on' : '') + '" data-a="' + esc(p.area) + '" data-x="' + c.c[0] + '" data-y="' + c.c[1] + '" transform="translate(' + c.c[0] + ' ' + c.c[1] + ')"' + (o.interactive ? ' tabindex="0" role="button" aria-label="' + esc(p.aria) + '"' : '') + '>' +
-        '<rect x="' + (-w / 2) + '" y="-15" width="' + w + '" height="30" rx="15"/><text text-anchor="middle" dominant-baseline="central" y="1">' + esc(p.text) + '</text></g>';
-    });
-    return s + '</svg>';
-  }
-  /* Pins keep a constant screen size at any map size */
-  function fitPins(box) {
-    var svg = $('svg', box); if (!svg) return;
-    var vb = svg.viewBox.baseVal, r = svg.getBoundingClientRect(); if (!r.width) return;
-    var k = Math.max(vb.width / r.width, vb.height / r.height);
-    if ((svg.getAttribute('preserveAspectRatio') || '').indexOf('slice') > -1) k = Math.min(vb.width / r.width, vb.height / r.height);
-    $$('.pin', svg).forEach(function (g) { g.setAttribute('transform', 'translate(' + g.dataset.x + ' ' + g.dataset.y + ') scale(' + k + ')'); });
-    $$('.m-lbl, .m-wlbl', svg).forEach(function (t) { t.style.fontSize = (13 * k) + 'px'; t.style.strokeWidth = (4 * k) + 'px'; });
-  }
-  function refitMaps() { $$('.map').forEach(fitPins); }
-  window.addEventListener('resize', refitMaps);
+  function refitMaps() { $$('.map-gl').forEach(function (m) { if (m._aaResize) m._aaResize(); }); window.dispatchEvent(new Event('aa-map-resize')); }
 
   /* ============================================================
      Header: mega menus (desktop), menu dialog (mobile), scroll states
@@ -474,36 +444,33 @@
       '<section class="sec tight cover" aria-labelledby="disc-h"><div class="wrap"><div class="sec-head"><div><p class="eyebrow">Start here</p><h2 class="h2" id="disc-h">What are you looking for?</h2></div></div>' +
       '<div class="disc">' + tiles.map(function (t) { return '<a class="tile" href="' + t.href + '"><img src="' + IMG(t.img) + '" alt="' + esc(t.alt) + '" loading="lazy" width="800" height="1000">' + (t.render ? '<span class="tag-r">Developer render</span>' : '') + '<span class="tx"><span class="k">' + t.k + '</span><span class="s">' + t.s + '<br>' + t.r + '</span><span class="go">' + t.go + ico('arrow') + '</span></span></a>'; }).join('') + '</div></div></section></div>' +
       /* Homes */
-      '<section class="sec mist homes" aria-labelledby="homes-h"><div class="wrap"><div class="sec-head"><div><p class="eyebrow">Available now</p><h2 class="h2" id="homes-h">Homes you can view this week</h2><p class="lede">Every card opens the full listing. WhatsApp and Call reach an adviser about that exact home.</p></div><a class="link-arrow" href="#search/sale" id="homes-all">All homes' + ico('arrow') + '</a></div>' +
+      '<section class="sec homes" aria-labelledby="homes-h"><div class="wrap"><div class="sec-head"><div><p class="eyebrow">Available now</p><h2 class="h2" id="homes-h">Homes you can view this week</h2><p class="lede">Every card opens the full listing. WhatsApp and Call reach an adviser about that exact home.</p></div><a class="link-arrow" href="#search/sale" id="homes-all">All homes' + ico('arrow') + '</a></div>' +
       '<div class="tabs" role="tablist" aria-label="Purpose"><button class="tab" role="tab" id="ht-sale" aria-selected="true" aria-controls="homes-p">For sale <span class="c">' + sales.length + '</span></button><button class="tab" role="tab" id="ht-rent" aria-selected="false" aria-controls="homes-p">For rent <span class="c">' + rents.length + '</span></button></div>' +
       '<div id="homes-p" role="tabpanel" aria-labelledby="ht-sale"><div class="cards">' + homesSale.map(function (x) { return card(x); }).join('') + '</div></div></div></section>' +
       /* Selection */
-      '<section class="sec dark" aria-labelledby="sel-h"><div class="wrap"><div class="sec-head"><div><p class="eyebrow">Selected by our advisers</p><h2 class="h2" id="sel-h">Homes with room to live</h2><p class="lede">Large homes from our current listings, chosen for space and layout. Ask for others before they reach the site.</p></div></div>' +
+      '<section class="sec sel-sec" aria-labelledby="sel-h"><div class="wrap"><div class="sec-head"><div><p class="eyebrow">Selected by our advisers</p><h2 class="h2" id="sel-h">Homes with room to live</h2><p class="lede">Large homes from our current listings, chosen for space and layout. Ask for others before they reach the site.</p></div></div>' +
       '<div class="sel-grid"><div class="sel-stage" id="sel-stage"><img src="' + IMG(byId(31521).img) + '" alt="' + esc(byId(31521).alt) + '"><div class="sel-thumbs" id="sel-thumbs"></div></div>' +
       '<div><div class="sel-list" role="group" aria-label="Selected homes">' + selIds.map(function (id, i) { var x = byId(id); return '<button type="button" class="sel-item" data-id="' + id + '" aria-pressed="' + (i === 0) + '"><img src="' + IMG(x.img) + '" alt=""><span><span class="p">' + AED(x.pr) + (x.pur === 'rent' ? '<small style="font:500 13px var(--ft)"> a year</small>' : '') + '</span><span class="t">' + esc(T(x)) + ' · ' + esc(x.area) + '</span><span class="m">' + x.b + ' bedrooms · ' + x.ba + ' bathrooms · ' + (x.s ? fmt(x.s) + ' sq ft' : 'size not listed') + '</span></span></button>'; }).join('') + '</div>' +
       '<div class="sel-detail" id="sel-detail"></div></div></div></div></section>' +
       /* Areas */
-      '<section class="sec" id="areas" aria-labelledby="ar-h"><div class="wrap"><div class="sec-head"><div><p class="eyebrow">Areas</p><h2 class="h2" id="ar-h">Choose the place first</h2><p class="lede">See each community through the homes we list there: what is available, from what price, and what it looks like.</p></div>' +
+      '<section class="sec dark areas-sec" id="areas" aria-labelledby="ar-h"><div class="wrap"><div class="sec-head"><div><p class="eyebrow">Areas</p><h2 class="h2" id="ar-h">Choose the place first</h2><p class="lede">See each community through the homes we list there: what is available, from what price, and what it looks like.</p></div>' +
       '<div class="city-sw" role="group" aria-label="City"><button type="button" data-city="Abu Dhabi" aria-pressed="true">Abu Dhabi</button><button type="button" data-city="Dubai" aria-pressed="false">Dubai</button></div></div>' +
       '<div class="ap" id="ap"></div><div class="ap-dots" id="ap-dots" aria-label="Areas"></div></div></section>' +
       /* Off-plan */
-      '<section class="sec mist" id="offplan" aria-labelledby="op-h"><div class="wrap"><div class="sec-head"><div><p class="eyebrow">Off-Plan</p><h2 class="h2" id="op-h">Off-plan, compared on the numbers</h2><p class="lede">Price, handover and payment plan side by side. Where a developer has not confirmed a figure, we say so.</p></div><a class="link-arrow" href="#search/offplan">All off-plan' + ico('arrow') + '</a></div>' +
+      '<section class="sec" id="offplan" aria-labelledby="op-h"><div class="wrap"><div class="sec-head"><div><p class="eyebrow">Off-Plan</p><h2 class="h2" id="op-h">Off-plan, compared on the numbers</h2><p class="lede">Price, handover and payment plan side by side. Where a developer has not confirmed a figure, we say so.</p></div><a class="link-arrow" href="#search/offplan">All off-plan' + ico('arrow') + '</a></div>' +
       opfHTML() +
       '<div class="op-sub"><h3>Compare all projects</h3><div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><div class="seg" role="group" aria-label="Show projects in"><button type="button" data-oc="" aria-pressed="true">All</button><button type="button" data-oc="Abu Dhabi" aria-pressed="false">Abu Dhabi</button><button type="button" data-oc="Dubai" aria-pressed="false">Dubai</button></div><div class="rail-nav"><button type="button" class="prev" aria-label="Previous projects">' + ico('arrow') + '</button><button type="button" class="next" aria-label="Next projects">' + ico('arrow') + '</button></div></div></div>' +
       '<div class="rail" id="op-rail">' + offs.map(projCard).join('') + '</div></div></section>' +
       /* Invest */
-      '<section class="sec" id="invest" aria-labelledby="iv-h"><div class="wrap"><div class="sec-head"><div><p class="eyebrow">Investing</p><h2 class="h2" id="iv-h">Investing, but not sure where?</h2><p class="lede">Start from how you want to invest. We show what matches today, and an adviser builds the shortlist with you.</p></div></div>' +
+      '<section class="sec dark inv-sec" id="invest" aria-labelledby="iv-h"><div class="inv-bg" id="inv-bg" aria-hidden="true"></div><div class="wrap"><div class="sec-head"><div><p class="eyebrow">Investing</p><h2 class="h2" id="iv-h">Investing, but not sure where?</h2><p class="lede">Start from how you want to invest. We show what matches today, and an adviser builds the shortlist with you.</p></div></div>' +
       '<div class="inv"><div class="inv-goals" id="inv-goals" role="group" aria-label="Investment goal"></div><div class="inv-res" id="inv-res" aria-live="polite"></div></div></div></section>' +
       /* Developers */
-      '<section class="sec mist" id="developers" aria-labelledby="dv-h"><div class="wrap"><div class="sec-head"><div><p class="eyebrow">Developers</p><h2 class="h2" id="dv-h">Developers, through their projects</h2><p class="lede">Each developer is shown with the project we can take you to, its location and its handover.</p></div><a class="link-arrow" href="#home" data-todo="The developer index is outside this specimen\'s four pages.">All 17 developers' + ico('arrow') + '</a></div>' +
-      '<div class="dv">' + A.DEVS.filter(function (d) { return d.projects.length; }).map(function (d) {
-        var p = PROJ(d.projects[0]);
-        return '<a class="dv-card" href="#search/offplan"><div class="dv-media">' + (p.img ? '<img src="' + IMG(p.img) + '" alt="' + esc(alt(p.img)) + '" loading="lazy"><span class="tag-r">Developer render</span>' : '<div class="noimg">' + ico('grid') + '<span>' + esc(p.name) + ': project imagery not yet approved</span></div>') + '</div>' +
-          '<div class="dv-tx"><img class="dv-logo" src="logo/' + d.key + '.png" alt="' + esc(d.name) + '"><h3>' + esc(p.name) + '</h3><dl><dt>Location</dt><dd>' + esc(p.loc) + '</dd><dt>Handover</dt><dd>' + esc(p.handover) + '</dd><dt>Payment plan</dt><dd>' + esc(p.plan.overall) + '</dd><dt>Projects with us</dt><dd>' + d.projects.length + '</dd></dl><span class="link-arrow" style="justify-self:start">View ' + esc(p.name) + ico('arrow') + '</span></div></a>';
-      }).join('') + '</div>' +
+      '<section class="sec" id="developers" aria-labelledby="dv-h"><div class="wrap"><div class="sec-head"><div><p class="eyebrow">Developers</p><h2 class="h2" id="dv-h">Developers, through their projects</h2><p class="lede">Choose a developer to see the project we can take you to, where it is, when it hands over and how you pay.</p></div><a class="link-arrow" href="#home" data-todo="The developer index is outside this specimen\'s four pages.">All 17 developers' + ico('arrow') + '</a></div>' +
+      '<div class="dvs" id="dvs"></div>' +
+      '<h3 class="dv-dir-h">In our developer directory</h3>' +
       '<div class="dv-wall" aria-label="Developer directory">' + A.DEVS.map(function (d) { return '<a href="#search/offplan"' + (d.projects.length ? '' : ' data-todo="' + esc(d.name) + ': developer pages are outside this specimen."') + '><img src="logo/' + d.key + '.png" alt="' + esc(d.name) + '" loading="lazy"><span class="nm" aria-hidden="true">' + esc(d.name) + '</span>' + (d.projects.length ? '<span class="p">' + d.projects.length + ' project</span>' : '') + '</a>'; }).join('') + '<a class="all" href="#home" data-todo="The developer index is outside this specimen\'s four pages.">All developers' + ico('arrow') + '</a></div></div></section>' +
       /* Advice + contact */
-      '<section class="sec dark" id="advice" aria-labelledby="ad-h"><div class="wrap adv"><div><p class="eyebrow">Al Aliah International</p><h2 class="adv-st" id="ad-h">Advice first. Then the right listing.</h2><p class="lede">An Abu Dhabi brokerage for buying, renting and off-plan, with a view of Dubai projects. Tell us what you need; an adviser replies with options and the facts behind them.</p>' +
+      '<section class="sec red" id="advice" aria-labelledby="ad-h"><div class="wrap adv"><div><p class="eyebrow">Al Aliah International</p><h2 class="adv-st" id="ad-h">Advice first. Then the right listing.</h2><p class="lede">An Abu Dhabi brokerage for buying, renting and off-plan, with a view of Dubai projects. Tell us what you need; an adviser replies with options and the facts behind them.</p>' +
       '<div class="adv-list"><a href="#search/sale"><b>Buying a home</b><span>Ready homes, prices and what each community offers</span>' + ico('arrow') + '</a><a href="#search/rent"><b>Renting</b><span>Annual rents, cheques and move-in dates</span>' + ico('arrow') + '</a><a href="#search/offplan"><b>Off-plan guidance</b><span>Payment plans, handover dates and developer track record</span>' + ico('arrow') + '</a><a href="#home" data-todo="List your property is outside this specimen\'s four pages."><b>Selling or letting your property</b><span>A valuation conversation and a listing plan</span>' + ico('arrow') + '</a></div></div>' +
       '<form class="cform" id="cform" novalidate><h3>Talk to an adviser</h3><p>Fastest on WhatsApp. Or leave your details and we will call you.</p><div class="cpair"><button type="button" class="btn-c" data-wa="general">' + ico('wa') + 'WhatsApp</button><button type="button" class="btn-c" data-call="general">' + ico('call') + 'Call</button></div><p class="or">or</p>' +
       '<div class="inp"><label for="c-name">Name</label><input id="c-name" autocomplete="name"></div><div class="inp"><label for="c-ph">Mobile number</label><input id="c-ph" type="tel" autocomplete="tel" inputmode="tel"></div><div class="inp"><label for="c-int">I\'m interested in</label><select id="c-int"><option>Buying</option><option>Renting</option><option>Off-plan</option><option>Selling or letting</option></select></div>' +
@@ -529,6 +496,7 @@
     $$('.city-sw button').forEach(function (b) { b.addEventListener('click', function () { $$('.city-sw button').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); wireAreas(b.dataset.city); }); });
     wireOffplan();
     wireInvest();
+    wireDevs();
     $('#cform').addEventListener('submit', function (e) { e.preventDefault(); toast('<b>Specimen:</b> nothing was sent. Live: the request goes to Al Aliah\'s lead inbox (open question W7).'); });
     heroMotion();
     homeReveals();
@@ -547,8 +515,7 @@
       $$('.sel-item').forEach(function (b) { b.setAttribute('aria-pressed', Number(b.dataset.id) === id); });
       thumbs.innerHTML = g.map(function (n, i) { return '<button type="button" aria-pressed="' + (i === 0) + '" data-n="' + n + '" aria-label="Photo ' + (i + 1) + ' of ' + g.length + '"><img src="' + IMG(n) + '" alt=""></button>'; }).join('');
       setImg(g[0], alt(g[0], x), first);
-      det.innerHTML = '<p class="sel-why">' + ico('check') + '<span>' + esc(WHY[id]) + '</span></p><div class="sel-act"><a class="btn light" href="#property/' + id + '">View property' + ico('arrow', 'go') + '</a><button type="button" class="btn-c" data-wa="' + id + '">' + ico('wa') + 'WhatsApp</button><button type="button" class="btn-c" data-call="' + id + '">' + ico('call') + 'Call</button></div>';
-      $$('.btn-c', det).forEach(function (b) { b.closest('.sel-act').classList.add('dark'); });
+      det.innerHTML = '<p class="sel-why">' + ico('check') + '<span>' + esc(WHY[id]) + '</span></p><div class="sel-act"><a class="btn primary" href="#property/' + id + '">View property' + ico('arrow', 'go') + '</a><button type="button" class="btn-c" data-wa="' + id + '">' + ico('wa') + 'WhatsApp</button><button type="button" class="btn-c" data-call="' + id + '">' + ico('call') + 'Call</button></div>';
       $$('button', thumbs).forEach(function (b) { b.addEventListener('click', function () { $$('button', thumbs).forEach(function (t) { t.setAttribute('aria-pressed', t === b); }); setImg(b.dataset.n, alt(b.dataset.n, x)); }); });
     }
     function setImg(n, a, instant) {
@@ -564,12 +531,17 @@
 
   /* Areas: image panels; one expands, the others compress. Mobile: a swipe deck. */
   function areaStats(a) {
-    if (a.city === 'Dubai') { var ps = A.PROJECTS.filter(function (p) { return p.area === a.n; }); return { html: '<div><b>' + ps.length + '</b>off-plan ' + (ps.length === 1 ? 'project' : 'projects') + '</div><div><b>' + ps.map(function (p) { return p.handover; }).filter(Boolean).join(', ') + '</b>handover</div>', n: ps.length + (ps.length === 1 ? ' project' : ' projects') }; }
-    var h = inArea(a.n), r = h.filter(rent), s = h.filter(sale);
-    var parts = [];
-    if (r.length) parts.push('<div><b>' + r.length + '</b>to rent, from ' + AED(minBy(r)) + '</div>');
-    if (s.length) parts.push('<div><b>' + s.length + '</b>to buy, from ' + AED(minBy(s)) + '</div>');
-    return { html: parts.join(''), n: h.length + (h.length === 1 ? ' home' : ' homes') };
+    var h = inArea(a.n), ps = A.PROJECTS.filter(function (p) { return p.area === a.n; }), r = h.filter(rent), s = h.filter(sale);
+    var types = {}; h.forEach(function (x) { types[x.type] = (types[x.type] || 0) + 1; });
+    var dom = Object.keys(types).sort(function (p, q) { return types[q] - types[p]; })[0];
+    var off = ps.length;
+    var cells = [];
+    cells.push(['Homes listed', h.length ? String(h.length) : 'None now']);
+    cells.push(['Off-plan projects', off ? String(off) : 'None now']);
+    if (dom) cells.push(['Mostly', dom.charAt(0).toUpperCase() + dom.slice(1) + 's']);
+    if (s.length) cells.push(['Buy from', AED(minBy(s))]); else if (r.length) cells.push(['Rent from', AED(minBy(r)) + '/yr']);
+    else { var hp = ps.filter(function (p) { return p.handover; }).map(function (p) { return p.handover; }); if (hp.length) cells.push(['Handover', hp.join(', ')]); }
+    return { html: cells.map(function (c) { return '<div><span>' + c[0] + '</span><b>' + esc(c[1]) + '</b></div>'; }).join(''), n: h.length ? h.length + (h.length === 1 ? ' home' : ' homes') : off + (off === 1 ? ' project' : ' projects') };
   }
   function wireAreas(city) {
     var list = A.AREAS.filter(function (a) { return a.city === city && !a.small; }), box = $('#ap'), dots = $('#ap-dots');
@@ -577,9 +549,9 @@
       var st = areaStats(a);
       return '<div class="ap-p' + (i === 0 ? ' on' : '') + '" data-k="' + a.key + '"><img src="' + IMG(a.img) + '" alt="' + esc(a.alt) + '" loading="lazy">' + (a.render ? '<span class="tag-r">Developer render</span>' : '') +
         '<button type="button" class="ap-hit" aria-expanded="' + (i === 0) + '" aria-label="' + esc(a.n) + ', ' + st.n + '"></button>' +
-        '<div class="ap-min" aria-hidden="true"><b>' + esc(a.n) + '</b><span>' + st.n + '</span></div>' +
+        '<div class="ap-min" aria-hidden="true"><span class="ap-n">' + st.n + '</span><b>' + esc(a.n) + '</b></div>' +
         '<div class="ap-full"><h3>' + esc(a.n) + '<span class="ar" lang="ar" dir="rtl">' + a.ar + '</span></h3><p>' + esc(a.line) + '</p><div class="ap-stats">' + st.html + '</div>' +
-        '<div class="ap-cta">' + (a.key === 'yas' ? '<a class="btn light" href="#area">Explore Yas Island' + ico('arrow', 'go') + '</a>' : '<a class="btn light" href="' + (city === 'Dubai' ? '#search/offplan' : '#search/' + (inArea(a.n).some(rent) ? 'rent' : 'sale')) + '" data-todo="Only Yas Island has an area page in this specimen; this button opens the ' + esc(a.n) + ' guide in the live site.">Explore ' + esc(a.n) + ico('arrow', 'go') + '</a>') +
+        '<div class="ap-cta">' + (a.key === 'yas' ? '<a class="btn primary" href="#area">Explore Yas Island' + ico('arrow', 'go') + '</a>' : '<a class="btn primary" href="' + (city === 'Dubai' ? '#search/offplan' : '#search/' + (inArea(a.n).some(rent) ? 'rent' : 'sale')) + '" data-todo="Only Yas Island has an area page in this specimen; this button opens the ' + esc(a.n) + ' guide in the live site.">Explore ' + esc(a.n) + ico('arrow', 'go') + '</a>') +
         '<button type="button" class="btn ghost-l" data-wa="' + a.key + '">' + ico('wa') + 'Ask about ' + esc(a.n) + '</button></div></div></div>';
     }).join('');
     dots.innerHTML = list.map(function (a, i) { return '<button type="button" aria-label="' + esc(a.n) + '"' + (i === 0 ? ' aria-current="true"' : '') + '></button>'; }).join('');
@@ -645,6 +617,35 @@
       });
     });
   }
+  function dvsStage(d) {
+    var p = PROJ(d.projects[0]);
+    var media = p.img ? '<img src="' + IMG(p.img) + '" alt="' + esc(alt(p.img)) + '"><span class="tag-r">Developer render</span>' :
+      '<div class="dvs-noimg"><img src="logo/' + d.key + '.png" alt=""><p>' + esc(p.name) + ': the renders on file are not approved for use, so the project is shown by its numbers.</p></div>';
+    return '<div class="dvs-media">' + media + '</div><div class="dvs-info"><img class="dvs-logo" src="logo/' + d.key + '.png" alt="' + esc(d.name) + '">' +
+      '<p class="dvs-k">Featured project</p><h3>' + esc(p.name) + '</h3><p class="dvs-loc">' + ico('pin') + esc(p.loc) + '</p>' +
+      '<dl class="dvs-f"><div><dt>Projects with us</dt><dd>' + d.projects.length + '</dd></div><div><dt>Handover</dt><dd>' + esc(p.handover || 'Ask us') + '</dd></div><div><dt>Payment plan</dt><dd>' + (p.plan ? esc(p.plan.overall) : 'Ask us') + '</dd></div><div><dt>Area</dt><dd>' + esc(p.area) + '</dd></div></dl>' +
+      (p.plan ? ppBar(p.plan) : '') +
+      '<div class="sel-act"><button type="button" class="btn primary" data-enquire="' + p.key + '">Payment plan &amp; brochure</button><button type="button" class="btn-c" data-wa="' + p.key + '">' + ico('wa') + 'WhatsApp</button></div></div>';
+  }
+  function wireDevs() {
+    var box = $('#dvs'); if (!box) return;
+    var ds = A.DEVS.filter(function (d) { return d.projects.length; });
+    box.innerHTML = '<div class="dvs-pick" role="group" aria-label="Developers with projects">' + ds.map(function (d, i) { var p = PROJ(d.projects[0]); return '<button type="button" data-dv="' + d.key + '" aria-pressed="' + (i === 0) + '"><img src="logo/' + d.key + '.png" alt=""><span><b>' + esc(d.name) + '</b><small>' + d.projects.length + ' project · ' + esc(p.area) + '</small></span>' + ico('arrow') + '</button>'; }).join('') +
+      '<p class="fine">Shown only where the developer–project link is verified. More are added as links are confirmed.</p></div><div class="dvs-stage" id="dvs-stage" aria-live="polite">' + dvsStage(ds[0]) + '</div>';
+    $$('[data-dv]', box).forEach(function (b) {
+      var go2 = function () {
+        if (b.getAttribute('aria-pressed') === 'true') return;
+        $$('[data-dv]', box).forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
+        var st = $('#dvs-stage'); st.innerHTML = dvsStage(DEV(b.dataset.dv)); growBars(st); $$('.pp', st).forEach(function (p) { p.classList.remove('pre'); });
+        if (!G || RM) return;
+        // Hide: the previous developer. Reveal: the project image wipes in. React: the picked row turns crimson. Move: facts rise.
+        gsap.fromTo($('.dvs-media', st), { clipPath: 'inset(0 0 0 100%)' }, { clipPath: 'inset(0 0 0 0%)', duration: .9, ease: 'expo.inOut' });
+        gsap.fromTo($('.dvs-media img', st), { scale: 1.12 }, { scale: 1, duration: 1.4, ease: 'power3.out' });
+        gsap.from($('.dvs-info', st).children, { y: 14, opacity: 0, duration: .45, stagger: .04, ease: 'power2.out', delay: .2 });
+      };
+      b.addEventListener('click', go2); b.addEventListener('mouseenter', function () { if (!mob()) go2(); });
+    });
+  }
   function wireOffplan() {
     wireOpf();
     var rail = $('#op-rail');
@@ -688,6 +689,7 @@
         return { href: '#property/' + o.id, img: o.img, a: o.alt, b: AED(o.pr), s: T(o) + ' · ' + o.area, big: AED(o.pr) };
       });
       var f = it.filter(function (x) { return x.img; })[0] || it[0];
+      var bg = $('#inv-bg'); if (bg) { var nb = new Image(); nb.src = IMG(f.img); nb.alt = ''; bg.appendChild(nb); var olds = $$('img', bg).slice(0, -1); if (anim && G && !RM) gsap.fromTo(nb, { opacity: 0, scale: 1.08 }, { opacity: 1, scale: 1, duration: 1.2, ease: 'power2.out', onComplete: function () { olds.forEach(function (o) { o.remove(); }); } }); else olds.forEach(function (o) { o.remove(); }); }
       rEl.innerHTML = '<a class="inv-big" href="' + f.href + '"><img src="' + IMG(f.img) + '" alt="' + esc(f.a) + '"><span class="tx"><span>' + esc(g.t) + '</span><b>' + esc(f.big) + '</b><span>' + esc(f.s) + '</span></span></a>' +
         '<div class="inv-list">' + it.map(function (x) { return '<a class="inv-row" href="' + x.href + '">' + (x.img ? '<img src="' + IMG(x.img) + '" alt="" loading="lazy">' : '<span class="ni">' + (x.logo ? '<img src="logo/' + x.logo + '.png" alt="">' : '') + '</span>') + '<span><b>' + esc(x.b) + '</b><span>' + esc(x.s) + '</span></span></a>'; }).join('') +
         '<div style="display:grid;gap:8px;margin-top:16px"><button type="button" class="btn primary" data-wa="' + esc('investment shortlist: ' + g.t) + '">' + ico('wa') + 'Get an investment shortlist</button><button type="button" class="btn ghost" data-call="general">' + ico('call') + 'Call an adviser</button></div></div>' +
@@ -914,26 +916,20 @@
     var box = $('#smap'); if (!box) return;
     var byA = {}; r.forEach(function (x) { (byA[x.area] = byA[x.area] || []).push(x); });
     var pins = Object.keys(byA).map(function (a) { var h = byA[a]; return { area: a, text: h.length > 1 ? h.length + ' homes' : pinTxt(h[0]), aria: a + ': ' + (h.length > 1 ? h.length + ' homes' : T(h[0]) + ', ' + AED(h[0].pr)), on: sSel && h.some(function (x) { return x.id === sSel; }) }; });
-    var selA = sSel && byId(sSel) ? [byId(sSel).area] : [];
-    box.innerHTML = mapSVG({ vb: '60 80 980 640', par: 'xMidYMid meet', pins: pins, on: selA, labels: Object.keys(byA), interactive: true, label: 'Map of Abu Dhabi with ' + r.length + ' homes by community' }) +
-      '<div class="map-zoom"><button type="button" aria-label="Zoom in" data-todo="Zoom is part of the production map (MapLibre, D-006).">+</button><button type="button" aria-label="Zoom out" data-todo="Zoom is part of the production map (MapLibre, D-006).">−</button></div>' +
-      '<p class="map-note">Stylised map. Listings have no coordinates yet, so homes are placed by community.' + (sQ.pur === 'offplan' ? ' Dubai projects are listed without a map.' : '') + '</p>';
-    fitPins(box);
-    $$('.pin', box).forEach(function (g) {
-      var go2 = function () {
-        var hs = byA[g.dataset.a]; sSel = hs[0].id;
-        $$('.pin', box).forEach(function (p) { p.classList.toggle('on', p === g); });
-        $$('.m-comm', box).forEach(function (p) { p.classList.toggle('on', p.dataset.a === g.dataset.a); });
-        $$('#rlist .pc').forEach(function (c) { c.classList.toggle('sel', c.dataset.area === g.dataset.a); });
+    var mapEl = document.createElement('div'); mapEl.className = 'map-gl'; mapEl.setAttribute('role', 'region'); mapEl.setAttribute('aria-label', 'Map of Abu Dhabi with ' + r.length + ' homes by community');
+    box.innerHTML = ''; box.appendChild(mapEl);
+    var note = document.createElement('p'); note.className = 'map-note'; note.textContent = 'Homes are shown at their community: exact locations are shared when you book a viewing.' + (sQ.pur === 'offplan' ? ' Dubai projects are listed without a map.' : ''); box.appendChild(note);
+    smapApi = AAMap.mount(mapEl, { pins: pins, cooperative: false,
+      onPin: function (area, el) {
+        var hs = byA[area]; sSel = hs[0].id;
+        $$('#rlist .pc').forEach(function (c) { c.classList.toggle('sel', c.dataset.area === area); });
         var c = $('#rlist .pc.sel'); if (c && !mob()) c.scrollIntoView({ block: 'nearest', behavior: RM ? 'auto' : 'smooth' });
-        mapPop(box, g, hs);
-      };
-      g.addEventListener('click', go2);
-      g.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go2(); } });
-      g.addEventListener('mouseenter', function () { $$('#rlist .pc').forEach(function (c) { c.classList.toggle('hot', c.dataset.area === g.dataset.a); }); });
-      g.addEventListener('mouseleave', function () { $$('#rlist .pc.hot').forEach(function (c) { c.classList.remove('hot'); }); });
+        mapPop(box, el, hs);
+      },
+      onHover: function (area, v) { $$('#rlist .pc').forEach(function (c) { c.classList.toggle('hot', v && c.dataset.area === area); }); }
     });
   }
+  var smapApi = null;
   function mapPop(box, g, hs) {
     var old = $('.map-pop', box); if (old) old.remove();
     var x = hs[0], r = g.getBoundingClientRect(), b = box.getBoundingClientRect();
@@ -949,7 +945,7 @@
   function wireCardMapSync(list) {
     var box = $('#smap');
     $$('.pc', list).forEach(function (c) {
-      var on = function (v) { if (!box) return; $$('.pin', box).forEach(function (p) { p.classList.toggle('hot', v && p.dataset.a === c.dataset.area); }); $$('.m-comm', box).forEach(function (p) { p.classList.toggle('hot', v && p.dataset.a === c.dataset.area); }); };
+      var on = function (v) { if (smapApi) smapApi.hot(c.dataset.area, v); };
       c.addEventListener('mouseenter', function () { on(true); }); c.addEventListener('mouseleave', function () { on(false); });
       c.addEventListener('focusin', function () { on(true); }); c.addEventListener('focusout', function () { on(false); });
     });
@@ -1066,10 +1062,11 @@
       '<form class="enq-mini" id="enq-mini" novalidate><p>Or we call you</p><div class="inp"><label for="em-n">Name</label><input id="em-n" autocomplete="name"></div><div class="inp"><label for="em-p">Mobile number</label><input id="em-p" type="tel" autocomplete="tel" inputmode="tel"></div><button type="submit" class="btn ghost block">Request a call back</button></form>' +
       '<p class="ref"><span>Reference</span><b>' + x.ref + '</b></p></div>' +
       '<div class="office"><img src="logo/alaliah-crimson.png" alt=""><div><b>Al Aliah International</b><span>Adviser details on request</span></div></div></aside></div>' +
-      '<section class="sec mist rel" aria-labelledby="pd-r"><div class="wrap"><div class="sec-head"><div><p class="eyebrow">Keep looking</p><h2 class="h2" id="pd-r">Similar homes</h2></div><a class="link-arrow" href="#search/' + (off ? 'offplan' : x.pur) + '">All ' + (rent2 ? 'rentals' : 'homes for sale') + ico('arrow') + '</a></div><div class="cards">' + related(x).map(function (y) { return card(y); }).join('') + '</div></div></section>' +
+      '<section class="sec rel" aria-labelledby="pd-r"><div class="wrap"><div class="sec-head"><div><p class="eyebrow">Keep looking</p><h2 class="h2" id="pd-r">Similar homes</h2></div><a class="link-arrow" href="#search/' + (off ? 'offplan' : x.pur) + '">All ' + (rent2 ? 'rentals' : 'homes for sale') + ico('arrow') + '</a></div><div class="cards">' + related(x).map(function (y) { return card(y); }).join('') + '</div></div></section>' +
       '<div class="pbar-m"><p class="pr"><span>' + esc(x.ref) + '</span><span><b>' + AED(x.pr) + '</b>' + (rent2 ? ' a year' : '') + '</span></p>' + waBtn + callBtn + '<button type="button" class="btn primary" data-enquire="' + x.id + '" data-kind="viewing">Enquire</button></div>';
     footer();
-    var pm = $('#pd-map'); pm.innerHTML = mapSVG({ vb: mapVB(x.area), on: [x.area], labels: [x.area], label: 'Map: ' + x.area + ', Abu Dhabi' }) + '<p class="map-note">Stylised map, community level.</p>'; fitPins(pm);
+    var pm = $('#pd-map'); pm.innerHTML = '<div class="map-gl" role="region" aria-label="Map: ' + esc(x.area) + ', Abu Dhabi"></div>';
+    AAMap.mount($('.map-gl', pm), { focus: x.area, zoom: 13, cooperative: true, pins: [{ area: x.area, text: pinTxt(x), aria: T(x) + ', ' + x.area, on: true }] });
     wireMort();
     var emf = $('#enq-mini'); if (emf) emf.addEventListener('submit', function (e) { e.preventDefault(); toast('<b>Specimen:</b> nothing was sent. Live: an adviser calls about ' + x.ref + '.'); });
     var mr = $('#pd-more'); if (mr) mr.addEventListener('click', function () { var on = mr.getAttribute('aria-expanded') !== 'true'; mr.setAttribute('aria-expanded', on); mr.textContent = on ? 'Show less' : 'Read more'; $('#pd-dx').innerHTML = (on ? DESC[x.id] : DESC[x.id].slice(0, 2)).map(function (p) { return '<p>' + esc(p) + '</p>'; }).join(''); });
@@ -1111,7 +1108,6 @@
     $('#mo-d').addEventListener('change', function () { var md = minDown(num('#mo-p')); if (md != null && num('#mo-d') < md) $('#mo-d').value = md; calc(); });
     calc();
   }
-  function mapVB(a) { var c = A.GEO.comm[a]; if (!c) return '60 80 980 640'; var w = 520, h = 300; return (c.c[0] - w / 2) + ' ' + (c.c[1] - h / 2) + ' ' + w + ' ' + h; }
   function related(x) {
     var same = L.filter(function (y) { return y.id !== x.id && y.pur === x.pur; });
     same.sort(function (a, b) { return (a.area === x.area ? -1 : 0) - (b.area === x.area ? -1 : 0) || Math.abs(a.pr - x.pr) - Math.abs(b.pr - x.pr); });
@@ -1169,22 +1165,22 @@
       chapters.map(function (c, i) { return '<div class="chap-tx' + (i === 0 ? ' on' : '') + '" data-i="' + i + '"><p class="k">' + c[0] + '</p><h2>' + c[1] + '</h2><p>' + c[2] + '</p><figure class="chap-img"><img src="' + IMG(c[3]) + '" alt="' + esc(c[4]) + '" loading="lazy"></figure></div>'; }).join('') +
       '<div class="story-prog" aria-hidden="true">' + chapters.map(function (c, i) { return '<span' + (i === 0 ? ' class="on"' : '') + '></span>'; }).join('') + '</div></div>' +
       '<div class="story-panels" aria-hidden="true">' + chapters.map(function (c, i) { return '<figure class="sp-p" data-i="' + i + '" style="flex-grow:' + (i === 0 ? 5 : 1) + '"><img src="' + IMG(c[3]) + '" alt=""><figcaption style="opacity:' + (i === 0 ? 1 : 0) + '">' + esc(c[4]) + '</figcaption></figure>'; }).join('') + '</div></div></section>' +
-      '<section class="sec mist" id="a-homes" aria-labelledby="a-hh"><div class="wrap"><div class="sec-head"><div><p class="eyebrow">Available now</p><h2 class="h2" id="a-hh">Homes in Yas Island</h2><p class="lede">One home listed today. Tell us your budget and timing, and an adviser replies with what is available as new instructions come in.</p></div></div>' +
+      '<section class="sec" id="a-homes" aria-labelledby="a-hh"><div class="wrap"><div class="sec-head"><div><p class="eyebrow">Available now</p><h2 class="h2" id="a-hh">Homes in Yas Island</h2><p class="lede">One home listed today. Tell us your budget and timing, and an adviser replies with what is available as new instructions come in.</p></div></div>' +
       '<div class="cards c3">' + h.map(function (y) { return card(y); }).join('') +
       '<form class="cform" id="a-form" style="border:1.5px solid var(--ink)"><h3>Looking in Yas Island?</h3><p>Share what you need. We reply on WhatsApp or by phone.</p><div class="inp"><label for="a-b">Budget</label><select id="a-b"><option>Rent: up to AED 300K a year</option><option>Rent: over AED 300K a year</option><option>Buy: up to AED 3M</option><option>Buy: over AED 3M</option></select></div><div class="inp"><label for="a-p">Mobile number</label><input id="a-p" type="tel" autocomplete="tel"></div><button type="submit" class="btn">Ask an adviser' + ico('arrow', 'go') + '</button></form></div>' +
       '<h3 style="margin:56px 0 20px;font:700 26px/1 var(--fd)">Nearby: homes in Al Raha</h3><div class="cards">' + raha.map(function (y) { return card(y); }).join('') + '</div></div></section>' +
       '<section class="sec" id="a-map" aria-labelledby="a-m"><div class="wrap a-split"><div class="map a-map" id="amap"></div><div><p class="eyebrow">On the map</p><h2 class="h2" id="a-m">Yas Island and its neighbours</h2><p class="lede">Communities around the island, with what we list in each today.</p><div class="near" style="margin-top:28px">' +
       [['Yas Island', 'West Yas villas'], ['Al Raha', 'Apartments, villas and off-plan'], ['Saadiyat Island', 'None listed now'], ['Al Reef Downtown', 'Apartments'], ['Khalifa City', 'Off-plan townhouses']].map(function (r) { var n = inArea(r[0]).length; return '<button type="button" data-a="' + esc(r[0]) + '"' + (r[0] === 'Yas Island' ? ' class="hot"' : '') + '><b>' + esc(r[0]) + '</b><span>' + esc(r[1]) + '</span><span class="n">' + n + '</span></button>'; }).join('') + '</div></div></div></section>' +
-      '<section class="sec mist" aria-labelledby="a-f"><div class="wrap"><div class="sec-head"><div><p class="eyebrow">Real estate facts</p><h2 class="h2" id="a-f">Yas Island in our listings</h2></div></div><dl class="facts-a"><div><dt>Homes listed</dt><dd>' + h.length + '<small>1 villa for rent</small></dd></div><div><dt>Rent</dt><dd>' + AED(x.pr) + '<small>a year, five bedrooms</small></dd></div><div><dt>Built-up area</dt><dd>' + fmt(x.s) + '<small>sq ft</small></dd></div><div><dt>Off-plan</dt><dd>None<small>no Yas projects listed now</small></dd></div></dl><p class="fine" style="margin-top:14px">From Al Aliah\'s current listings only. Market-wide prices and yields need a sourced data feed.</p></div></section>' +
+      '<section class="sec dark" aria-labelledby="a-f"><div class="wrap"><div class="sec-head"><div><p class="eyebrow">Real estate facts</p><h2 class="h2" id="a-f">Yas Island in our listings</h2></div></div><dl class="facts-a"><div><dt>Homes listed</dt><dd>' + h.length + '<small>1 villa for rent</small></dd></div><div><dt>Rent</dt><dd>' + AED(x.pr) + '<small>a year, five bedrooms</small></dd></div><div><dt>Built-up area</dt><dd>' + fmt(x.s) + '<small>sq ft</small></dd></div><div><dt>Off-plan</dt><dd>None<small>no Yas projects listed now</small></dd></div></dl><p class="fine" style="margin-top:14px">From Al Aliah\'s current listings only. Market-wide prices and yields need a sourced data feed.</p></div></section>' +
       '<section class="sec" id="a-places" aria-labelledby="a-pl"><div class="wrap"><div class="sec-head"><div><p class="eyebrow">Living here</p><h2 class="h2" id="a-pl">On the island</h2><p class="lede">Public landmarks on Yas Island. Travel times depend on where you live; ask us for a specific home.</p></div></div><ul class="places">' + A.YAS_PLACES.map(function (p) { return '<li><b>' + esc(p[0]) + '</b><span>' + esc(p[1]) + '</span></li>'; }).join('') + '</ul></div></section>' +
       '<section class="a-cta dark" aria-labelledby="a-c"><img src="' + IMG('yas-ext') + '" alt=""><div class="wrap"><h2 id="a-c">Thinking about Yas Island?</h2><div class="sel-act"><button type="button" class="btn primary" data-enquire="yas">Talk to an adviser</button><button type="button" class="btn-c" data-wa="yas">' + ico('wa') + 'WhatsApp</button><button type="button" class="btn-c" data-call="general">' + ico('call') + 'Call</button></div></div></section>' +
       '<section class="sec" aria-labelledby="a-o"><div class="wrap"><div class="sec-head"><div><p class="eyebrow">Other areas</p><h2 class="h2" id="a-o">Keep exploring</h2></div></div><div class="oth">' + ['raha', 'reem', 'khalifa', 'khalidiya'].map(function (k) { var o = AREA(k); return '<a href="#home" data-scroll="areas"><img src="' + IMG(o.img) + '" alt="' + esc(o.alt) + '" loading="lazy">' + (o.render ? '<span class="tag-r">Developer render</span>' : '') + '<span class="tx"><b>' + esc(o.n) + '</b><span>' + inArea(o.n).length + ' homes</span></span></a>'; }).join('') + '</div></div></section>';
     footer();
     var am = $('#amap');
     var pins = ['Yas Island', 'Al Raha', 'Al Reef Downtown', 'Khalifa City'].map(function (n) { var hh = inArea(n); return { area: n, text: hh.length + (hh.length === 1 ? ' home' : ' homes'), aria: n + ': ' + hh.length + ' homes', on: n === 'Yas Island' }; });
-    am.innerHTML = mapSVG({ vb: '520 60 520 520', pins: pins, on: ['Yas Island'], labels: ['Yas Island', 'Al Raha', 'Saadiyat Island', 'Al Reef Downtown', 'Khalifa City', 'Masdar City', 'Al Reem Island'], label: 'Map: Yas Island and neighbouring communities' }) + '<p class="map-note">Stylised map. Not for navigation.</p>';
-    fitPins(am);
-    $$('.near button').forEach(function (b) { var f = function (v) { $$('.m-comm', am).forEach(function (p) { p.classList.toggle('hot', v && p.dataset.a === b.dataset.a && p.dataset.a !== 'Yas Island'); }); $$('.near button').forEach(function (x) { x.classList.toggle('hot', v ? x === b : x.dataset.a === 'Yas Island'); }); }; b.addEventListener('mouseenter', function () { f(true); }); b.addEventListener('focus', function () { f(true); }); b.addEventListener('mouseleave', function () { f(false); }); b.addEventListener('click', function () { if (b.dataset.a !== 'Yas Island') { goSearch({ pur: inArea(b.dataset.a).some(rent) ? 'rent' : 'sale', locs: inArea(b.dataset.a).length ? [b.dataset.a] : [], types: [], beds: '', price: '', comp: '', sort: 'new', sl: false }); } }); });
+    am.innerHTML = '<div class="map-gl" role="region" aria-label="Map: Yas Island and neighbouring communities"></div>';
+    var amApi = AAMap.mount($('.map-gl', am), { pins: pins, cooperative: true, flyOnSelect: true, onPin: function (a) { $$('.near button').forEach(function (x2) { x2.classList.toggle('hot', x2.dataset.a === a); }); } });
+    $$('.near button').forEach(function (b) { var f = function (v) { if (amApi) amApi.hot(b.dataset.a, v); $$('.near button').forEach(function (x) { x.classList.toggle('hot', v ? x === b : x.dataset.a === 'Yas Island'); }); }; b.addEventListener('mouseenter', function () { f(true); }); b.addEventListener('focus', function () { f(true); }); b.addEventListener('mouseleave', function () { f(false); }); b.addEventListener('click', function () { if (b.dataset.a !== 'Yas Island') { goSearch({ pur: inArea(b.dataset.a).some(rent) ? 'rent' : 'sale', locs: inArea(b.dataset.a).length ? [b.dataset.a] : [], types: [], beds: '', price: '', comp: '', sort: 'new', sl: false }); } }); });
     $('#a-form').addEventListener('submit', function (e) { e.preventDefault(); toast('<b>Specimen:</b> nothing was sent.'); });
     areaMotion();
   }

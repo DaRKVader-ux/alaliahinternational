@@ -276,3 +276,11 @@ Approved from 02.5b: the three intensity levels (Functional, Editorial, Immersiv
 - **Consequences, provisional until v2 is approved:** full-bleed real listing photography in the hero (the Tier C full-bleed ban is suspended for the specimen; resolution is limited to 1,600 px, Q2); photo overlays may use a gradient for legibility; the crimson-fill budget becomes one primary action per view plus the hero search.
 - Unchanged: WordPress-first architecture, real data only, staging-only writes, production read-only, no theme build before Stage 05.
 
+**D-040 · 2026-10-08 · Stage 03.3 art direction: warmer, image-led, crimson as signal**
+- The information architecture stays as revised on 2026-10-08. This round changes art direction only.
+- **Type:** Plus Jakarta Sans for all roles (headings, body, prices, data, UI), with Poppins as fallback. Hierarchy comes from scale, weight and spacing, not condensed faces. This replaces T5 (D-030) for the specimen; the production licence is checked at Stage 05 (Plus Jakarta Sans is OFL).
+- **Surfaces:** white, `#222222`, `#941F27` and photography. Gray is limited to borders, muted text, disabled states and separators. Homepage rhythm: image → white → editorial → dark immersive → crimson-accented → photo-backed → visual → crimson → dark footer.
+- **Crimson** is the behavioural signal: primary CTAs, active search mode, tabs, selected filters, active area and developer states, map selection, arrows, section markers, trust accents. `#FF8E47` stays secondary.
+- **Maps** use a familiar street-map language (MapLibre with OpenStreetMap vector tiles). Positions remain at community level until listings have coordinates (Q3).
+- **Familiar UX, distinctive execution:** search, filters, map, cards, contact actions, menus and property detail behave like common portals; distinctiveness comes from composition, photography, motion and colour.
+

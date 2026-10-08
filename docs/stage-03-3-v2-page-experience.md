@@ -10,6 +10,17 @@
 - **Desktop / Mobile 390.**
 - **Notes:** the 4-motion rule and data notes per page.
 
+## Art-direction revision 2026-10-08 (D-040)
+
+- Plus Jakarta Sans throughout.
+- No gray section grounds; crimson is the behavioural signal.
+- **Cards:** 22–24 px padding (18 px on mobile), in the order image → price and title → facts → View property → WhatsApp / Call.
+- **Areas:** dark and data-backed (homes, off-plan projects, main property type, price from), with a crimson active state.
+- **Developers:** an interactive showcase driven by selection; the logo directory is secondary.
+- **Investing:** photo-backed with a data overlay.
+- **Contact:** a crimson band, then a dark footer.
+- **Maps:** MapLibre with an OpenStreetMap street-map style. Tiles are bundled by `tools/map/fetch_tiles.py`, which needs network access to `tiles.openfreemap.org`. Until then the map areas show a clear pending state.
+
 ## Revision 2026-10-08: from the live references
 
 Both reference sites were inspected directly. Observations, the comparison with v2, and what was adopted or deliberately not copied are in [`stage-03-3-v2-reference-study.md`](./stage-03-3-v2-reference-study.md). Changes in this revision:
