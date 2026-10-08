@@ -177,6 +177,12 @@ No verified permit exists for any listing. The only stored value (`madhmoun-perm
 ### C11. Reference sites and CDNs in cloud sessions
 *Updated 2026-10-08:* both reference sites are now reachable and were studied directly. Their CDN dependencies (jsdelivr, cdnjs, unpkg) are still blocked, so the study served those exact library versions locally from npm. The specimen vendors GSAP and Lenis for the same reason.
 
+*Updated 2026-10-08, after a session restart with the map and CDN domains allowed:*
+- `tiles.openfreemap.org`, `openfreemap.org` and `cdn.jsdelivr.net` are reachable.
+- The specimen map now uses real bundled OSM tiles.
+- The artifact host still cannot load third-party tiles at runtime, so the tiles are published as artifact files.
+- Production keeps the question open: a self-hosted tile set (PMTiles) or a hosted tile service needs a decision (D-006).
+
 ---
 
 ## Production findings (raised by the staging audit; production is read-only)

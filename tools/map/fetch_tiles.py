@@ -6,11 +6,11 @@ tiles and style: OpenFreeMap (MIT/BSD-style). Run from the repo root:
 
     python3 tools/map/fetch_tiles.py docs/stage-03-3-v2/map
 """
-import json, math, os, sys, urllib.request, urllib.parse, gzip
+import json, math, os, shutil, sys, urllib.request, urllib.parse, gzip
 
 OUT = sys.argv[1]
 BASE = 'https://tiles.openfreemap.org'
-# Abu Dhabi island to Yas, Al Reef and Madinat Al Riyad
+# Abu Dhabi island to Yas, Al Reef and Madinat Al Riyad. map.js uses the same box as maxBounds.
 W, S, E, N = 54.25, 24.15, 54.80, 24.62
 ZOOMS = range(8, 14)  # 8–13; MapLibre over-zooms to 16
 
@@ -48,26 +48,40 @@ for z in ZOOMS:
 print('tiles', count)
 
 # Keep vector layers only (drop the shaded-relief raster), English labels first
-style['sources'] = {'openmaptiles': {'type': 'vector', 'tiles': ['map/tiles/{z}/{x}/{y}.pbf'], 'minzoom': 0, 'maxzoom': 13,
-                                     'attribution': '© OpenStreetMap contributors'}}
+# Attribution is set once by map.js (OpenStreetMap contributors, OpenFreeMap)
+style['sources'] = {'openmaptiles': {'type': 'vector', 'tiles': ['map/tiles/{z}/{x}/{y}.pbf'], 'minzoom': 0, 'maxzoom': 13}}
 style['layers'] = [l for l in style['layers'] if l.get('source', 'openmaptiles') == 'openmaptiles' and l.get('type') != 'raster']
 fonts = set()
 for l in style['layers']:
     lay = l.get('layout', {})
-    if 'text-field' in lay:
-        lay['text-field'] = ['coalesce', ['get', 'name:en'], ['get', 'name_en'], ['get', 'name:latin'], ['get', 'name']]
+    # Name labels in English, else the Latin transliteration. No fallback to the local-script name: the specimen
+    # is English-only and Arabic needs glyph ranges and shaping it does not bundle (a missing range blanks a tile).
+    # Road shields keep their 'ref' text.
+    if 'text-field' in lay and 'name' in json.dumps(lay['text-field']):
+        # (not 'name_en': OpenMapTiles fills it from the local-script name when no English name exists)
+        lay['text-field'] = ['coalesce', ['get', 'name:en'], ['get', 'name:latin']]
     for f in lay.get('text-font', []) if isinstance(lay.get('text-font'), list) else []:
         if isinstance(f, str): fonts.add(f)
-# Glyphs for Latin ranges (labels are English); sprite at 1x and 2x
+# Glyphs for the Latin ranges (basic, Latin-1, Extended A/B, combining marks, Extended Additional, punctuation),
+# plus the Arabic blocks: some OSM features carry Arabic text in name:en, and one missing range blanks the whole tile.
 for f in fonts:
-    for rng in ['0-255', '256-511', '8192-8447']:
+    for rng in ['0-255', '256-511', '512-767', '768-1023', '7680-7935', '8192-8447',
+                '1536-1791', '1792-2047', '64256-64511', '64512-64767', '64768-65023', '65024-65279']:
         p = os.path.join(OUT, 'fonts', f, rng + '.pbf')
-        if not os.path.exists(p):
+        if not os.path.exists(p) and not os.path.exists(os.path.join(OUT, 'fonts', f.replace(' ', '-'), rng + '.pbf')):
             try: save(p, get(BASE + '/fonts/' + urllib.parse.quote(f) + '/' + rng + '.pbf', binary=True))
             except Exception as e: print('font miss', f, rng, e)
 sp = style['sprite'] if isinstance(style['sprite'], str) else style['sprite'][0]['url']
 for suf in ['.json', '.png', '@2x.json', '@2x.png']:
     save(os.path.join(OUT, 'sprites', 'ofm' + suf), get(sp + suf, binary=True))
+# Font stacks without spaces (safe as published file paths): 'Noto Sans Regular' -> 'Noto-Sans-Regular'
+for f in fonts:
+    src, dst = os.path.join(OUT, 'fonts', f), os.path.join(OUT, 'fonts', f.replace(' ', '-'))
+    if os.path.isdir(src):
+        shutil.rmtree(dst, ignore_errors=True)
+        os.rename(src, dst)
+for f in fonts:
+    style['layers'] = json.loads(json.dumps(style['layers']).replace('"' + f + '"', '"' + f.replace(' ', '-') + '"'))
 style['sprite'] = 'map/sprites/ofm'
 style['glyphs'] = 'map/fonts/{fontstack}/{range}.pbf'
 json.dump(style, open(os.path.join(OUT, 'style.json'), 'w'))

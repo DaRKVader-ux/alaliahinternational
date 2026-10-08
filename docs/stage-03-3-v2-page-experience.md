@@ -10,6 +10,51 @@
 - **Desktop / Mobile 390.**
 - **Notes:** the 4-motion rule and data notes per page.
 
+## Refinement pass 2026-10-08: real map and five targeted fixes
+
+The IA and art direction (D-040) are unchanged. This pass made five targeted changes and put a real map in place.
+
+- **Map:** real OpenStreetMap vector tiles (OpenFreeMap "liberty" style) rendered by MapLibre 4.7.1. The set is bundled in `map/` by `tools/map/fetch_tiles.py`: 257 tiles, z8–13, plus glyphs, sprite and style.
+  - **Coverage:** the tile box W54.25 S24.15 E54.80 N24.62, which is also the map's `maxBounds`, so no view can reach an unbundled tile.
+  - **Labels:** English, else Latin transliteration. Road shields show their `ref`.
+  - **Glyphs:** Latin plus the Arabic ranges. Some OSM features carry Arabic in `name:en`, and one missing glyph range blanks the whole tile.
+  - **Verified:** a sweep of z10–13 across the box gives 240 tiles, all rendering, with no failed requests.
+- **Pin positions:** taken from the OSM place labels in the tiles, so each pin sits just above the map's own label for that community.
+  - Al Reef Downtown has no place label. Its pin uses the community's OSM points of interest.
+  - Madinat Al Riyad moved about 15 km to the OSM position.
+  - The OSM node for Khalifa City sits near Masdar. It is used as published.
+- **Hero search:**
+  - Purpose (Buy, Rent, Off-Plan) is a segmented control on the photo, on a solid dark plate.
+  - One white bar holds Location, Type, Price and Search, at headline width.
+  - Bedrooms moved to Filters.
+  - The city note and the Popular row were removed: they repeated the tiles below, and one link went to an unfiltered search.
+- **Mobile menu:**
+  - One section opens at a time, and the opened heading moves to the top of the panel.
+  - Rows are aligned (the UA button padding is removed).
+  - Every link lands on what its label says: type routes, area searches filtered by location (with a count of what the link opens), and developer links that select that developer.
+  - Counts are live from the data.
+  - The menu button carries `aria-expanded`.
+- **Search results:**
+  - One row: Location, Property type, Price and All filters; Sort and a single Map toggle on the right.
+  - Bedrooms, Completion and "Shortlisted only" are in All filters.
+  - "Save this search" is a quiet action beside the count.
+- **Property rail:**
+  - The price shows "a year" inline, with a one-line summary (beds, baths, size, type) below it.
+  - There is one primary action, then WhatsApp and Call.
+  - The call-back form opens on request.
+  - The office and the reference to quote sit in the card footer.
+  - The decorative crimson top bar is removed.
+  - On mobile the rail keeps only the call back and the office, because the bottom bar carries price and actions.
+- **Developers:** the active developer sets the whole band.
+  - **Backdrop:** a blurred wash of its project render under a solid 72% overlay, crossfading on change.
+  - **Danube (no approved render):** its logo, faint, on dark.
+  - **Layout:** the picker turns white for the active developer, and the heading and directory stay on white so the homepage keeps its light/dark rhythm.
+  - **For review:** the backdrop is a full-bleed use of a developer render, which the design system limits to contained, labelled placements. It is blurred past recognition and the labelled render stays on the stage. This is a deliberate exception and needs approval.
+
+**QA:**
+- `tools/qa/check.mjs` on 9 routes: 0 console errors, no overflow from 1920 to 375 px, axe 0 at 1440 and 390.
+- Axe 0 on 21 interactive states, including the Danube scene, the rail call back, the two-section menu, a selected map pin and the hidden map.
+
 ## Art-direction revision 2026-10-08 (D-040)
 
 - Plus Jakarta Sans throughout.
@@ -19,7 +64,7 @@
 - **Developers:** an interactive showcase driven by selection; the logo directory is secondary.
 - **Investing:** photo-backed with a data overlay.
 - **Contact:** a crimson band, then a dark footer.
-- **Maps:** MapLibre with an OpenStreetMap street-map style. Tiles are bundled by `tools/map/fetch_tiles.py`, which needs network access to `tiles.openfreemap.org`. Until then the map areas show a clear pending state.
+- **Maps:** MapLibre with an OpenStreetMap street-map style, bundled by `tools/map/fetch_tiles.py` (see the refinement pass above).
 
 ## Revision 2026-10-08: from the live references
 

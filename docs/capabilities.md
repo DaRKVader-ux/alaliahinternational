@@ -89,7 +89,7 @@ All were discovered by the harness in-session (they appear in the available-skil
 | `motion` | 14.0.0 | UI state and layout transitions. Use current `motion` imports, not legacy `framer-motion` |
 | `lenis` | 1.3.26 | Optional, editorial pages only, never with ScrollSmoother |
 | `@wordpress/scripts`, `@wordpress/interactivity` | registry | Theme/block build and native interactivity (W1 option a) |
-| Maps: Mapbox GL / MapLibre / Google Maps | not evaluated | Depends on coordinate quality (Q3). `api.mapbox.com` is currently blocked by egress policy |
+| Maps: MapLibre GL 4.7.1 + OpenStreetMap (OpenFreeMap) | partial (specimen) | Verified 2026-10-08: `tiles.openfreemap.org` reachable; a bounded Abu Dhabi tile set is bundled by `tools/map/fetch_tiles.py` and renders in the specimen. Listing-level pins depend on coordinate quality (Q3). Mapbox and Google not evaluated; `api.mapbox.com` was blocked by egress policy |
 | Search engines (Typesense/Meilisearch/Algolia) | not evaluated | D-006: requires justification |
 
 ## 5. Conflicts identified

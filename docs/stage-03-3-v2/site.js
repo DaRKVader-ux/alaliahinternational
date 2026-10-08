@@ -315,21 +315,33 @@
   /* Mobile menu */
   function mnavHTML() {
     var sec = function (k, label, body) { return '<div class="mn-sec"><button type="button" aria-expanded="false" aria-controls="mn-' + k + '">' + label + ico('chev') + '</button><div class="mn-in" id="mn-' + k + '" hidden>' + body + '</div></div>'; };
-    var ln = function (href, t, n) { return '<a href="' + href + '">' + t + (n != null ? '<span class="c">' + n + '</span>' : '') + '</a>'; };
+    // Every link lands on what its label says: a search filtered by type or location (data-q), with live counts
+    var ln = function (href, t, n, q) { return '<a href="' + href + '"' + (q ? ' data-q="' + esc(JSON.stringify(q)) + '"' : '') + '>' + t + (n != null ? '<span class="c">' + n + '</span>' : '') + '</a>'; };
+    var Q = function (pur, o) { var q = { pur: pur, locs: [], types: [], beds: '', price: '', comp: '', sort: 'new', sl: false }; for (var k in o) q[k] = o[k]; return q; };
+    var byType = function (pur, t, label) { var n = cnt(function (x) { return x.pur === pur && x.type === t; }); return n ? ln('#search/' + pur + '/' + t, label, n) : ''; };
+    var areaLn = function (a) { var h = inArea(a.n); if (a.key === 'yas') return ln('#area', a.n, h.length); var pur = h.some(rent) ? 'rent' : 'sale', n = h.filter(function (x) { return x.pur === pur; }).length; return ln('#search/' + pur, a.n + (n && h.length > n ? ' to rent' : ''), n, n ? Q(pur, { locs: [a.n] }) : null); };
     var fc = function (x) { return '<a href="#property/' + x.id + '"><img src="' + IMG(x.img) + '" alt="" loading="lazy"><b>' + AED(x.pr) + (x.pur === 'rent' ? ' a year' : '') + '</b><span>' + esc(T(x)) + ', ' + esc(x.area) + '</span></a>'; };
+    var du = A.PROJECTS.filter(function (p) { return p.city === 'Dubai'; });
     return '<div class="mn-hd"><img src="logo/alaliah-h-crimson.png" alt="Al Aliah International"><button type="button" class="d-x" data-close>' + ico('close') + '<span class="vh">Close menu</span></button></div>' +
-      '<div class="mn-bd">' +
-      sec('buy', 'Buy', '<div class="mn-links">' + ln('#search/sale', 'Apartments', 3) + ln('#search/sale', 'Villas', 1) + ln('#search/sale', 'Townhouses', 1) + ln('#search/offplan', 'Off-plan', 2) + '</div><h3>Featured</h3><div class="mn-feat">' + fc(byId(31495)) + fc(byId(31082)) + '</div>') +
-      sec('rent', 'Rent', '<div class="mn-links">' + ln('#search/rent', 'Apartments', 4) + ln('#search/rent', 'Villas', 2) + ln('#search/rent', 'Yas Island', 1) + ln('#search/rent', 'Al Raha', 2) + '</div><h3>Featured</h3><div class="mn-feat">' + fc(byId(31521)) + fc(byId(31013)) + '</div>') +
-      sec('off', 'Off-Plan', '<div class="mn-links">' + ln('#search/offplan', 'Abu Dhabi', 2) + ln('#search/offplan', 'Dubai', 3) + ln('#search/offplan', 'Handover 2027', 1) + ln('#search/offplan', '70/30 plans', 2) + '</div>') +
-      sec('areas', 'Areas', '<h3>Abu Dhabi</h3><div class="mn-links">' + A.AREAS.filter(function (a) { return a.city === 'Abu Dhabi'; }).map(function (a) { return ln(a.key === 'yas' ? '#area' : '#search/rent', a.n, inArea(a.n).length); }).join('') + '</div><h3>Dubai</h3><div class="mn-links">' + ln('#search/offplan', 'Business Bay', 2) + ln('#search/offplan', 'Dubai South', 1) + '</div>') +
-      sec('dev', 'Developers', '<div class="mn-links">' + A.DEVS.filter(function (d) { return d.projects.length; }).map(function (d) { return ln('#search/offplan', d.name, d.projects.length); }).join('') + ln('#home', 'All 17 developers') + '</div>') +
+      '<div class="mn-bd" id="mn-bd">' +
+      sec('buy', 'Buy', '<div class="mn-links">' + byType('sale', 'apartment', 'Apartments') + byType('sale', 'villa', 'Villas') + byType('sale', 'townhouse', 'Townhouses') + ln('#search/sale', 'All for sale', cnt(sale)) + '</div><h3>Featured</h3><div class="mn-feat">' + fc(byId(31495)) + fc(byId(31082)) + '</div>') +
+      sec('rent', 'Rent', '<div class="mn-links">' + byType('rent', 'apartment', 'Apartments') + byType('rent', 'villa', 'Villas') + byType('rent', 'townhouse', 'Townhouses') + ln('#search/rent', 'All for rent', cnt(rent)) + '</div><h3>Featured</h3><div class="mn-feat">' + fc(byId(31521)) + fc(byId(31013)) + '</div>') +
+      sec('off', 'Off-Plan', '<div class="mn-links">' + ln('#search/offplan', 'Abu Dhabi homes', cnt(function (x) { return x.comp === 'offplan'; }), Q('offplan', { locs: [] })) + ln('#search/offplan', 'Dubai projects', du.length) + '</div><p class="mn-note">Dubai projects are listed together with Abu Dhabi off-plan.</p>') +
+      sec('areas', 'Areas', '<h3>Abu Dhabi</h3><div class="mn-links">' + A.AREAS.filter(function (a) { return a.city === 'Abu Dhabi'; }).map(areaLn).join('') + '</div><h3>Dubai, off-plan</h3><div class="mn-links">' + ['Business Bay', 'Dubai South'].map(function (a) { return ln('#search/offplan', a, du.filter(function (p) { return p.area === a; }).length); }).join('') + '</div>') +
+      sec('dev', 'Developers', '<div class="mn-links">' + A.DEVS.filter(function (d) { return d.projects.length; }).map(function (d) { return ln('#home', d.name, d.projects.length).replace('<a ', '<a data-scroll="developers" data-dev="' + d.key + '" '); }).join('') + '</div><p class="mn-note">Shown where the developer and project link is verified.</p>') +
       '<a class="mn-plain" href="#about" data-todo="About Us is outside this specimen\'s four pages.">About Us</a><a class="mn-plain" href="#home" data-scroll="advice">List your property</a></div>' +
       '<div class="mn-ft"><button type="button" class="btn-c" data-wa="general">' + ico('wa') + 'WhatsApp</button><button type="button" class="btn-c" data-call="general">' + ico('call') + 'Call</button><button type="button" class="btn" data-enquire="general">Contact</button></div>';
   }
   $('#hdr-menu').addEventListener('click', function () {
-    var d = $('#mnav'); d.innerHTML = mnavHTML(); d.showModal();
-    $$('.mn-sec > button', d).forEach(function (b) { b.addEventListener('click', function () { var on = b.getAttribute('aria-expanded') !== 'true'; b.setAttribute('aria-expanded', on); $('#' + b.getAttribute('aria-controls')).hidden = !on; }); });
+    var d = $('#mnav'); d.innerHTML = mnavHTML(); d.showModal(); this.setAttribute('aria-expanded', 'true');
+    var hb = this; d.addEventListener('close', function () { hb.setAttribute('aria-expanded', 'false'); }, { once: true });
+    // One section open at a time; the opened section's heading moves to the top of the panel so its links are in view
+    var secs = $$('.mn-sec > button', d), bd = $('#mn-bd', d);
+    secs.forEach(function (b) { b.addEventListener('click', function () {
+      var on = b.getAttribute('aria-expanded') !== 'true';
+      secs.forEach(function (x) { var o = on && x === b; x.setAttribute('aria-expanded', o); $('#' + x.getAttribute('aria-controls')).hidden = !o; });
+      if (on) bd.scrollTo({ top: b.parentNode.offsetTop - bd.offsetTop, behavior: RM ? 'auto' : 'smooth' });
+    }); });
   });
 
   /* ============================================================
@@ -370,16 +382,15 @@
   }
   function qsHTML() {
     var opt = function (arr, v) { return arr.map(function (o) { return '<option value="' + o[0] + '"' + (o[0] === v ? ' selected' : '') + '>' + o[1] + '</option>'; }).join(''); };
-    return '<div class="qs-tabs" role="tablist" aria-label="Search for">' + [['sale', 'Buy'], ['rent', 'Rent'], ['offplan', 'Off-Plan']].map(function (t) { return '<button type="button" role="tab" class="qs-tab" data-pur="' + t[0] + '" aria-selected="' + (homeQ.pur === t[0]) + '" id="qs-t-' + t[0] + '" aria-controls="qs-p">' + t[1] + '</button>'; }).join('') +
-      '<span class="qs-note">Abu Dhabi listings · Dubai off-plan</span></div>' +
-      '<div class="qs-row" id="qs-p" role="tabpanel" aria-labelledby="qs-t-' + homeQ.pur + '">' +
+    // Purpose as a segmented control on the photo; one white bar with the three questions people answer first.
+    // Bedrooms and the rest stay one tap away in Filters.
+    return '<div class="qs-tabs" role="tablist" aria-label="Search for">' + [['sale', 'Buy'], ['rent', 'Rent'], ['offplan', 'Off-Plan']].map(function (t) { return '<button type="button" role="tab" class="qs-tab" data-pur="' + t[0] + '" aria-selected="' + (homeQ.pur === t[0]) + '" tabindex="' + (homeQ.pur === t[0] ? '0' : '-1') + '" id="qs-t-' + t[0] + '" aria-controls="qs-p">' + t[1] + '</button>'; }).join('') + '</div>' +
+      '<div class="qs-bar"><div class="qs-row" id="qs-p" role="tabpanel" aria-labelledby="qs-t-' + homeQ.pur + '">' +
       '<div class="fld"><label for="q-loc">Location</label><input id="q-loc" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="q-sugg" autocomplete="off" placeholder="Community or area" value="' + esc(homeQ.loc) + '"><div class="sugg" id="q-sugg" role="listbox" aria-label="Locations" hidden></div></div>' +
       '<div class="fld"><label for="q-type">Property type</label><select id="q-type">' + opt([['', 'Any type'], ['apartment', 'Apartment'], ['villa', 'Villa'], ['townhouse', 'Townhouse']], homeQ.type) + '</select></div>' +
-      '<div class="fld"><label for="q-beds">Bedrooms</label><select id="q-beds">' + opt([['', 'Any'], ['1', '1+'], ['2', '2+'], ['3', '3+'], ['4', '4+'], ['5', '5+']], homeQ.beds) + '</select></div>' +
-      '<div class="fld"><label for="q-price">Price</label><select id="q-price">' + opt(PRICES[homeQ.pur], homeQ.price) + '</select></div>' +
+      '<div class="fld"><label for="q-price">' + (homeQ.pur === 'rent' ? 'Rent a year' : 'Price') + '</label><select id="q-price">' + opt(PRICES[homeQ.pur], homeQ.price) + '</select></div>' +
       '<button type="submit" class="btn primary qs-go">' + ico('search') + '<span>Search <span class="n" id="q-n">' + homeCount() + '</span> <span id="q-u">' + (homeQ.pur === 'offplan' ? 'options' : 'homes') + '</span></span></button></div>' +
-      '<div class="qs-mf"><button type="button" id="q-more">' + ico('filter') + 'Filters</button><button type="submit" class="btn primary qs-go">' + ico('search') + '<span>Search <span class="n">' + homeCount() + '</span></span></button></div>' +
-      '<div class="qs-pop"><span>Popular:</span><a href="#search/rent/villa">Villas for rent</a><a href="#search/offplan">Off-plan with payment plans</a><a href="#area">Yas Island</a><a href="#search/sale">Under AED 1M</a></div>';
+      '<div class="qs-mf"><button type="button" id="q-more" aria-haspopup="dialog">' + ico('filter') + 'Filters</button><button type="submit" class="btn primary qs-go">' + ico('search') + '<span>Search <span class="n">' + homeCount() + '</span></span></button></div></div>';
   }
   function wireQS() {
     var f = $('#qs');
@@ -387,7 +398,7 @@
       b.addEventListener('click', function () { homeQ.pur = b.dataset.pur; homeQ.price = ''; f.innerHTML = qsHTML(); wireQS(); $('#qs-t-' + homeQ.pur).focus(); });
       b.addEventListener('keydown', function (e) { var t = $$('.qs-tab', f), i = t.indexOf(b); if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); t[(i + (e.key === 'ArrowRight' ? 1 : t.length - 1)) % t.length].click(); } });
     });
-    ['type', 'beds', 'price'].forEach(function (k) { $('#q-' + k).addEventListener('change', function (e) { homeQ[k] = e.target.value; upd(); }); });
+    ['type', 'price'].forEach(function (k) { $('#q-' + k).addEventListener('change', function (e) { homeQ[k] = e.target.value; upd(); }); });
     function upd() { $$('.qs-go .n', f).forEach(function (n) { n.textContent = homeCount(); }); }
     combobox($('#q-loc'), $('#q-sugg'), function (v) { homeQ.loc = v; upd(); });
     $('#q-more').addEventListener('click', function () { sQ = fromHome(); openSheet(true); });
@@ -465,8 +476,8 @@
       '<section class="sec dark inv-sec" id="invest" aria-labelledby="iv-h"><div class="inv-bg" id="inv-bg" aria-hidden="true"></div><div class="wrap"><div class="sec-head"><div><p class="eyebrow">Investing</p><h2 class="h2" id="iv-h">Investing, but not sure where?</h2><p class="lede">Start from how you want to invest. We show what matches today, and an adviser builds the shortlist with you.</p></div></div>' +
       '<div class="inv"><div class="inv-goals" id="inv-goals" role="group" aria-label="Investment goal"></div><div class="inv-res" id="inv-res" aria-live="polite"></div></div></div></section>' +
       /* Developers */
-      '<section class="sec" id="developers" aria-labelledby="dv-h"><div class="wrap"><div class="sec-head"><div><p class="eyebrow">Developers</p><h2 class="h2" id="dv-h">Developers, through their projects</h2><p class="lede">Choose a developer to see the project we can take you to, where it is, when it hands over and how you pay.</p></div><a class="link-arrow" href="#home" data-todo="The developer index is outside this specimen\'s four pages.">All 17 developers' + ico('arrow') + '</a></div>' +
-      '<div class="dvs" id="dvs"></div>' +
+      '<section class="sec dv-sec" id="developers" aria-labelledby="dv-h"><div class="wrap"><div class="sec-head"><div><p class="eyebrow">Developers</p><h2 class="h2" id="dv-h">Developers, through their projects</h2><p class="lede">Choose a developer to see the project we can take you to, where it is, when it hands over and how you pay.</p></div><a class="link-arrow" href="#home" data-todo="The developer index is outside this specimen\'s four pages.">All 17 developers' + ico('arrow') + '</a></div>' +
+      '</div><div class="dvs-scene dark"><div class="dvs-bg" id="dvs-bg" aria-hidden="true"></div><div class="wrap"><div class="dvs" id="dvs"></div></div></div><div class="wrap">' +
       '<h3 class="dv-dir-h">In our developer directory</h3>' +
       '<div class="dv-wall" aria-label="Developer directory">' + A.DEVS.map(function (d) { return '<a href="#search/offplan"' + (d.projects.length ? '' : ' data-todo="' + esc(d.name) + ': developer pages are outside this specimen."') + '><img src="logo/' + d.key + '.png" alt="' + esc(d.name) + '" loading="lazy"><span class="nm" aria-hidden="true">' + esc(d.name) + '</span>' + (d.projects.length ? '<span class="p">' + d.projects.length + ' project</span>' : '') + '</a>'; }).join('') + '<a class="all" href="#home" data-todo="The developer index is outside this specimen\'s four pages.">All developers' + ico('arrow') + '</a></div></div></section>' +
       /* Advice + contact */
@@ -630,6 +641,10 @@
   function wireDevs() {
     var box = $('#dvs'); if (!box) return;
     var ds = A.DEVS.filter(function (d) { return d.projects.length; });
+    // The active developer sets the whole scene: a blurred, darkened wash of its project render behind the section
+    // (the render itself stays contained and labelled on the stage). No approved render: its logo, faint, on dark.
+    var bg = $('#dvs-bg');
+    if (bg) bg.innerHTML = ds.map(function (d, i) { var p = PROJ(d.projects[0]); return p.img ? '<div class="l' + (i === 0 ? ' on' : '') + '" data-bg="' + d.key + '" style="background-image:url(\'' + IMG(p.img) + '\')"></div>' : '<div class="l wm' + (i === 0 ? ' on' : '') + '" data-bg="' + d.key + '"><img src="logo/' + d.key + '.png" alt=""></div>'; }).join('');
     box.innerHTML = '<div class="dvs-pick" role="group" aria-label="Developers with projects">' + ds.map(function (d, i) { var p = PROJ(d.projects[0]); return '<button type="button" data-dv="' + d.key + '" aria-pressed="' + (i === 0) + '"><img src="logo/' + d.key + '.png" alt=""><span><b>' + esc(d.name) + '</b><small>' + d.projects.length + ' project · ' + esc(p.area) + '</small></span>' + ico('arrow') + '</button>'; }).join('') +
       '<p class="fine">Shown only where the developer–project link is verified. More are added as links are confirmed.</p></div><div class="dvs-stage" id="dvs-stage" aria-live="polite">' + dvsStage(ds[0]) + '</div>';
     $$('[data-dv]', box).forEach(function (b) {
@@ -637,6 +652,7 @@
         if (b.getAttribute('aria-pressed') === 'true') return;
         $$('[data-dv]', box).forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
         var st = $('#dvs-stage'); st.innerHTML = dvsStage(DEV(b.dataset.dv)); growBars(st); $$('.pp', st).forEach(function (p) { p.classList.remove('pre'); });
+        if (bg) $$('[data-bg]', bg).forEach(function (l) { l.classList.toggle('on', l.dataset.bg === b.dataset.dv); });
         if (!G || RM) return;
         // Hide: the previous developer. Reveal: the project image wipes in. React: the picked row turns crimson. Move: facts rise.
         gsap.fromTo($('.dvs-media', st), { clipPath: 'inset(0 0 0 100%)' }, { clipPath: 'inset(0 0 0 0%)', duration: .9, ease: 'expo.inOut' });
@@ -784,14 +800,13 @@
     if (pendingQ) { sQ = pendingQ; pendingQ = null; }
     else if (arg) { var a = arg.split('/'); if (PURN[a[0]]) { sQ = { pur: a[0], locs: [], types: a[1] ? [a[1]] : [], beds: '', price: '', comp: '', sort: 'new', sl: false }; } }
     main.innerHTML = '<div class="wrap s-head"><ol class="crumbs"><li><a href="#home">Home</a></li><li><a href="#search/' + sQ.pur + '">' + { sale: 'Buy', rent: 'Rent', offplan: 'Off-Plan' }[sQ.pur] + '</a></li><li aria-current="page">Abu Dhabi</li></ol>' +
-      '<div class="s-title"><div><h1 id="s-h1"></h1><p class="s-count" id="s-count" aria-live="polite"></p></div><div class="seg" role="group" aria-label="Purpose">' + [['sale', 'Buy'], ['rent', 'Rent'], ['offplan', 'Off-Plan']].map(function (p) { return '<button type="button" data-p="' + p[0] + '" aria-pressed="' + (sQ.pur === p[0]) + '">' + p[1] + '</button>'; }).join('') + '</div></div></div>' +
-      '<div class="fbar" id="fbar"><div class="wrap fbar-in"><button type="button" class="btn sm ghost" id="f-all">' + ico('filter') + 'Filters <span id="f-n"></span></button>' +
-      ['locs', 'types', 'beds', 'price'].map(function (k) { return '<div class="fb" data-k="' + k + '"><button type="button" aria-expanded="false" aria-controls="pop-' + k + '"><span></span>' + ico('chev') + '</button><div class="fb-pop" id="pop-' + k + '" hidden></div></div>'; }).join('') +
-      (sQ.pur === 'sale' ? '<div class="seg sm" id="f-comp" role="group" aria-label="Completion">' + [['', 'Any'], ['ready', 'Ready'], ['offplan', 'Off-plan']].map(function (c) { return '<button type="button" data-c="' + c[0] + '" aria-pressed="' + (sQ.comp === c[0]) + '">' + c[1] + '</button>'; }).join('') + '</div>' : '') +
-      '<button type="button" class="pill" id="f-sl" aria-pressed="' + sQ.sl + '">' + ico('heart') + ' Shortlist</button>' +
+      '<div class="s-title"><div><h1 id="s-h1"></h1><p class="s-meta"><span class="s-count" id="s-count" aria-live="polite"></span><button type="button" class="s-save" id="f-save">' + ico('heart') + 'Save this search</button></p></div><div class="seg" role="group" aria-label="Purpose">' + [['sale', 'Buy'], ['rent', 'Rent'], ['offplan', 'Off-Plan']].map(function (p) { return '<button type="button" data-p="' + p[0] + '" aria-pressed="' + (sQ.pur === p[0]) + '">' + p[1] + '</button>'; }).join('') + '</div></div></div>' +
+      '<div class="fbar" id="fbar"><div class="wrap fbar-in">' +
+      // Three filters people use first; bedrooms, completion and shortlist-only live in All filters
+      ['locs', 'types', 'price'].map(function (k) { return '<div class="fb" data-k="' + k + '"><button type="button" aria-expanded="false" aria-controls="pop-' + k + '"><span></span>' + ico('chev') + '</button><div class="fb-pop" id="pop-' + k + '" hidden></div></div>'; }).join('') +
+      '<button type="button" class="btn sm ghost" id="f-all" aria-haspopup="dialog">' + ico('filter') + '<span class="f-all-l">All filters</span><span class="f-all-m">Filters</span> <span id="f-n"></span></button>' +
       '<span class="fbar-sp"></span><label class="sort"><span class="vh">Sort by</span><select id="f-sort"><option value="new">Newest</option><option value="lo">Price: low to high</option><option value="hi">Price: high to low</option><option value="size">Largest first</option></select></label>' +
-      '<div class="seg" id="f-view" role="group" aria-label="Layout"><button type="button" data-v="list" aria-pressed="' + (sView === 'list') + '">' + ico('list') + 'List</button><button type="button" data-v="split" aria-pressed="' + (sView === 'split') + '">' + ico('map') + 'List and map</button></div>' +
-      '<button type="button" class="btn sm ghost" id="f-save">Save search</button></div><div class="wrap chips-row" id="f-chips"></div></div>' +
+      '<button type="button" class="pill f-map" id="f-map" aria-pressed="' + (sView === 'split') + '">' + ico('map') + 'Map</button></div><div class="wrap chips-row" id="f-chips"></div></div>' +
       '<div class="wrap res mode-' + sMob + (sView === 'list' ? ' list-only' : '') + '" id="res"><div class="rlist" id="rlist"></div><div class="rmap"><div class="map" id="smap"></div></div></div>' +
       '<div class="mbar"><div class="seg" role="group" aria-label="Show results as"><button type="button" data-m="list" aria-pressed="' + (sMob === 'list') + '">' + ico('list') + 'List</button><button type="button" data-m="map" aria-pressed="' + (sMob === 'map') + '">' + ico('map') + 'Map</button></div></div><div id="cmp-tray-slot"></div>';
     footer();
@@ -841,9 +856,7 @@
     });
     document.addEventListener('click', docClose); cleanup.push(function () { document.removeEventListener('click', docClose); });
     $('#f-sort').addEventListener('change', function (e) { sQ.sort = e.target.value; searchUpdate(); });
-    $$('#f-comp button').forEach(function (b) { b.addEventListener('click', function () { sQ.comp = b.dataset.c; searchUpdate(); }); });
-    $('#f-sl').addEventListener('click', function () { sQ.sl = !sQ.sl; this.setAttribute('aria-pressed', sQ.sl); searchUpdate(); });
-    $$('#f-view button').forEach(function (b) { b.addEventListener('click', function () { sView = b.dataset.v; $$('#f-view button').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); $('#res').classList.toggle('list-only', sView === 'list'); refitMaps(); }); });
+    $('#f-map').addEventListener('click', function () { sView = sView === 'split' ? 'list' : 'split'; this.setAttribute('aria-pressed', sView === 'split'); $('#res').classList.toggle('list-only', sView === 'list'); refitMaps(); });
     $$('.mbar button').forEach(function (b) { b.addEventListener('click', function () { sMob = b.dataset.m; $$('.mbar button').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); var r = $('#res'); r.classList.remove('mode-list', 'mode-map'); r.classList.add('mode-' + sMob); refitMaps(); window.scrollTo(0, $('#res').offsetTop - 120); }); });
     $('#f-save').addEventListener('click', function () { toast('<b>Search saved.</b> Live: alerts by email or WhatsApp when a new home matches (needs an account or a contact opt-in).'); });
     $('#f-all').addEventListener('click', function () { openSheet(false); });
@@ -870,13 +883,12 @@
     var r = results(), du = dubaiProjects();
     var n = r.length + du.length;
     $('#s-h1').textContent = sQ.pur === 'offplan' ? 'Off-plan projects and homes' : (sQ.types.length === 1 ? fbLabel('types') : 'Homes') + ' ' + PURN[sQ.pur] + ' in Abu Dhabi';
-    $('#s-count').innerHTML = '<b>' + n + '</b> ' + (sQ.pur === 'offplan' ? (n === 1 ? 'result' : 'results') : (n === 1 ? 'home' : 'homes')) + (sQ.pur === 'offplan' && du.length ? ' · ' + du.length + ' Dubai projects included' : '') + ' · positions shown by community';
-    $$('#f-comp button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.c === sQ.comp); });
+    $('#s-count').innerHTML = '<b>' + n + '</b> ' + (sQ.pur === 'offplan' ? (n === 1 ? 'result' : 'results') : (n === 1 ? 'home' : 'homes')) + (sQ.pur === 'offplan' && du.length ? ' · ' + du.length + ' Dubai projects included' : '');
     $$('.fb').forEach(function (fb) { var k = fb.dataset.k, b = $('button', fb), on = k === 'locs' || k === 'types' ? sQ[k].length : sQ[k]; $('span', b).textContent = fbLabel(k); b.classList.toggle('on', !!on); });
-    var fc = sQ.locs.length + sQ.types.length + (sQ.beds ? 1 : 0) + (sQ.price ? 1 : 0) + (sQ.comp ? 1 : 0); $('#f-n').textContent = fc ? '(' + fc + ')' : '';
+    var fc = sQ.locs.length + sQ.types.length + (sQ.beds ? 1 : 0) + (sQ.price ? 1 : 0) + (sQ.comp ? 1 : 0) + (sQ.sl ? 1 : 0); $('#f-n').textContent = fc ? '(' + fc + ')' : '';
     $('#f-chips').innerHTML = chipsHTML();
-    $$('#f-chips .chip-x').forEach(function (c) { c.addEventListener('click', function () { var k = c.dataset.k; if (k === 'locs' || k === 'types') sQ[k] = sQ[k].filter(function (v) { return v !== c.dataset.v; }); else if (k === 'sl') { sQ.sl = false; $('#f-sl').setAttribute('aria-pressed', 'false'); } else sQ[k] = ''; searchUpdate(); }); });
-    var cl = $('#f-clear'); if (cl) cl.addEventListener('click', function () { sQ.locs = []; sQ.types = []; sQ.beds = ''; sQ.price = ''; sQ.comp = ''; sQ.sl = false; $('#f-sl').setAttribute('aria-pressed', 'false'); searchUpdate(); });
+    $$('#f-chips .chip-x').forEach(function (c) { c.addEventListener('click', function () { var k = c.dataset.k; if (k === 'locs' || k === 'types') sQ[k] = sQ[k].filter(function (v) { return v !== c.dataset.v; }); else if (k === 'sl') sQ.sl = false; else sQ[k] = ''; searchUpdate(); }); });
+    var cl = $('#f-clear'); if (cl) cl.addEventListener('click', function () { sQ.locs = []; sQ.types = []; sQ.beds = ''; sQ.price = ''; sQ.comp = ''; sQ.sl = false; searchUpdate(); });
     var list = $('#rlist');
     if (!n) list.innerHTML = emptyHTML();
     else {
@@ -919,7 +931,7 @@
     var mapEl = document.createElement('div'); mapEl.className = 'map-gl'; mapEl.setAttribute('role', 'region'); mapEl.setAttribute('aria-label', 'Map of Abu Dhabi with ' + r.length + ' homes by community');
     box.innerHTML = ''; box.appendChild(mapEl);
     var note = document.createElement('p'); note.className = 'map-note'; note.textContent = 'Homes are shown at their community: exact locations are shared when you book a viewing.' + (sQ.pur === 'offplan' ? ' Dubai projects are listed without a map.' : ''); box.appendChild(note);
-    smapApi = AAMap.mount(mapEl, { pins: pins, cooperative: false,
+    smapApi = AAMap.mount(mapEl, { pins: pins, cooperative: false, note: true,
       onPin: function (area, el) {
         var hs = byA[area]; sSel = hs[0].id;
         $$('#rlist .pc').forEach(function (c) { c.classList.toggle('sel', c.dataset.area === area); });
@@ -989,6 +1001,7 @@
         '<div class="sh-sec" data-k="locs">' + popHTML('locs', 'h3').replace(/<footer>[\s\S]*<\/footer>/, '') + '</div><div class="sh-sec" data-k="types">' + popHTML('types', 'h3').replace(/<footer>[\s\S]*<\/footer>/, '') + '</div>' +
         '<div class="sh-sec" data-k="beds">' + popHTML('beds', 'h3').replace(/<footer>[\s\S]*<\/footer>/, '') + '</div><div class="sh-sec" data-k="price">' + popHTML('price', 'h3').replace(/<footer>[\s\S]*<\/footer>/, '') + '</div>' +
         (sQ.pur === 'sale' ? '<div><h3>Completion</h3><div class="pills">' + [['', 'Any'], ['ready', 'Ready'], ['offplan', 'Off-plan']].map(function (c) { return '<button type="button" class="pill" data-comp="' + c[0] + '" aria-pressed="' + (sQ.comp === c[0]) + '">' + c[1] + '</button>'; }).join('') + '</div></div>' : '') +
+        '<div><h3>Show</h3><div class="pills"><button type="button" class="pill" data-slonly aria-pressed="' + sQ.sl + '">' + ico('heart') + ' Shortlisted only</button></div></div>' +
         '<div><h3>Sort</h3><div class="pills">' + [['new', 'Newest'], ['lo', 'Lowest price'], ['hi', 'Highest price'], ['size', 'Largest']].map(function (s) { return '<button type="button" class="pill" data-sort="' + s[0] + '" aria-pressed="' + (sQ.sort === s[0]) + '">' + s[1] + '</button>'; }).join('') + '</div></div></div>' +
         '<div class="d-ft"><button type="button" class="btn ghost" id="sh-clear">Clear</button><button type="button" class="btn primary" id="sh-go">Show ' + n + (n === 1 ? ' home' : ' homes') + '</button></div>';
     };
@@ -1000,7 +1013,8 @@
       else if (t.closest('[data-comp]')) { sQ.comp = t.closest('[data-comp]').dataset.comp; draw(); }
       else if (t.closest('.sh-sec[data-k="beds"] .pill')) { sQ.beds = t.closest('.pill').dataset.v; draw(); }
       else if (t.closest('[data-sort]')) { sQ.sort = t.closest('[data-sort]').dataset.sort; draw(); }
-      else if (t.closest('#sh-clear')) { sQ.locs = []; sQ.types = []; sQ.beds = ''; sQ.price = ''; sQ.comp = ''; draw(); }
+      else if (t.closest('[data-slonly]')) { sQ.sl = !sQ.sl; draw(); }
+      else if (t.closest('#sh-clear')) { sQ.locs = []; sQ.types = []; sQ.beds = ''; sQ.price = ''; sQ.comp = ''; sQ.sl = false; draw(); }
       else if (t.closest('#sh-go')) { d.close(); goSearch(sQ); return; }
       else return;
       var b = $('.d-bd', d); if (b) b.scrollTop = y;
@@ -1056,18 +1070,23 @@
       '<section class="pd-sec" aria-labelledby="pd-l"><h2 id="pd-l">Location</h2><div class="map loc-map" id="pd-map"></div><p class="loc-note">' + ico('pin') + '<span>' + esc(x.addr) + '. Shown at community level: the exact location is shared when you book a viewing.</span></p></section>' +
       (proj ? '<section class="pd-sec" aria-labelledby="pd-p"><h2 id="pd-p">The project</h2><div class="proj"><div class="ph"><img src="' + IMG(proj.imgs[1] || proj.img) + '" alt="' + esc(alt(proj.imgs[1] || proj.img)) + '" loading="lazy"><span class="tag-r">Developer render</span></div><div class="tx"><h3>' + esc(proj.name) + '</h3><p>' + esc(proj.loc) + '</p><p>' + (proj.handover ? 'Handover ' + proj.handover + '. ' : 'Handover not confirmed in our listing. ') + (proj.plan ? 'Payment plan ' + proj.plan.overall + '.' : 'Payment plan on request.') + '</p><p class="fine">Developer not yet linked: shown once confirmed.</p><button type="button" class="btn ghost sm" data-enquire="' + proj.key + '" style="justify-self:start">Brochure and unit availability</button></div></div></section>' : '') +
       '</div>' +
-      '<aside class="rail-c" aria-label="Enquire"><div class="enq-card"><div class="pr"><span>' + (rent2 ? 'Annual rent' : off ? 'Price' : 'Asking price') + '</span><b>' + AED(x.pr) + '</b>' + (rent2 ? '<small>a year' + (x.textOnly && x.textOnly.cheques ? ', ' + x.textOnly.cheques : '') + '</small>' : ppsf ? '<small>AED ' + fmt(ppsf) + ' per sq ft</small>' : '') + '</div>' +
+      // Rail: price and the summary that scrolls away, one primary action, then the quieter routes. The call-back form
+      // opens on request instead of standing open, and the office sits in the card footer with the reference to quote.
+      '<aside class="rail-c" aria-label="Enquire"><div class="enq-card"><div class="pr"><span>' + (rent2 ? 'Annual rent' : off ? 'Price' : 'Asking price') + '</span><b>' + AED(x.pr) + (rent2 ? '<small> a year</small>' : '') + '</b>' +
+      (rent2 && x.textOnly && x.textOnly.cheques ? '<small>' + esc(x.textOnly.cheques) + '</small>' : !rent2 && ppsf ? '<small>AED ' + fmt(ppsf) + ' per sq ft</small>' : '') + '</div>' +
+      '<p class="enq-facts">' + [x.b ? x.b + ' bed' : 'Studio', x.ba ? x.ba + ' bath' : '', x.s ? fmt(x.s) + ' sq ft' : '', x.type.charAt(0).toUpperCase() + x.type.slice(1)].filter(Boolean).join('<i aria-hidden="true">·</i>') + '</p>' +
       (off && x.plan ? '<p class="per">' + x.plan.booking + '% on booking: about ' + AED(Math.round(x.pr * x.plan.booking / 100)) + '</p>' : '') +
       '<button type="button" class="btn primary block" data-enquire="' + x.id + '" data-kind="viewing">' + ico('cal') + (off ? 'Book a consultation' : 'Request a viewing') + '</button><div class="cpair">' + waBtn + callBtn + '</div>' +
-      '<form class="enq-mini" id="enq-mini" novalidate><p>Or we call you</p><div class="inp"><label for="em-n">Name</label><input id="em-n" autocomplete="name"></div><div class="inp"><label for="em-p">Mobile number</label><input id="em-p" type="tel" autocomplete="tel" inputmode="tel"></div><button type="submit" class="btn ghost block">Request a call back</button></form>' +
-      '<p class="ref"><span>Reference</span><b>' + x.ref + '</b></p></div>' +
-      '<div class="office"><img src="logo/alaliah-crimson.png" alt=""><div><b>Al Aliah International</b><span>Adviser details on request</span></div></div></aside></div>' +
+      '<div class="enq-cb"><button type="button" class="enq-cb-t" aria-expanded="false" aria-controls="enq-mini">' + ico('call') + 'Prefer a call back?' + ico('chev') + '</button>' +
+      '<form class="enq-mini" id="enq-mini" novalidate hidden><div class="inp"><label for="em-n">Name</label><input id="em-n" autocomplete="name"></div><div class="inp"><label for="em-p">Mobile number</label><input id="em-p" type="tel" autocomplete="tel" inputmode="tel"></div><button type="submit" class="btn ghost block">Request a call back</button></form></div>' +
+      '<div class="enq-off"><img src="logo/alaliah-crimson.png" alt=""><div><b>Al Aliah International</b><span>Adviser details on request</span></div><p class="ref"><span>Ref</span><b>' + esc(x.ref) + '</b></p></div></div></aside></div>' +
       '<section class="sec rel" aria-labelledby="pd-r"><div class="wrap"><div class="sec-head"><div><p class="eyebrow">Keep looking</p><h2 class="h2" id="pd-r">Similar homes</h2></div><a class="link-arrow" href="#search/' + (off ? 'offplan' : x.pur) + '">All ' + (rent2 ? 'rentals' : 'homes for sale') + ico('arrow') + '</a></div><div class="cards">' + related(x).map(function (y) { return card(y); }).join('') + '</div></div></section>' +
       '<div class="pbar-m"><p class="pr"><span>' + esc(x.ref) + '</span><span><b>' + AED(x.pr) + '</b>' + (rent2 ? ' a year' : '') + '</span></p>' + waBtn + callBtn + '<button type="button" class="btn primary" data-enquire="' + x.id + '" data-kind="viewing">Enquire</button></div>';
     footer();
     var pm = $('#pd-map'); pm.innerHTML = '<div class="map-gl" role="region" aria-label="Map: ' + esc(x.area) + ', Abu Dhabi"></div>';
     AAMap.mount($('.map-gl', pm), { focus: x.area, zoom: 13, cooperative: true, pins: [{ area: x.area, text: pinTxt(x), aria: T(x) + ', ' + x.area, on: true }] });
     wireMort();
+    var cbt = $('.enq-cb-t'); if (cbt) cbt.addEventListener('click', function () { var on = cbt.getAttribute('aria-expanded') !== 'true'; cbt.setAttribute('aria-expanded', on); $('#enq-mini').hidden = !on; if (on) $('#em-n').focus(); });
     var emf = $('#enq-mini'); if (emf) emf.addEventListener('submit', function (e) { e.preventDefault(); toast('<b>Specimen:</b> nothing was sent. Live: an adviser calls about ' + x.ref + '.'); });
     var mr = $('#pd-more'); if (mr) mr.addEventListener('click', function () { var on = mr.getAttribute('aria-expanded') !== 'true'; mr.setAttribute('aria-expanded', on); mr.textContent = on ? 'Show less' : 'Read more'; $('#pd-dx').innerHTML = (on ? DESC[x.id] : DESC[x.id].slice(0, 2)).map(function (p) { return '<p>' + esc(p) + '</p>'; }).join(''); });
     $$('#pd-gal .g').forEach(function (b) { b.addEventListener('click', function () { openLB(g, Number(b.dataset.i), null, b); }); });
@@ -1252,7 +1271,8 @@
     if ((b = t.closest('[data-enquire]'))) { e.preventDefault(); var dlg = b.closest('dialog'); if (dlg) dlg.close(); openEnquiry(b.dataset.enquire, b.dataset.kind); return; }
     if ((b = t.closest('[data-todo]'))) { e.preventDefault(); closeMega(); var dl = b.closest('dialog'); if (dl) dl.close(); toast(esc(b.dataset.todo)); return; }
     if ((b = t.closest('[data-close]'))) { var dd = b.closest('dialog'); if (dd) dd.close(); if (!b.getAttribute('href')) return; }
-    if ((b = t.closest('[data-scroll]'))) { e.preventDefault(); closeMega(); var md = $('#mnav'); if (md.open) md.close(); var id = b.dataset.scroll; var jump = function () { var el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: RM ? 'auto' : 'smooth' }); }; if (route.page !== 'home') { go('home'); setTimeout(jump, 150); } else jump(); return; }
+    if ((b = t.closest('[data-scroll]'))) { e.preventDefault(); closeMega(); var md = $('#mnav'); if (md.open) md.close(); var id = b.dataset.scroll, dv = b.dataset.dev; var jump = function () { var el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: RM ? 'auto' : 'smooth' }); var pb = dv && document.querySelector('[data-dv="' + dv + '"]'); if (pb) pb.click(); }; if (route.page !== 'home') { go('home'); setTimeout(jump, 150); } else jump(); return; }
+    if ((b = t.closest('a[data-q]'))) { e.preventDefault(); closeMega(); var dq = b.closest('dialog'); if (dq) dq.close(); goSearch(JSON.parse(b.dataset.q)); return; }
     if ((b = t.closest('a[href^="#"]'))) {
       var href = b.getAttribute('href');
       if (/^#(home|search|property|area|offplan)/.test(href)) { closeMega(); var m = $('#mnav'); if (m.open) m.close(); var dg = b.closest('dialog'); if (dg) dg.close(); }

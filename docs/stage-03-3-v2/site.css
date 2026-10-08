@@ -551,7 +551,13 @@ ul, ol { margin: 0; padding: 0; list-style: none }
 .pill:hover { border-color: var(--ink) }
 .fb-pop footer { display: flex; justify-content: space-between; gap: 8px; padding-top: 10px; border-top: 1px solid var(--line) }
 .fbar-sp { flex: 1 }
-#f-all { display: none }
+#f-all .f-all-m { display: none }
+.s-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px }
+.s-save { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0; border: 0; background: none; color: var(--ink-2); font: 600 14px var(--ft); text-decoration: underline; text-underline-offset: 3px; cursor: pointer }
+.s-save .i { width: 15px; height: 15px }
+.s-save:hover { color: var(--crimson) }
+.f-map { gap: 6px }
+.f-map .i { width: 16px; height: 16px }
 .sort select { min-height: 42px; border: 1.5px solid var(--line-2); padding: 0 34px 0 12px; font-weight: 600; font-size: 14px; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23222' stroke-width='2' d='m6 9 6 6 6-6'/%3E%3C/svg%3E") right 10px center / 16px no-repeat; appearance: none }
 .chips-row { display: flex; flex-wrap: wrap; gap: 6px; padding-block: 0 12px; align-items: center }
 .chip-x { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 6px 0 12px; background: var(--ink); color: #fff; border: 0; font-size: 13px; font-weight: 600 }
@@ -705,10 +711,6 @@ ul, ol { margin: 0; padding: 0; list-style: none }
 .enq-card .per { font-size: 14px; color: var(--ink-2); padding-block: 10px; border-block: 1px solid var(--line) }
 .enq-card .ref { display: flex; justify-content: space-between; font-size: 14px; color: var(--ink-2) }
 .enq-card .ref b { color: var(--ink); font-variant-numeric: tabular-nums }
-.office { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 12px; align-items: center; padding: 14px 16px; background: var(--mist) }
-.office img { width: 52px; height: 48px; object-fit: contain }
-.office b { display: block; font-size: 15px }
-.office span { font-size: 13px; color: var(--ink-2) }
 .pbar-m { display: none }
 
 /* ---------- Area page ---------- */
@@ -845,12 +847,13 @@ dialog::backdrop { background: rgba(17,17,17,.55) }
 .mn-hd img { width: 136px; height: 31px; object-fit: contain; object-position: left }
 .mn-bd { overflow-y: auto; padding: 4px 16px 24px }
 .mn-sec { border-block-end: 1px solid var(--line) }
-.mn-sec > button { width: 100%; display: flex; justify-content: space-between; align-items: center; min-height: 60px; border: 0; background: none; font: 700 20px/1.12 var(--fd) }
+.mn-sec > button { width: 100%; display: flex; justify-content: space-between; align-items: center; min-height: 60px; padding: 0; border: 0; background: none; color: inherit; text-align: start; font: 700 20px/1.12 var(--fd) }
 .mn-sec > button .i { transition: transform var(--fast) }
 .mn-sec > button[aria-expanded="true"] .i { transform: rotate(180deg) }
 .mn-sec > button[aria-expanded="true"] { color: var(--crimson) }
 .mn-in { padding: 0 0 18px; display: grid; gap: 14px }
 .mn-in h3 { font-size: 12px; color: var(--ink-3); font-weight: 600 }
+.mn-note { font-size: 13px; color: var(--ink-2) }
 .mn-links { display: grid; grid-template-columns: 1fr 1fr; gap: 6px }
 .mn-links a { display: flex; justify-content: space-between; align-items: center; gap: 6px; min-height: 48px; padding: 0 12px; background: var(--mist); text-decoration: none; font-weight: 600; font-size: 15px }
 .mn-links a .c { color: var(--ink-3); font-weight: 500; font-size: 13px }
@@ -862,6 +865,9 @@ dialog::backdrop { background: rgba(17,17,17,.55) }
 .mn-plain { display: block; min-height: 60px; line-height: 60px; font: 700 20px/60px var(--fd); text-decoration: none; border-block-end: 1px solid var(--line) }
 .mn-ft { padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); border-block-start: 1px solid var(--line); display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px }
 .mn-ft .btn, .mn-ft .btn-c { min-height: 52px; padding: 0 8px }
+/* Enters with a short rise and fade (direction-neutral, so it needs no RTL mirror); reduced motion: instant */
+dialog.mnav[open] { animation: mn-in 240ms var(--ease) both }
+@keyframes mn-in { from { opacity: 0; transform: translateY(10px) } }
 body.mframe dialog.sheet, body.mframe dialog.mnav, body.mframe dialog.lb, body.mframe dialog.enq, body.mframe dialog.cmp { width: 390px; max-width: 390px; margin-inline: auto }
 body.mframe dialog.sheet { margin-inline: auto }
 .toast:not(.on) { visibility: hidden; transition: transform 320ms var(--ease), visibility 0s 320ms }
@@ -944,8 +950,8 @@ body.mframe dialog.sheet { margin-inline: auto }
 .mort-out dt { font-size: 12px; color: var(--on-dark-2) }
 .mort-out dd { margin: 0; font: 700 14px/1.2 var(--fd) }
 .mort-out .fine { color: var(--on-dark-2) }
-.enq-mini { display: grid; gap: 10px; padding-top: 14px; border-top: 1px solid var(--line) }
-.enq-mini > p { font-size: 13px; color: var(--ink-3); font-weight: 600 }
+.enq-mini { display: grid; gap: 10px; padding-top: 4px }
+.enq-mini[hidden] { display: none }
 .enq-mini .inp input { min-height: 44px }
 
 /* ---------- Mobile quick bar (shown in the mobile query) ---------- */
@@ -968,7 +974,7 @@ body.mframe dialog.sheet { margin-inline: auto }
   .cards.c3 { grid-template-columns: repeat(2, minmax(0, 1fr)) }
   .qs-row { grid-template-columns: repeat(2, minmax(0, 1fr)) }
   .qs-row .fld:first-child { grid-column: 1 / -1 }
-  .qs-go { grid-column: 1 / -1; min-height: 60px }
+  .qs-row .qs-go { grid-column: 1 / -1; margin-block-start: 0 }
   .sel-grid, .inv, .adv, .a-intro, .a-split { grid-template-columns: minmax(0, 1fr) }
   .rail { grid-auto-columns: 72% }
   .dv { grid-template-columns: minmax(0, 1fr) }
@@ -1015,8 +1021,9 @@ body.mframe dialog.sheet { margin-inline: auto }
   .hero-copy { padding-block-end: 18px }
   .hero-anchor { inset-block-start: auto; inset-block-end: auto; inset-inline: 16px auto; top: 80px; font-size: 13px; padding: 6px 6px 6px 10px }
   .hero-anchor .go { width: 30px; height: 30px }
+  .qs { justify-items: stretch; gap: 10px }
   .qs-tabs { display: grid; grid-template-columns: repeat(3, 1fr) }
-  .qs-tab { padding: 0; min-height: 48px; font-size: 15px }
+  .qs-tab { padding: 0; min-height: 44px; font-size: 15px }
   .qs-note { display: none }
   .qs-row { grid-template-columns: minmax(0, 1fr) }
   .qs-row .fld:not(:first-child) { display: none }
@@ -1094,9 +1101,9 @@ body.mframe dialog.sheet { margin-inline: auto }
   .s-title h1 { font-size: 30px }
   .s-title .seg { display: none }
   .fbar { top: calc(var(--bar) + 64px) }
-  .fbar .fb, .fbar .sort, .fbar #f-view, .fbar .fbar-sp, .fbar #f-save { display: none }
+  .fbar .fb, .fbar .sort, .fbar .f-map, .fbar .fbar-sp { display: none }
+  #f-all .f-all-l { display: none } #f-all .f-all-m { display: inline }
   .fbar-in { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-block: 10px }
-  .fbar #f-all { display: inline-flex }
   .chips-row { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none }
   .chip-x { flex: none }
   .res { padding-block: 18px 40px }
@@ -1130,7 +1137,10 @@ body.mframe dialog.sheet { margin-inline: auto }
   .ope-steps dd small { grid-column: 1 / -1 }
   .permit { grid-template-columns: auto minmax(0, 1fr); padding: 16px }
   .permit-qr { display: none }
-  .rail-c .enq-card { display: none }
+  /* Price, viewing, WhatsApp and Call live in the sticky bottom bar: the rail keeps the call back and the office */
+  .rail-c .enq-card > .pr, .rail-c .enq-card > .enq-facts, .rail-c .enq-card > .per, .rail-c .enq-card > .btn.primary, .rail-c .enq-card > .cpair { display: none }
+  .rail-c .enq-cb { border: 0; padding: 0 }
+  .rail-c .enq-card { padding-block-start: 12px }
   .rail-c { margin-top: 28px }
   .pd-sec { margin-top: 32px; padding-top: 32px }
   .proj { grid-template-columns: minmax(0, 1fr) }
@@ -1173,7 +1183,6 @@ body.mframe dialog.sheet { margin-inline: auto }
   .a-hero-in { padding-block-end: 74px }
   .mbar { bottom: 72px }
   .cmp-tray { bottom: 140px }
-  .fbar #f-comp { display: none }
   .ap.pre .ap-p { translate: 40px 0 }
   .ap-full, .ap-p.on .ap-full { filter: none }
   .pc-nav { opacity: .92 }
