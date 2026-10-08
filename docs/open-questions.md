@@ -174,8 +174,8 @@ No verified permit exists for any listing. The only stored value (`madhmoun-perm
 ### C10. 31571 location conflict
 31571 is filed under Al Raha, but its address is "Faya at Bloom Gardens, Al Muntazah". Its townhouse photos are not used as Al Raha place imagery in v2. Editor to confirm the area.
 
-### C11. Reference sites unreachable from cloud sessions
-oiaproperties.com and 11tanjung.com are blocked by the environment's egress policy, and so is cdnjs (npm is allowed). The v2 reference study relied on search summaries; the 11 Tanjung intro and facilities behaviour could not be observed. Add these domains to the environment's allowed list, or capture screen recordings, if a closer study is needed.
+### C11. Reference sites and CDNs in cloud sessions
+*Updated 2026-10-08:* both reference sites are now reachable and were studied directly. Their CDN dependencies (jsdelivr, cdnjs, unpkg) are still blocked, so the study served those exact library versions locally from npm. The specimen vendors GSAP and Lenis for the same reason.
 
 ---
 

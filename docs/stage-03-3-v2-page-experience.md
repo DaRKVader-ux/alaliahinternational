@@ -1,6 +1,6 @@
 # Stage 03.3 v2: Page experience
 
-**Status:** v2 specimen complete, awaiting review (D-039). v1 is not approved and is kept only as a record. No theme work has started, and Arabic/RTL is deferred.
+**Status:** v2 specimen revised 2026-10-08 from direct reference study, awaiting review (D-039). v1 is not approved and is kept only as a record. No theme work has started, and Arabic/RTL is deferred.
 
 **Specimen:** `docs/stage-03-3-v2/index.html`, with `site.css`, `site.js`, `data.js`, `img/`, `logo/` and `vendor/`. Serve the folder (`python3 -m http.server` from `docs/stage-03-3-v2`). The dark bar at the top is specimen chrome, not website:
 - **Page:** the four pages.
@@ -9,6 +9,21 @@
 - **Replay intro.**
 - **Desktop / Mobile 390.**
 - **Notes:** the 4-motion rule and data notes per page.
+
+## Revision 2026-10-08: from the live references
+
+Both reference sites were inspected directly. Observations, the comparison with v2, and what was adopted or deliberately not copied are in [`stage-03-3-v2-reference-study.md`](./stage-03-3-v2-reference-study.md). Changes in this revision:
+
+- **Hero:** a white loader plate with a real load counter opens outward from a crimson redline; headline words rise out of their masks; the search settles from blur. The hero stays pinned while the next section slides over it.
+- **Section headings:** word-by-word mask reveal on entry, CSS only.
+- **Areas:** facilities-style entrance (from the right, blurred, staggered); the active panel takes about a third and its caption un-blurs.
+- **Off-plan:** a featured project band (image, numbers, payment-plan bar, CTA) before the comparison rail.
+- **Cards:** in-card photo browsing.
+- **Navigation:** "List your property" in the header and menus; "Latest listings" in the Buy and Rent menus; CTA buttons on featured menu cards.
+- **Mobile:** a quick bar (Search, Off-Plan, Shortlist, WhatsApp, Menu).
+- **Search:** a Ready / Off-plan switch, an owner card among results, and popular searches.
+- **Property:** a mortgage estimate on ready sales and an inline call-back form in the enquiry card.
+- **Site-wide:** a call-back band and footer area counts.
 
 ## 1. Where the brief and the data collide
 

@@ -37,6 +37,23 @@
   var AREA = function (k) { return A.AREAS.filter(function (a) { return a.key === k || a.n === k; })[0]; };
   var minBy = function (list) { return list.length ? Math.min.apply(null, list.map(function (x) { return x.pr; })) : null; };
 
+  /* Word spans for the clip reveal (observed on 11 Tanjung: each word rises out of its own mask) */
+  function words(text, cls) {
+    return '<span class="' + cls + '" aria-hidden="true">' + text.split(' ').map(function (w, i) { return '<span class="w"><span style="--i:' + i + '">' + esc(w) + '</span></span>'; }).join(' ') + '</span>';
+  }
+  function splitHeads(root) {
+    $$('.h2, .adv-st, .a-intro .big', root).forEach(function (h) {
+      if (h.dataset.split) return; h.dataset.split = '1';
+      var t = h.textContent.trim().replace(/\s+/g, ' ');
+      h.innerHTML = '<span class="vh">' + esc(t) + '</span><span aria-hidden="true">' + t.split(' ').map(function (w, i) { return '<span class="w"><span style="--i:' + i + '">' + esc(w) + '</span></span>'; }).join(' ') + '</span>';
+      h.classList.add('cw');
+    });
+    if (RM || !('IntersectionObserver' in window)) { $$('.cw', root).forEach(function (h) { h.classList.add('in'); }); return; }
+    var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }); }, { threshold: .3 });
+    $$('.cw:not(.in)', root).forEach(function (h) { io.observe(h); });
+    cleanup.push(function () { io.disconnect(); });
+  }
+
   var DESC = {
     31521: ['Discover luxury living in this beautiful villa located in the prestigious West Yas community on Yas Island. This modern villa offers spacious interiors, high-quality finishes, and a family-friendly environment, making it the perfect home for comfortable living.', 'The villa features generously sized bedrooms, a bright living and dining area, a modern kitchen with ample storage, and large windows that allow plenty of natural light. The outdoor space includes a private garden, ideal for relaxing or entertaining guests.', 'West Yas is one of the most sought-after communities in Yas Island, offering residents a peaceful lifestyle with excellent facilities and easy access to major attractions.'],
     31094: ['An exclusive project that speaks the language of elegance, precision, and lifestyle. Fully finished, with built-in kitchen appliances. Handover: Q1 2029.', 'Private balconies or terraces as per unit plan, en-suite bedrooms as per plan, double-glazed windows, built-in wardrobes, central air conditioning and a fibre-optic connection.', 'The agent\'s description also lists alternative payment options (investor and down-payment variants). They are not shown as data until the developer\'s current plan is confirmed.'],
@@ -88,7 +105,8 @@
   function isSL(id) { return shortlist.indexOf(Number(id)) > -1; }
   function setSLCount() {
     var n = shortlist.length, b = $('#hdr-sl'), c = $('#sl-n');
-    c.textContent = n; c.classList.toggle('zero', !n); b.setAttribute('aria-label', 'Shortlist, ' + n + (n === 1 ? ' home' : ' homes'));
+    c.textContent = n; c.classList.toggle('zero', !n);
+    var mt = $('#mt-n'); if (mt) { mt.textContent = n; mt.classList.toggle('zero', !n); } b.setAttribute('aria-label', 'Shortlist, ' + n + (n === 1 ? ' home' : ' homes'));
   }
   function toggleSL(id, btn) {
     id = Number(id); var i = shortlist.indexOf(id);
@@ -119,7 +137,9 @@
       '<div class="pc-media' + (portrait ? ' contain' : '') + '"><img src="' + IMG(x.img) + '" alt="' + esc(x.alt) + '" loading="lazy" width="640" height="480">' +
       '<span class="pc-tag' + (x.comp === 'offplan' ? ' off' : '') + '">' + PURL(x) + '</span>' +
       (x.render ? '<span class="pc-rd">Developer render</span>' : '') +
-      '<span class="pc-n">' + ico('grid') + n + '<span class="vh"> photos</span></span></div>' +
+      '<span class="pc-n" data-pcn>' + ico('grid') + '<span>' + n + '</span><span class="vh"> photos</span></span>' +
+      (n > 1 ? '<button type="button" class="pc-nav prev" data-pcnav="-1" aria-label="Previous photo of ' + esc(T(x)) + '">' + ico('arrow') + '</button><button type="button" class="pc-nav next" data-pcnav="1" aria-label="Next photo of ' + esc(T(x)) + '">' + ico('arrow') + '</button>' +
+        '<span class="pc-dots" aria-hidden="true">' + gal(x).slice(0, 5).map(function (g, i) { return '<i' + (i === 0 ? ' class="on"' : '') + '></i>'; }).join('') + '</span>' : '') + '</div>' +
       '<button type="button" class="pc-sl" data-sl="' + x.id + '" aria-pressed="' + on + '" aria-label="Shortlist ' + esc(T(x)) + ', ' + esc(x.area) + '">' + ico(on ? 'heart-f' : 'heart') + '</button>' +
       '<div class="pc-body"><p class="pc-price">' + priceHTML(x) + '</p>' +
       '<h3 class="pc-t"><a class="pc-link" href="#property/' + x.id + '">' + esc(T(x)) + '</a></h3>' +
@@ -128,6 +148,23 @@
       (o.compare ? '<label class="pc-cmp"><input type="checkbox" data-cmp="' + x.id + '"' + (compare.indexOf(x.id) > -1 ? ' checked' : '') + '>Compare</label>' : '<span class="pc-view">View property' + ico('arrow') + '</span>') + '</div></div>' +
       '<div class="pc-act cpair"><button type="button" class="btn-c" data-wa="' + x.id + '">' + ico('wa') + 'WhatsApp</button><button type="button" class="btn-c" data-call="' + x.id + '">' + ico('call') + 'Call</button></div></article>';
   }
+  function pcStep(btn) {
+    var c = btn.closest('.pc'), x = byId(c.dataset.id), g = gal(x), im = $('.pc-media img', c);
+    var i = ((Number(c.dataset.pi) || 0) + Number(btn.dataset.pcnav) + g.length) % g.length;
+    c.dataset.pi = i; im.style.opacity = .25;
+    var nx = new Image(); nx.onload = nx.onerror = function () { im.src = nx.src; im.alt = alt(g[i], x); im.style.opacity = 1; }; nx.src = IMG(g[i]);
+    $('[data-pcn] span', c).textContent = (i + 1) + ' / ' + g.length;
+    $$('.pc-dots i', c).forEach(function (d, k) { d.classList.toggle('on', k === Math.min(i, 4)); });
+  }
+  // Touch: swipe the card photo
+  var tx0 = null;
+  document.addEventListener('touchstart', function (e) { var m = e.target.closest('.pc-media'); tx0 = m ? [e.touches[0].clientX, e.touches[0].clientY, m] : null; }, { passive: true });
+  document.addEventListener('touchend', function (e) {
+    if (!tx0) return; var dx = e.changedTouches[0].clientX - tx0[0], dy = e.changedTouches[0].clientY - tx0[1];
+    var row = tx0[2].closest('.cards'), rowScrolls = row && getComputedStyle(row).overflowX === 'auto';
+    if (!rowScrolls && Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) { var b = $('[data-pcnav="' + (dx < 0 ? 1 : -1) + '"]', tx0[2]); if (b) pcStep(b); }
+    tx0 = null;
+  }, { passive: true });
   function ppBar(p, pre) {
     if (!p) return '';
     var seg = [['s1', p.booking, 'On booking'], ['s2', p.construction, 'During construction'], ['s3', p.handover, 'On handover']];
@@ -195,8 +232,14 @@
   var sale = function (x) { return x.pur === 'sale'; }, rent = function (x) { return x.pur === 'rent'; };
   function megaLink(href, label, n, data) { return '<li><a href="' + href + '"' + (data || '') + '><span>' + label + '</span>' + (n != null ? '<span class="c">' + n + '</span>' : '') + '</a></li>'; }
   function megaFeat(x, kicker) {
-    return '<a class="mega-feat" href="#property/' + x.id + '"><div class="ph"><img src="' + IMG(x.img) + '" alt="' + esc(x.alt) + '"></div><div class="tx"><span>' + esc(kicker) + '</span><b>' + AED(x.pr) + (x.pur === 'rent' ? ' a year' : '') + '</b><span>' + esc(T(x)) + ', ' + esc(x.area) + '</span></div></a>';
+    return '<a class="mega-feat" href="#property/' + x.id + '"><div class="ph"><img src="' + IMG(x.img) + '" alt="' + esc(x.alt) + '"></div><div class="tx"><span>' + esc(kicker) + '</span><b>' + AED(x.pr) + (x.pur === 'rent' ? ' a year' : '') + '</b><span>' + esc(T(x)) + ', ' + esc(x.area) + '</span><span class="btn sm mf-cta">View property' + ico('arrow', 'go') + '</span></div></a>';
   }
+  function megaLatest(list) {
+    return '<h3 style="margin-top:22px">Latest listings</h3><ul class="mega-latest">' + list.slice().sort(function (a, b) { return b.id - a.id; }).slice(0, 2).map(function (x) {
+      return '<li><a href="#property/' + x.id + '"' + hov(x) + '><img src="' + IMG(x.img) + '" alt=""><span><b>' + AED(x.pr) + (x.pur === 'rent' ? ' a year' : '') + '</b>' + esc(T(x)) + ', ' + esc(x.area) + '</span></a></li>';
+    }).join('') + '</ul>';
+  }
+  var ownerLink = '<a class="link-arrow" href="#home" data-scroll="advice">List your property with us' + ico('arrow') + '</a>';
   var hov = function (x) { return ' data-img="' + x.img + '" data-cap="' + esc(T(x) + ', ' + x.area) + '"'; };
   var MEGA = {
     buy: function () {
@@ -204,22 +247,23 @@
       return '<div class="mega-col"><h3>Property type</h3><ul>' +
         megaLink('#search/sale/apartment', 'Apartments', cnt(function (x) { return sale(x) && x.type === 'apartment'; }), hov(byId(31082))) +
         megaLink('#search/sale/villa', 'Villas', cnt(function (x) { return sale(x) && x.type === 'villa'; }), hov(byId(31495))) +
-        megaLink('#search/sale/townhouse', 'Townhouses', cnt(function (x) { return sale(x) && x.type === 'townhouse'; }), hov(byId(31083))) + '</ul></div>' +
+        megaLink('#search/sale/townhouse', 'Townhouses', cnt(function (x) { return sale(x) && x.type === 'townhouse'; }), hov(byId(31083))) + '</ul>' +
+        megaLatest(S.filter(function (x) { return x.comp === 'ready'; })) + '</div>' +
         '<div class="mega-col"><h3>Location</h3><ul>' + megaLink('#search/sale', 'Abu Dhabi', S.length) + megaLink('#search/offplan', 'Dubai (off-plan projects)', 3) + '</ul>' +
         '<h3 style="margin-top:22px">Completion</h3><ul>' + megaLink('#search/sale', 'Ready to move in', cnt(function (x) { return sale(x) && x.comp === 'ready'; })) + megaLink('#search/offplan', 'Off-plan', cnt(function (x) { return x.comp === 'offplan'; })) + '</ul></div>' +
         '<div class="mega-col"><h3>Budget</h3><ul>' + megaLink('#search/sale', 'Under AED 1M', cnt(function (x) { return sale(x) && x.pr < 1e6; })) + megaLink('#search/sale', 'AED 1M to 3M', cnt(function (x) { return sale(x) && x.pr >= 1e6 && x.pr <= 3e6; })) + megaLink('#search/sale', 'Over AED 3M', cnt(function (x) { return sale(x) && x.pr > 3e6; })) + '</ul></div>' +
         megaFeat(byId(31495), 'Featured · ready to buy') +
-        '<div class="mega-foot"><span>Penthouses: none listed now.</span><a class="link-arrow" href="#search/sale">All ' + S.length + ' homes for sale' + ico('arrow') + '</a></div>';
+        '<div class="mega-foot"><span>Penthouses: none listed now.</span><a class="link-arrow" href="#search/sale">All ' + S.length + ' homes for sale' + ico('arrow') + '</a>' + ownerLink + '</div>';
     },
     rent: function () {
       var R = L.filter(rent);
       return '<div class="mega-col"><h3>Property type</h3><ul>' +
         megaLink('#search/rent/apartment', 'Apartments', cnt(function (x) { return rent(x) && x.type === 'apartment'; }), hov(byId(31013))) +
-        megaLink('#search/rent/villa', 'Villas', cnt(function (x) { return rent(x) && x.type === 'villa'; }), hov(byId(31521))) + '</ul></div>' +
+        megaLink('#search/rent/villa', 'Villas', cnt(function (x) { return rent(x) && x.type === 'villa'; }), hov(byId(31521))) + '</ul>' + megaLatest(R) + '</div>' +
         '<div class="mega-col"><h3>Popular areas</h3><ul>' + ['Yas Island', 'Al Raha', 'Al Reem Island', 'Al Khalidiya'].map(function (a) { var f = inArea(a, R); return megaLink('#search/rent', a, f.length, f[0] ? hov(f[0]) : ''); }).join('') + '</ul></div>' +
         '<div class="mega-col"><h3>Budget a year</h3><ul>' + megaLink('#search/rent', 'Under AED 100K', cnt(function (x) { return rent(x) && x.pr < 1e5; })) + megaLink('#search/rent', 'AED 100K to 200K', cnt(function (x) { return rent(x) && x.pr >= 1e5 && x.pr <= 2e5; })) + megaLink('#search/rent', 'Over AED 200K', cnt(function (x) { return rent(x) && x.pr > 2e5; })) + '</ul></div>' +
         megaFeat(byId(31521), 'Featured · for rent') +
-        '<div class="mega-foot"><span>All rents in Abu Dhabi. Dubai rentals: none listed now.</span><a class="link-arrow" href="#search/rent">All ' + R.length + ' homes for rent' + ico('arrow') + '</a></div>';
+        '<div class="mega-foot"><span>All rents in Abu Dhabi. Dubai rentals: none listed now.</span><a class="link-arrow" href="#search/rent">All ' + R.length + ' homes for rent' + ico('arrow') + '</a>' + ownerLink + '</div>';
     },
     offplan: function () {
       var P = A.PROJECTS;
@@ -229,7 +273,7 @@
         '<div class="mega-col" style="grid-column:span 2"><h3>By developer</h3><div class="mega-chips">' + A.DEVS.filter(function (d) { return d.projects.length; }).map(function (d) { return '<a class="chip" href="#search/offplan">' + esc(d.name) + ' <span class="c">' + d.projects.length + '</span></a>'; }).join('') + '</div>' +
         '<h3 style="margin-top:22px">By handover</h3><div class="mega-chips"><a class="chip" href="#search/offplan">2027 <span class="c">1</span></a><a class="chip" href="#search/offplan">2029 <span class="c">2</span></a><a class="chip" href="#search/offplan">Ask us <span class="c">2</span></a></div>' +
         '<h3 style="margin-top:22px">By payment plan</h3><div class="mega-chips"><a class="chip" href="#search/offplan">70/30 <span class="c">2</span></a><a class="chip" href="#search/offplan">85/15 <span class="c">1</span></a><a class="chip" href="#search/offplan">From 10% on booking <span class="c">1</span></a></div></div>' +
-        '<a class="mega-feat" href="#property/31094"><div class="ph"><img src="' + IMG('brabus-aerial') + '" alt="' + esc(alt('brabus-aerial')) + '"><span class="tag-r">Developer render</span></div><div class="tx"><span>Featured project · Al Raha Beach</span><b>Brabus Island</b><span>Handover Q1 2029 · 85/15 plan · from 10% on booking</span></div></a>' +
+        '<a class="mega-feat" href="#property/31094"><div class="ph"><img src="' + IMG('brabus-aerial') + '" alt="' + esc(alt('brabus-aerial')) + '"><span class="tag-r">Developer render</span></div><div class="tx"><span>Featured project · Al Raha Beach</span><b>Brabus Island</b><span>Handover Q1 2029 · 85/15 plan · from 10% on booking</span><span class="btn sm mf-cta">View project' + ico('arrow', 'go') + '</span></div></a>' +
         '<div class="mega-foot"><a class="link-arrow" href="#search/offplan">All off-plan projects' + ico('arrow') + '</a></div>';
     },
     areas: function () {
@@ -238,7 +282,7 @@
         '<div class="mega-col"><h3>Dubai</h3><ul>' + du.map(function (a) { var n = A.PROJECTS.filter(function (p) { return p.area === a.n; }).length; return megaLink('#search/offplan', a.n, n + (n === 1 ? ' project' : ' projects'), ' data-img="' + a.img + '" data-cap="' + esc(a.n + ' · ' + a.line) + '"'); }).join('') + '</ul>' +
         '<p class="fine" style="margin-top:16px">Saadiyat Island: no listings and no approved photography yet.</p></div>' +
         '<div class="mega-col"><h3>Guides</h3><ul>' + megaLink('#area', 'Yas Island area guide', null) + megaLink('#home', 'All areas on the homepage', null, ' data-scroll="areas"') + '</ul></div>' +
-        '<a class="mega-feat" href="#area"><div class="ph"><img src="' + IMG('yas-terrace-view') + '" alt="' + esc('Covered terrace looking over a villa street in West Yas') + '"></div><div class="tx"><span>Area guide</span><b>Yas Island</b><span>Contemporary villas on tree-lined streets in West Yas.</span></div></a>';
+        '<a class="mega-feat" href="#area"><div class="ph"><img src="' + IMG('yas-terrace-view') + '" alt="' + esc('Covered terrace looking over a villa street in West Yas') + '"></div><div class="tx"><span>Area guide</span><b>Yas Island</b><span>Contemporary villas on tree-lined streets in West Yas.</span><span class="btn sm mf-cta">View area' + ico('arrow', 'go') + '</span></div></a>';
     },
     developers: function () {
       var feat = A.DEVS.filter(function (d) { return d.projects.length; });
@@ -310,7 +354,7 @@
       sec('off', 'Off-Plan', '<div class="mn-links">' + ln('#search/offplan', 'Abu Dhabi', 2) + ln('#search/offplan', 'Dubai', 3) + ln('#search/offplan', 'Handover 2027', 1) + ln('#search/offplan', '70/30 plans', 2) + '</div>') +
       sec('areas', 'Areas', '<h3>Abu Dhabi</h3><div class="mn-links">' + A.AREAS.filter(function (a) { return a.city === 'Abu Dhabi'; }).map(function (a) { return ln(a.key === 'yas' ? '#area' : '#search/rent', a.n, inArea(a.n).length); }).join('') + '</div><h3>Dubai</h3><div class="mn-links">' + ln('#search/offplan', 'Business Bay', 2) + ln('#search/offplan', 'Dubai South', 1) + '</div>') +
       sec('dev', 'Developers', '<div class="mn-links">' + A.DEVS.filter(function (d) { return d.projects.length; }).map(function (d) { return ln('#search/offplan', d.name, d.projects.length); }).join('') + ln('#home', 'All 17 developers') + '</div>') +
-      '<a class="mn-plain" href="#about" data-todo="About Us is outside this specimen\'s four pages.">About Us</a></div>' +
+      '<a class="mn-plain" href="#about" data-todo="About Us is outside this specimen\'s four pages.">About Us</a><a class="mn-plain" href="#home" data-scroll="advice">List your property</a></div>' +
       '<div class="mn-ft"><button type="button" class="btn-c" data-wa="general">' + ico('wa') + 'WhatsApp</button><button type="button" class="btn-c" data-call="general">' + ico('call') + 'Call</button><button type="button" class="btn" data-enquire="general">Contact</button></div>';
   }
   $('#hdr-menu').addEventListener('click', function () {
@@ -322,13 +366,18 @@
      Footer
      ============================================================ */
   function footer() {
-    $('#ft').innerHTML = '<div class="wrap"><div class="ft-top"><div class="ft-brand"><img src="logo/alaliah-white.png" alt="Al Aliah International" width="120" height="134"><p>Property advice and brokerage in Abu Dhabi, with off-plan projects across the UAE.</p><div class="cpair dark" style="background:none"><button type="button" class="btn-c" data-wa="general">' + ico('wa') + 'WhatsApp</button><button type="button" class="btn-c" data-call="general">' + ico('call') + 'Call</button></div></div>' +
+    var band = route.page === 'home' ? '' : '<div class="cb dark"><div class="wrap cb-in"><div><p class="eyebrow">Need guidance?</p><h2 class="cb-h">Request a call back</h2><p>An adviser calls you within working hours. Or message us now on WhatsApp.</p></div>' +
+      '<form class="cb-f" id="cb-f" novalidate><div class="inp"><label for="cb-n">Name</label><input id="cb-n" autocomplete="name"></div><div class="inp"><label for="cb-p">Mobile number</label><input id="cb-p" type="tel" autocomplete="tel" inputmode="tel"></div><button type="submit" class="btn light">Request a call back</button><button type="button" class="btn-c" data-wa="general">' + ico('wa') + 'WhatsApp</button></form></div></div>';
+    var keyAreas = A.AREAS.filter(function (a) { return a.city === 'Abu Dhabi'; }).map(function (a) { var n2 = inArea(a.n).length; return '<li><a href="' + (a.key === 'yas' ? '#area' : '#search/' + (inArea(a.n).some(rent) ? 'rent' : 'sale')) + '">' + esc(a.n) + ' <span class="c">(' + n2 + (n2 === 1 ? ' listing' : ' listings') + ')</span></a></li>'; }).join('');
+    $('#ft').innerHTML = band + '<div class="wrap"><div class="ft-top"><div class="ft-brand"><img src="logo/alaliah-white.png" alt="Al Aliah International" width="120" height="134"><p>Property advice and brokerage in Abu Dhabi, with off-plan projects across the UAE.</p><div class="cpair dark" style="background:none"><button type="button" class="btn-c" data-wa="general">' + ico('wa') + 'WhatsApp</button><button type="button" class="btn-c" data-call="general">' + ico('call') + 'Call</button></div></div>' +
       '<div><h3>Buy</h3><ul><li><a href="#search/sale">Apartments</a></li><li><a href="#search/sale">Villas</a></li><li><a href="#search/sale">Townhouses</a></li><li><a href="#search/offplan">Off-plan</a></li></ul></div>' +
       '<div><h3>Rent</h3><ul><li><a href="#search/rent">Apartments</a></li><li><a href="#search/rent">Villas</a></li><li><a href="#area">Yas Island</a></li><li><a href="#search/rent">Al Raha</a></li></ul></div>' +
+      '<div><h3>Key areas</h3><ul>' + keyAreas + '</ul></div>' +
       '<div><h3>Explore</h3><ul><li><a href="#home" data-scroll="areas">Areas</a></li><li><a href="#home" data-scroll="developers">Developers</a></li><li><a href="#home" data-scroll="invest">Investing</a></li></ul></div>' +
       '<div><h3>Company</h3><ul><li><a href="#about" data-todo="About Us is outside this specimen.">About Us</a></li><li><a href="#home" data-scroll="advice">List your property</a></li><li><a href="#home" data-scroll="advice">Contact</a></li></ul></div></div>' +
       '<div class="ft-bot"><span>© 2026 Al Aliah International. Abu Dhabi, United Arab Emirates.</span><span>Licence and permit details are shown here once verified (open question Q9).</span></div></div>';
     $$('#ft .cpair').forEach(function (c) { c.classList.add('dark'); });
+    var cbf = $('#cb-f'); if (cbf) cbf.addEventListener('submit', function (e) { e.preventDefault(); toast('<b>Specimen:</b> nothing was sent. Live: the request reaches an adviser (lead routing: open question W7).'); });
   }
 
   /* ============================================================
@@ -413,16 +462,17 @@
 
     main.innerHTML =
       /* Hero */
-      '<section class="hero on-img" id="hero" aria-label="Search Abu Dhabi property">' +
-      '<div class="hero-side" id="hs-l"><img src="' + IMG('raha-apt-water') + '" alt=""></div><div class="hero-side" id="hs-r"><img src="' + IMG('khalifa-sunset') + '" alt=""></div>' +
+      '<div class="hero-stack" id="hero-stack"><section class="hero on-img" id="hero" aria-label="Search Abu Dhabi property">' +
       '<div class="hero-media" id="hero-media"><img src="' + IMG('yas-terrace-timber') + '" alt="Upper terrace of a villa in West Yas: timber-clad wall, pergola slats and a glass balustrade" fetchpriority="high" width="1280" height="960"></div>' +
-      '<div class="hero-intro" id="hero-intro" aria-hidden="true"><img src="logo/alaliah-white.png" alt=""><p>ABU DHABI · DUBAI</p></div>' +
+      '<div class="hero-shade" id="hero-shade" aria-hidden="true"></div>' +
+      '<div class="plate" id="plate" aria-hidden="true"><div class="plate-h t"></div><div class="plate-h b"></div><span class="plate-line"></span>' +
+      '<span class="plate-n"><i></i><b id="plate-n">0</b>%</span><img class="plate-logo" src="logo/alaliah-crimson.png" alt=""><span class="plate-r">Abu Dhabi · Dubai</span></div>' +
       '<a class="hero-anchor" id="hero-anchor" href="#property/31521"><span>In this photo: <b>five-bedroom villa for rent</b>, West Yas</span><span class="go">' + ico('arrow') + '</span></a>' +
-      '<div class="hero-in wrap"><div class="hero-copy"><h1><span class="ln"><span>Abu Dhabi property,</span></span><span class="ln"><span>clearly understood.</span></span></h1><p class="hero-sub">Homes to buy and rent, and off-plan projects, with advisers who know each community.</p></div>' +
+      '<div class="hero-in wrap"><div class="hero-copy"><h1 aria-label="Abu Dhabi property, clearly understood.">' + words('Abu Dhabi property,', 'ln') + words('clearly understood.', 'ln') + '</h1><p class="hero-sub">Homes to buy and rent, and off-plan projects, with advisers who know each community.</p></div>' +
       '<form class="qs" id="qs" role="search" aria-label="Property search">' + qsHTML() + '</form></div></section>' +
-      /* Discover */
-      '<section class="sec tight" aria-labelledby="disc-h"><div class="wrap"><div class="sec-head"><div><p class="eyebrow">Start here</p><h2 class="h2" id="disc-h">What are you looking for?</h2></div></div>' +
-      '<div class="disc">' + tiles.map(function (t) { return '<a class="tile" href="' + t.href + '"><img src="' + IMG(t.img) + '" alt="' + esc(t.alt) + '" loading="lazy" width="800" height="1000">' + (t.render ? '<span class="tag-r">Developer render</span>' : '') + '<span class="tx"><span class="k">' + t.k + '</span><span class="s">' + t.s + '<br>' + t.r + '</span><span class="go">' + t.go + ico('arrow') + '</span></span></a>'; }).join('') + '</div></div></section>' +
+      /* Discover: slides over the pinned hero */
+      '<section class="sec tight cover" aria-labelledby="disc-h"><div class="wrap"><div class="sec-head"><div><p class="eyebrow">Start here</p><h2 class="h2" id="disc-h">What are you looking for?</h2></div></div>' +
+      '<div class="disc">' + tiles.map(function (t) { return '<a class="tile" href="' + t.href + '"><img src="' + IMG(t.img) + '" alt="' + esc(t.alt) + '" loading="lazy" width="800" height="1000">' + (t.render ? '<span class="tag-r">Developer render</span>' : '') + '<span class="tx"><span class="k">' + t.k + '</span><span class="s">' + t.s + '<br>' + t.r + '</span><span class="go">' + t.go + ico('arrow') + '</span></span></a>'; }).join('') + '</div></div></section></div>' +
       /* Homes */
       '<section class="sec mist homes" aria-labelledby="homes-h"><div class="wrap"><div class="sec-head"><div><p class="eyebrow">Available now</p><h2 class="h2" id="homes-h">Homes you can view this week</h2><p class="lede">Every card opens the full listing. WhatsApp and Call reach an adviser about that exact home.</p></div><a class="link-arrow" href="#search/sale" id="homes-all">All homes' + ico('arrow') + '</a></div>' +
       '<div class="tabs" role="tablist" aria-label="Purpose"><button class="tab" role="tab" id="ht-sale" aria-selected="true" aria-controls="homes-p">For sale <span class="c">' + sales.length + '</span></button><button class="tab" role="tab" id="ht-rent" aria-selected="false" aria-controls="homes-p">For rent <span class="c">' + rents.length + '</span></button></div>' +
@@ -437,8 +487,9 @@
       '<div class="city-sw" role="group" aria-label="City"><button type="button" data-city="Abu Dhabi" aria-pressed="true">Abu Dhabi</button><button type="button" data-city="Dubai" aria-pressed="false">Dubai</button></div></div>' +
       '<div class="ap" id="ap"></div><div class="ap-dots" id="ap-dots" aria-label="Areas"></div></div></section>' +
       /* Off-plan */
-      '<section class="sec mist" id="offplan" aria-labelledby="op-h"><div class="wrap"><div class="sec-head"><div><p class="eyebrow">Off-Plan</p><h2 class="h2" id="op-h">Off-plan, compared on the numbers</h2><p class="lede">Price, handover and payment plan side by side. Where a developer has not confirmed a figure, we say so.</p></div>' +
-      '<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><div class="seg" role="group" aria-label="Show projects in"><button type="button" data-oc="" aria-pressed="true">All</button><button type="button" data-oc="Abu Dhabi" aria-pressed="false">Abu Dhabi</button><button type="button" data-oc="Dubai" aria-pressed="false">Dubai</button></div><div class="rail-nav"><button type="button" class="prev" aria-label="Previous projects">' + ico('arrow') + '</button><button type="button" class="next" aria-label="Next projects">' + ico('arrow') + '</button></div></div></div>' +
+      '<section class="sec mist" id="offplan" aria-labelledby="op-h"><div class="wrap"><div class="sec-head"><div><p class="eyebrow">Off-Plan</p><h2 class="h2" id="op-h">Off-plan, compared on the numbers</h2><p class="lede">Price, handover and payment plan side by side. Where a developer has not confirmed a figure, we say so.</p></div><a class="link-arrow" href="#search/offplan">All off-plan' + ico('arrow') + '</a></div>' +
+      opfHTML() +
+      '<div class="op-sub"><h3>Compare all projects</h3><div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><div class="seg" role="group" aria-label="Show projects in"><button type="button" data-oc="" aria-pressed="true">All</button><button type="button" data-oc="Abu Dhabi" aria-pressed="false">Abu Dhabi</button><button type="button" data-oc="Dubai" aria-pressed="false">Dubai</button></div><div class="rail-nav"><button type="button" class="prev" aria-label="Previous projects">' + ico('arrow') + '</button><button type="button" class="next" aria-label="Next projects">' + ico('arrow') + '</button></div></div></div>' +
       '<div class="rail" id="op-rail">' + offs.map(projCard).join('') + '</div></div></section>' +
       /* Invest */
       '<section class="sec" id="invest" aria-labelledby="iv-h"><div class="wrap"><div class="sec-head"><div><p class="eyebrow">Investing</p><h2 class="h2" id="iv-h">Investing, but not sure where?</h2><p class="lede">Start from how you want to invest. We show what matches today, and an adviser builds the shortlist with you.</p></div></div>' +
@@ -532,6 +583,12 @@
         '<button type="button" class="btn ghost-l" data-wa="' + a.key + '">' + ico('wa') + 'Ask about ' + esc(a.n) + '</button></div></div></div>';
     }).join('');
     dots.innerHTML = list.map(function (a, i) { return '<button type="button" aria-label="' + esc(a.n) + '"' + (i === 0 ? ' aria-current="true"' : '') + '></button>'; }).join('');
+    $$('.ap-p', box).forEach(function (p, i) { p.style.setProperty('--i', i); });
+    if (!RM && 'IntersectionObserver' in window && !box.dataset.seen) {
+      box.classList.add('pre');
+      var aio = new IntersectionObserver(function (es) { if (es[0].isIntersecting) { box.classList.remove('pre'); box.dataset.seen = '1'; aio.disconnect(); } }, { threshold: .25 });
+      aio.observe(box); cleanup.push(function () { aio.disconnect(); });
+    }
     var panels = $$('.ap-p', box), t;
     function activate(p) {
       if (p.classList.contains('on')) return;
@@ -557,7 +614,39 @@
     }, { passive: true });
   }
 
+  var OPF = ['brabus', 'reportage', 'aquarise', 'venice'];
+  function opfSheet(p) {
+    var d = p.dev ? DEV(p.dev) : null, i = OPF.indexOf(p.key);
+    return '<p class="opf-k">Featured project ' + (i + 1) + ' of ' + OPF.length + ' · ' + esc(p.city) + '</p><h3>' + esc(p.name) + '</h3><p class="opf-loc">' + ico('pin') + esc(p.loc) + (d ? ' · <img src="logo/' + d.key + '.png" alt="' + esc(d.name) + '">' : '') + '</p>' +
+      '<dl class="opf-f"><div><dt>' + (p.price ? 'Listed from' : 'Price') + '</dt><dd>' + (p.price ? AED(p.price) : 'On request') + '</dd></div><div><dt>Handover</dt><dd>' + (p.handover || 'Ask us') + '</dd></div><div><dt>Payment plan</dt><dd>' + (p.plan ? esc(p.plan.overall) : 'Ask us') + '</dd></div></dl>' +
+      (p.plan ? ppBar(p.plan) : '<p class="fine">The developer has not confirmed a payment plan in our listing yet.</p>') +
+      '<div class="sel-act"><button type="button" class="btn primary" data-enquire="' + p.key + '">Payment plan &amp; brochure</button>' + (p.listing ? '<a class="btn ghost" href="#property/' + p.listing + '">View listing' + ico('arrow', 'go') + '</a>' : '') + '<button type="button" class="btn-c" data-wa="' + p.key + '">' + ico('wa') + 'WhatsApp</button></div>';
+  }
+  function opfHTML() {
+    var ps = OPF.map(PROJ);
+    return '<div class="opf" id="opf"><div class="opf-stage" id="opf-stage"><img src="' + IMG(ps[0].img) + '" alt="' + esc(alt(ps[0].img)) + '"><span class="tag-r">Developer render</span></div>' +
+      '<div class="opf-sheet" id="opf-sheet" aria-live="polite">' + opfSheet(ps[0]) + '</div>' +
+      '<div class="opf-list" role="group" aria-label="Featured projects">' + ps.map(function (p, i) { return '<button type="button" data-opf="' + p.key + '" aria-pressed="' + (i === 0) + '"><span class="n">0' + (i + 1) + '</span><span><b>' + esc(p.name) + '</b><small>' + esc(p.loc) + '</small></span></button>'; }).join('') + '</div></div>';
+  }
+  function wireOpf() {
+    var stg = $('#opf-stage'), sh = $('#opf-sheet');
+    $$('[data-opf]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        if (b.getAttribute('aria-pressed') === 'true') return;
+        var p = PROJ(b.dataset.opf);
+        $$('[data-opf]').forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
+        var old = $('img', stg), im = new Image(); im.src = IMG(p.img); im.alt = alt(p.img); stg.insertBefore(im, $('.tag-r', stg));
+        sh.innerHTML = opfSheet(p);
+        if (!G || RM) { old.remove(); return; }
+        // Hide: the previous image stays under. Reveal: the new one wipes in. Move: it settles from 1.1x. React: the sheet lines rise.
+        gsap.fromTo(im, { clipPath: 'inset(0 0 0 100%)' }, { clipPath: 'inset(0 0 0 0%)', duration: 1, ease: 'expo.inOut', onComplete: function () { if (old.parentNode) old.remove(); } });
+        gsap.fromTo(im, { scale: 1.1 }, { scale: 1, duration: 1.6, ease: 'power3.out' });
+        gsap.from(sh.children, { y: 16, opacity: 0, filter: 'blur(6px)', duration: .5, stagger: .05, ease: 'power2.out', delay: .25 });
+      });
+    });
+  }
   function wireOffplan() {
+    wireOpf();
     var rail = $('#op-rail');
     $$('[data-oc]').forEach(function (b) {
       b.addEventListener('click', function () {
@@ -609,60 +698,60 @@
     show(goals[0]);
   }
 
-  /* Hero: the 4-motion opening. Hide the intro plate → reveal three image panels → the centre one
-     takes the frame while the others compress → headline and search rise. Plays once per session. */
+  /* Hero, re-expressed from 11 Tanjung's observed sequence (plate loader -> line -> reveal -> type -> search):
+     Hide: the white plate with a real load counter. Reveal: the photo, opened outward from a crimson redline.
+     React: headline words rise out of their masks (50 ms stagger), then the search settles from blur.
+     Move: the photo settles from 1.12x scale. Once per session; any input skips it. */
   function heroMotion() {
-    var hero = $('#hero'), media = $('#hero-media'), img = $('img', media), intro = $('#hero-intro'), L1 = $('#hs-l'), R1 = $('#hs-r');
-    var lines = $$('.hero h1 .ln > span'), sub = $('.hero-sub'), qs = $('#qs'), anchor = $('#hero-anchor');
+    var media = $('#hero-media'), img = $('img', media), plate = $('#plate'), n = $('#plate-n');
+    var ws = $$('.hero h1 .w > span'), sub = $('.hero-sub'), qs = $('#qs'), anchor = $('#hero-anchor');
     var skip = RM || !G || (sess.get('aa2-intro') && !window.__replay);
     window.__replay = false;
-    if (skip) { intro.style.display = 'none'; }
-    else {
-      sess.set('aa2-intro', '1');
-      [L1, R1].forEach(function (e) { e.style.display = 'block'; e.style.width = '100%'; });
-      var tl = gsap.timeline({ defaults: { ease: 'power3.out' }, onComplete: done });
-      tl.set(media, { clipPath: 'inset(50% 40% 50% 40%)' })
-        .set([L1, R1], { clipPath: 'inset(50% 62% 50% 22%)' })
-        .set(R1, { clipPath: 'inset(50% 22% 50% 62%)' })
-        .set(hdr, { autoAlpha: 0, y: -16 })
-        .set(lines, { yPercent: 115 }).set([sub, anchor], { autoAlpha: 0 }).set(qs, { autoAlpha: 0, y: 48 })
-        .from($('img', intro), { autoAlpha: 0, y: 12, duration: .6 }, 0)
-        .from($('p', intro), { autoAlpha: 0, duration: .6 }, .15)
-        .to(media, { clipPath: 'inset(26% 40% 26% 40%)', duration: .9, ease: 'expo.out' }, .35)
-        .fromTo(img, { scale: 1.4 }, { scale: 1, duration: 2.8, ease: 'power2.out' }, .35)
-        .to(L1, { clipPath: 'inset(32% 62% 32% 22%)', duration: .8, ease: 'expo.out' }, .5)
-        .to(R1, { clipPath: 'inset(32% 22% 32% 62%)', duration: .8, ease: 'expo.out' }, .62)
-        .to(intro, { autoAlpha: 0, duration: .45, ease: 'power1.in' }, 1.25)
-        .to(L1, { clipPath: 'inset(32% 78% 32% 22%)', duration: .75, ease: 'power3.in' }, 1.35)
-        .to(R1, { clipPath: 'inset(32% 22% 32% 78%)', duration: .75, ease: 'power3.in' }, 1.35)
-        .to(media, { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.4, ease: 'expo.inOut' }, 1.5)
-        .to(lines, { yPercent: 0, duration: 1, stagger: .12, ease: 'power4.out' }, 2.35)
-        .to(sub, { autoAlpha: 1, duration: .6 }, 2.7)
-        .to(qs, { autoAlpha: 1, y: 0, duration: .8 }, 2.75)
-        .from($$('.qs-tab, .fld, .qs-go', qs), { autoAlpha: 0, y: 10, duration: .4, stagger: .05 }, 2.95)
-        .to(hdr, { autoAlpha: 1, y: 0, duration: .5 }, 2.9)
-        .to(anchor, { autoAlpha: 1, duration: .5 }, 3.2);
-      var skipFn = function () { tl.progress(1); };
-      ['wheel', 'touchstart', 'keydown', 'pointerdown'].forEach(function (ev) { window.addEventListener(ev, skipFn, { once: true, passive: true }); });
-      cleanup.push(function () { tl.kill(); ['wheel', 'touchstart', 'keydown', 'pointerdown'].forEach(function (ev) { window.removeEventListener(ev, skipFn); }); gsap.set(hdr, { clearProps: 'all' }); });
-    }
-    function done() { [L1, R1].forEach(function (e) { e.style.display = 'none'; }); intro.style.display = 'none'; gsap.set(hdr, { clearProps: 'opacity,visibility,transform' }); }
-    if (skip || !G) return;
+    if (skip) { plate.style.display = 'none'; return; }
+    sess.set('aa2-intro', '1');
+    var tl = gsap.timeline({ paused: true, defaults: { ease: 'power3.out' }, onComplete: done });
+    gsap.set(hdr, { autoAlpha: 0, y: -16 }); gsap.set(ws, { yPercent: 110 }); gsap.set([sub, anchor], { autoAlpha: 0 });
+    gsap.set(qs, { autoAlpha: 0, y: 40, filter: 'blur(12px)' }); gsap.set(img, { scale: 1.12 });
+    gsap.set('.plate-logo', { autoAlpha: 0, yPercent: 25 });
+    var ease = 'cubic-bezier(.5,0,0,1)';
+    tl.to('.plate-logo', { autoAlpha: 1, yPercent: 0, duration: .5 }, 0)
+      .to('.plate-line', { scaleX: 1, duration: .6, ease: 'power2.inOut' }, .35)
+      .to(['.plate-logo', '.plate-n', '.plate-r'], { autoAlpha: 0, duration: .25, ease: 'power1.in' }, .8)
+      .to('.plate-h.t', { yPercent: -100, duration: 1.1, ease: ease }, .95)
+      .to('.plate-h.b', { yPercent: 100, duration: 1.1, ease: ease }, .95)
+      .to('.plate-line', { autoAlpha: 0, duration: .4 }, 1.15)
+      .to(img, { scale: 1, duration: 2.2, ease: 'power2.out' }, .95)
+      .to(ws, { yPercent: 0, duration: 1, stagger: .05, ease: 'expo.out' }, 1.55)
+      .to(sub, { autoAlpha: 1, duration: .6 }, 1.95)
+      .to(qs, { autoAlpha: 1, y: 0, filter: 'blur(0px)', duration: .8 }, 2.05)
+      .from($$('.qs-tab, .fld, .qs-go', qs), { autoAlpha: 0, y: 8, duration: .35, stagger: .04 }, 2.25)
+      .to(hdr, { autoAlpha: 1, y: 0, duration: .5 }, 2.2)
+      .to(anchor, { autoAlpha: 1, duration: .5 }, 2.5);
+    // Real progress: the hero photo and the fonts. Minimum 600 ms so the counter is legible.
+    var t0 = performance.now(), shown = 0, target = 12, raf;
+    var tick = function () { shown += (target - shown) * .18; n.textContent = Math.round(shown); if (target >= 100 && shown > 99.4) { n.textContent = 100; setTimeout(function () { tl.play(); }, Math.max(0, 600 - (performance.now() - t0))); return; } raf = requestAnimationFrame(tick); };
+    raf = requestAnimationFrame(tick);
+    var parts = [img.decode ? img.decode().catch(function () {}) : Promise.resolve(), document.fonts ? document.fonts.ready : Promise.resolve()], got = 0;
+    parts.forEach(function (pr) { pr.then(function () { got++; target = got === parts.length ? 100 : 60; }); });
+    var skipFn = function () { cancelAnimationFrame(raf); tl.progress(1); };
+    ['wheel', 'touchstart', 'keydown', 'pointerdown'].forEach(function (ev) { window.addEventListener(ev, skipFn, { once: true, passive: true }); });
+    cleanup.push(function () { cancelAnimationFrame(raf); tl.kill(); ['wheel', 'touchstart', 'keydown', 'pointerdown'].forEach(function (ev) { window.removeEventListener(ev, skipFn); }); gsap.set(hdr, { clearProps: 'all' }); });
+    function done() { plate.style.display = 'none'; gsap.set([hdr, qs], { clearProps: 'opacity,visibility,transform,filter' }); }
   }
   /* Scroll: the hero image compresses into a frame as the page moves on (architecture moves slowly) */
   function homeScroll() {
     if (!G || RM || mob()) return;
-    var st = gsap.timeline({ scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: .6 } });
-    st.to('#hero-media', { clipPath: 'inset(0% 3% 10% 3%)', ease: 'none' }, 0).to('#hero-media img', { scale: 1.08, ease: 'none' }, 0).to('.hero-copy', { y: -60, opacity: .15, ease: 'none' }, 0);
+    // The next section slides over the pinned hero (CSS sticky); the hero recedes under it.
+    var st = gsap.timeline({ scrollTrigger: { trigger: '.cover', start: 'top bottom', end: 'top top', scrub: .5 } });
+    st.to('#hero-media img', { scale: 1.06, ease: 'none' }, 0).to('#hero-shade', { opacity: .7, ease: 'none' }, 0).to('.hero-copy, #qs, .hero-anchor', { y: -40, ease: 'none' }, 0);
   }
   function homeReveals() {
     homeScroll();
     if (!G || RM) return;
-    $$('.sec-head', main).forEach(function (h) {
-      gsap.from(h.children, { y: 30, opacity: 0, duration: .8, stagger: .1, ease: 'power3.out', scrollTrigger: { trigger: h, start: 'top 85%', once: true } });
+    $$('.sec-head .eyebrow, .sec-head .lede', main).forEach(function (h) {
+      gsap.from(h, { y: 18, opacity: 0, duration: .7, ease: 'power3.out', scrollTrigger: { trigger: h, start: 'top 88%', once: true } });
     });
     gsap.from('.tile', { y: 40, opacity: 0, duration: .9, stagger: .1, ease: 'power3.out', scrollTrigger: { trigger: '.disc', start: 'top 85%', once: true } });
-    gsap.from('#ap .ap-p', { clipPath: 'inset(100% 0 0 0)', duration: 1.2, stagger: .08, ease: 'expo.out', scrollTrigger: { trigger: '#ap', start: 'top 80%', once: true } });
   }
 
   /* ============================================================
@@ -696,7 +785,7 @@
       '<div class="s-title"><div><h1 id="s-h1"></h1><p class="s-count" id="s-count" aria-live="polite"></p></div><div class="seg" role="group" aria-label="Purpose">' + [['sale', 'Buy'], ['rent', 'Rent'], ['offplan', 'Off-Plan']].map(function (p) { return '<button type="button" data-p="' + p[0] + '" aria-pressed="' + (sQ.pur === p[0]) + '">' + p[1] + '</button>'; }).join('') + '</div></div></div>' +
       '<div class="fbar" id="fbar"><div class="wrap fbar-in"><button type="button" class="btn sm ghost" id="f-all">' + ico('filter') + 'Filters <span id="f-n"></span></button>' +
       ['locs', 'types', 'beds', 'price'].map(function (k) { return '<div class="fb" data-k="' + k + '"><button type="button" aria-expanded="false" aria-controls="pop-' + k + '"><span></span>' + ico('chev') + '</button><div class="fb-pop" id="pop-' + k + '" hidden></div></div>'; }).join('') +
-      (sQ.pur === 'sale' ? '<div class="fb" data-k="comp"><button type="button" aria-expanded="false" aria-controls="pop-comp"><span></span>' + ico('chev') + '</button><div class="fb-pop" id="pop-comp" hidden></div></div>' : '') +
+      (sQ.pur === 'sale' ? '<div class="seg sm" id="f-comp" role="group" aria-label="Completion">' + [['', 'Any'], ['ready', 'Ready'], ['offplan', 'Off-plan']].map(function (c) { return '<button type="button" data-c="' + c[0] + '" aria-pressed="' + (sQ.comp === c[0]) + '">' + c[1] + '</button>'; }).join('') + '</div>' : '') +
       '<button type="button" class="pill" id="f-sl" aria-pressed="' + sQ.sl + '">' + ico('heart') + ' Shortlist</button>' +
       '<span class="fbar-sp"></span><label class="sort"><span class="vh">Sort by</span><select id="f-sort"><option value="new">Newest</option><option value="lo">Price: low to high</option><option value="hi">Price: high to low</option><option value="size">Largest first</option></select></label>' +
       '<div class="seg" id="f-view" role="group" aria-label="Layout"><button type="button" data-v="list" aria-pressed="' + (sView === 'list') + '">' + ico('list') + 'List</button><button type="button" data-v="split" aria-pressed="' + (sView === 'split') + '">' + ico('map') + 'List and map</button></div>' +
@@ -750,6 +839,7 @@
     });
     document.addEventListener('click', docClose); cleanup.push(function () { document.removeEventListener('click', docClose); });
     $('#f-sort').addEventListener('change', function (e) { sQ.sort = e.target.value; searchUpdate(); });
+    $$('#f-comp button').forEach(function (b) { b.addEventListener('click', function () { sQ.comp = b.dataset.c; searchUpdate(); }); });
     $('#f-sl').addEventListener('click', function () { sQ.sl = !sQ.sl; this.setAttribute('aria-pressed', sQ.sl); searchUpdate(); });
     $$('#f-view button').forEach(function (b) { b.addEventListener('click', function () { sView = b.dataset.v; $$('#f-view button').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); $('#res').classList.toggle('list-only', sView === 'list'); refitMaps(); }); });
     $$('.mbar button').forEach(function (b) { b.addEventListener('click', function () { sMob = b.dataset.m; $$('.mbar button').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); var r = $('#res'); r.classList.remove('mode-list', 'mode-map'); r.classList.add('mode-' + sMob); refitMaps(); window.scrollTo(0, $('#res').offsetTop - 120); }); });
@@ -779,6 +869,7 @@
     var n = r.length + du.length;
     $('#s-h1').textContent = sQ.pur === 'offplan' ? 'Off-plan projects and homes' : (sQ.types.length === 1 ? fbLabel('types') : 'Homes') + ' ' + PURN[sQ.pur] + ' in Abu Dhabi';
     $('#s-count').innerHTML = '<b>' + n + '</b> ' + (sQ.pur === 'offplan' ? (n === 1 ? 'result' : 'results') : (n === 1 ? 'home' : 'homes')) + (sQ.pur === 'offplan' && du.length ? ' · ' + du.length + ' Dubai projects included' : '') + ' · positions shown by community';
+    $$('#f-comp button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.c === sQ.comp); });
     $$('.fb').forEach(function (fb) { var k = fb.dataset.k, b = $('button', fb), on = k === 'locs' || k === 'types' ? sQ[k].length : sQ[k]; $('span', b).textContent = fbLabel(k); b.classList.toggle('on', !!on); });
     var fc = sQ.locs.length + sQ.types.length + (sQ.beds ? 1 : 0) + (sQ.price ? 1 : 0) + (sQ.comp ? 1 : 0); $('#f-n').textContent = fc ? '(' + fc + ')' : '';
     $('#f-chips').innerHTML = chipsHTML();
@@ -786,14 +877,29 @@
     var cl = $('#f-clear'); if (cl) cl.addEventListener('click', function () { sQ.locs = []; sQ.types = []; sQ.beds = ''; sQ.price = ''; sQ.comp = ''; sQ.sl = false; $('#f-sl').setAttribute('aria-pressed', 'false'); searchUpdate(); });
     var list = $('#rlist');
     if (!n) list.innerHTML = emptyHTML();
-    else list.innerHTML = '<h2 class="vh">Results</h2><div class="cards">' + r.map(function (x) { return card(x, { compare: true, cls: sSel === x.id ? 'sel' : '' }); }).join('') + du.map(projCard).join('') + '</div>' +
-      '<div class="rmore"><span>Showing ' + n + ' of ' + n + '</span>' + (n > 24 ? '<button class="btn ghost">Show 24 more</button>' : '') + '</div>';
+    else {
+      var items = r.map(function (x) { return card(x, { compare: true, cls: sSel === x.id ? 'sel' : '' }); }).concat(du.map(projCard));
+      // Owner capture inside the results, after the fourth item (OIA puts it in a sidebar; here it sits in the reading path)
+      items.splice(Math.min(4, items.length), 0, '<aside class="own dark"><p class="eyebrow">Owners</p><h3>Selling or letting in Abu Dhabi?</h3><p>Tell us about your property. An adviser comes back with a valuation conversation and a listing plan.</p><div class="sel-act"><button type="button" class="btn light" data-enquire="general">List your property</button><button type="button" class="btn-c" data-wa="general">' + ico('wa') + 'WhatsApp</button></div></aside>');
+      list.innerHTML = '<h2 class="vh">Results</h2><div class="cards">' + items.join('') + '</div>' +
+        '<div class="rmore"><span>Showing ' + n + ' of ' + n + '</span>' + (n > 24 ? '<button class="btn ghost">Show 24 more</button>' : '') + '</div>' + popular();
+    }
     growBars(list);
     $$('.empty [data-relax]', list).forEach(function (b) { b.addEventListener('click', function () { var k = b.dataset.relax; sQ[k] = (k === 'locs' || k === 'types') ? [] : ''; if (k === 'sl') sQ.sl = false; searchUpdate(); }); });
     var al = $('.empty [data-alert]', list); if (al) al.addEventListener('click', function () { toast('<b>Alert set.</b> Live: we message you when a home matches this search.'); });
     drawSearchMap(r);
     wireCardMapSync(list);
     tray();
+  }
+  function popular() {
+    var q = function (label, href, n2) { return n2 ? '<li><a href="' + href + '">' + label + ' <span class="c">' + n2 + '</span></a></li>' : ''; };
+    return '<nav class="pop-s" aria-label="Popular searches"><h3>Popular searches</h3><ul>' +
+      q('Villas for rent in Abu Dhabi', '#search/rent/villa', cnt(function (x) { return rent(x) && x.type === 'villa'; })) +
+      q('Apartments for rent in Abu Dhabi', '#search/rent/apartment', cnt(function (x) { return rent(x) && x.type === 'apartment'; })) +
+      q('Apartments for sale in Abu Dhabi', '#search/sale/apartment', cnt(function (x) { return sale(x) && x.type === 'apartment'; })) +
+      q('Off-plan with payment plans', '#search/offplan', A.PROJECTS.filter(function (p) { return p.plan; }).length) +
+      q('Homes in Al Raha', '#search/rent', inArea('Al Raha').length) +
+      q('Homes on Yas Island', '#area', inArea('Yas Island').length) + '</ul></nav>';
   }
   function emptyHTML() {
     var keys = [['locs', 'Location'], ['types', 'Property type'], ['beds', 'Bedrooms'], ['price', 'Price'], ['comp', 'Completion'], ['sl', 'Shortlist only']];
@@ -886,6 +992,7 @@
         '<div><h3>Looking to</h3><div class="pills">' + [['sale', 'Buy'], ['rent', 'Rent'], ['offplan', 'Off-Plan']].map(function (p) { return '<button type="button" class="pill" data-pur="' + p[0] + '" aria-pressed="' + (sQ.pur === p[0]) + '">' + p[1] + '</button>'; }).join('') + '</div></div>' +
         '<div class="sh-sec" data-k="locs">' + popHTML('locs', 'h3').replace(/<footer>[\s\S]*<\/footer>/, '') + '</div><div class="sh-sec" data-k="types">' + popHTML('types', 'h3').replace(/<footer>[\s\S]*<\/footer>/, '') + '</div>' +
         '<div class="sh-sec" data-k="beds">' + popHTML('beds', 'h3').replace(/<footer>[\s\S]*<\/footer>/, '') + '</div><div class="sh-sec" data-k="price">' + popHTML('price', 'h3').replace(/<footer>[\s\S]*<\/footer>/, '') + '</div>' +
+        (sQ.pur === 'sale' ? '<div><h3>Completion</h3><div class="pills">' + [['', 'Any'], ['ready', 'Ready'], ['offplan', 'Off-plan']].map(function (c) { return '<button type="button" class="pill" data-comp="' + c[0] + '" aria-pressed="' + (sQ.comp === c[0]) + '">' + c[1] + '</button>'; }).join('') + '</div></div>' : '') +
         '<div><h3>Sort</h3><div class="pills">' + [['new', 'Newest'], ['lo', 'Lowest price'], ['hi', 'Highest price'], ['size', 'Largest']].map(function (s) { return '<button type="button" class="pill" data-sort="' + s[0] + '" aria-pressed="' + (sQ.sort === s[0]) + '">' + s[1] + '</button>'; }).join('') + '</div></div></div>' +
         '<div class="d-ft"><button type="button" class="btn ghost" id="sh-clear">Clear</button><button type="button" class="btn primary" id="sh-go">Show ' + n + (n === 1 ? ' home' : ' homes') + '</button></div>';
     };
@@ -893,7 +1000,8 @@
     d.onchange = function (e) { var s = e.target.closest('.sh-sec'); if (s) { readPop(s.dataset.k, s); var y = $('.d-bd', d).scrollTop; draw(); $('.d-bd', d).scrollTop = y; } };
     d.onclick = function (e) {
       var t = e.target, y = $('.d-bd', d) ? $('.d-bd', d).scrollTop : 0;
-      if (t.closest('[data-pur]')) { sQ.pur = t.closest('[data-pur]').dataset.pur; sQ.price = ''; draw(); }
+      if (t.closest('[data-pur]')) { sQ.pur = t.closest('[data-pur]').dataset.pur; sQ.price = ''; if (sQ.pur !== 'sale') sQ.comp = ''; draw(); }
+      else if (t.closest('[data-comp]')) { sQ.comp = t.closest('[data-comp]').dataset.comp; draw(); }
       else if (t.closest('.sh-sec[data-k="beds"] .pill')) { sQ.beds = t.closest('.pill').dataset.v; draw(); }
       else if (t.closest('[data-sort]')) { sQ.sort = t.closest('[data-sort]').dataset.sort; draw(); }
       else if (t.closest('#sh-clear')) { sQ.locs = []; sQ.types = []; sQ.beds = ''; sQ.price = ''; sQ.comp = ''; draw(); }
@@ -947,6 +1055,7 @@
       [['home', 'In the home'], ['building', 'Building and community'], ['general', 'Shared or private, to confirm']].filter(function (k) { return am[k[0]].length; }).map(function (k) { return '<div><h3>' + k[1] + ' <span class="n">' + am[k[0]].length + '</span></h3><ul>' + am[k[0]].map(function (a) { return '<li>' + ico('check') + esc(a) + '</li>'; }).join('') + '</ul></div>'; }).join('') + '</div>' +
       (!am.home.length && !am.building.length && !am.general.length ? '<p class="fine">No amenities are recorded for this listing yet. Ask us for the building facilities.</p>' : '') +
       (dropped.length ? '<p class="am-drop">Specimen note: ' + esc(dropped.join(' and ')) + ' removed in editorial review (legacy tags that do not fit this home). Amenities are not migrated until the map is approved.</p>' : '') + '</section>' +
+      (x.pur === 'sale' && !off ? mortHTML(x) : '') +
       '<section class="pd-sec" aria-labelledby="pd-f"><h2 id="pd-f">Floor plan</h2><div class="fp-ask"><div><b>The floor plan is not published for this listing</b><p>We send it on request, with room sizes where the ' + (off ? 'developer' : 'owner') + ' provides them.</p></div><button type="button" class="btn" data-enquire="' + x.id + '" data-kind="plan">Request the floor plan</button></div></section>' +
       '<section class="pd-sec" aria-labelledby="pd-l"><h2 id="pd-l">Location</h2><div class="map loc-map" id="pd-map"></div><p class="loc-note">' + ico('pin') + '<span>' + esc(x.addr) + '. Shown at community level: the exact location is shared when you book a viewing.</span></p></section>' +
       (proj ? '<section class="pd-sec" aria-labelledby="pd-p"><h2 id="pd-p">The project</h2><div class="proj"><div class="ph"><img src="' + IMG(proj.imgs[1] || proj.img) + '" alt="' + esc(alt(proj.imgs[1] || proj.img)) + '" loading="lazy"><span class="tag-r">Developer render</span></div><div class="tx"><h3>' + esc(proj.name) + '</h3><p>' + esc(proj.loc) + '</p><p>' + (proj.handover ? 'Handover ' + proj.handover + '. ' : 'Handover not confirmed in our listing. ') + (proj.plan ? 'Payment plan ' + proj.plan.overall + '.' : 'Payment plan on request.') + '</p><p class="fine">Developer not yet linked: shown once confirmed.</p><button type="button" class="btn ghost sm" data-enquire="' + proj.key + '" style="justify-self:start">Brochure and unit availability</button></div></div></section>' : '') +
@@ -954,12 +1063,15 @@
       '<aside class="rail-c" aria-label="Enquire"><div class="enq-card"><div class="pr"><span>' + (rent2 ? 'Annual rent' : off ? 'Price' : 'Asking price') + '</span><b>' + AED(x.pr) + '</b>' + (rent2 ? '<small>a year' + (x.textOnly && x.textOnly.cheques ? ', ' + x.textOnly.cheques : '') + '</small>' : ppsf ? '<small>AED ' + fmt(ppsf) + ' per sq ft</small>' : '') + '</div>' +
       (off && x.plan ? '<p class="per">' + x.plan.booking + '% on booking: about ' + AED(Math.round(x.pr * x.plan.booking / 100)) + '</p>' : '') +
       '<button type="button" class="btn primary block" data-enquire="' + x.id + '" data-kind="viewing">' + ico('cal') + (off ? 'Book a consultation' : 'Request a viewing') + '</button><div class="cpair">' + waBtn + callBtn + '</div>' +
+      '<form class="enq-mini" id="enq-mini" novalidate><p>Or we call you</p><div class="inp"><label for="em-n">Name</label><input id="em-n" autocomplete="name"></div><div class="inp"><label for="em-p">Mobile number</label><input id="em-p" type="tel" autocomplete="tel" inputmode="tel"></div><button type="submit" class="btn ghost block">Request a call back</button></form>' +
       '<p class="ref"><span>Reference</span><b>' + x.ref + '</b></p></div>' +
       '<div class="office"><img src="logo/alaliah-crimson.png" alt=""><div><b>Al Aliah International</b><span>Adviser details on request</span></div></div></aside></div>' +
       '<section class="sec mist rel" aria-labelledby="pd-r"><div class="wrap"><div class="sec-head"><div><p class="eyebrow">Keep looking</p><h2 class="h2" id="pd-r">Similar homes</h2></div><a class="link-arrow" href="#search/' + (off ? 'offplan' : x.pur) + '">All ' + (rent2 ? 'rentals' : 'homes for sale') + ico('arrow') + '</a></div><div class="cards">' + related(x).map(function (y) { return card(y); }).join('') + '</div></div></section>' +
       '<div class="pbar-m"><p class="pr"><span>' + esc(x.ref) + '</span><span><b>' + AED(x.pr) + '</b>' + (rent2 ? ' a year' : '') + '</span></p>' + waBtn + callBtn + '<button type="button" class="btn primary" data-enquire="' + x.id + '" data-kind="viewing">Enquire</button></div>';
     footer();
     var pm = $('#pd-map'); pm.innerHTML = mapSVG({ vb: mapVB(x.area), on: [x.area], labels: [x.area], label: 'Map: ' + x.area + ', Abu Dhabi' }) + '<p class="map-note">Stylised map, community level.</p>'; fitPins(pm);
+    wireMort();
+    var emf = $('#enq-mini'); if (emf) emf.addEventListener('submit', function (e) { e.preventDefault(); toast('<b>Specimen:</b> nothing was sent. Live: an adviser calls about ' + x.ref + '.'); });
     var mr = $('#pd-more'); if (mr) mr.addEventListener('click', function () { var on = mr.getAttribute('aria-expanded') !== 'true'; mr.setAttribute('aria-expanded', on); mr.textContent = on ? 'Show less' : 'Read more'; $('#pd-dx').innerHTML = (on ? DESC[x.id] : DESC[x.id].slice(0, 2)).map(function (p) { return '<p>' + esc(p) + '</p>'; }).join(''); });
     $$('#pd-gal .g').forEach(function (b) { b.addEventListener('click', function () { openLB(g, Number(b.dataset.i), null, b); }); });
     $$('[data-lb]').forEach(function (b) { b.addEventListener('click', function () { openLB(g, 0, null); }); });
@@ -971,6 +1083,33 @@
       gsap.from('#pd-gal .g:not(.g0)', { clipPath: 'inset(0 0 100% 0)', duration: .9, stagger: .07, ease: 'expo.out', delay: .15 });
       gsap.from('.pd-hd > *, .kf > div', { y: 18, opacity: 0, duration: .55, stagger: .04, ease: 'power2.out', delay: .25 });
     }
+  }
+  /* Mortgage estimate. Minimum down payments: UAE Central Bank limits for a first home (nationals 15% up to AED 5M, 25% above;
+     residents 20% up to AED 5M, 30% above). The rate is the visitor's own input; the prefilled figure is labelled as an example. */
+  function mortHTML(x) {
+    return '<section class="pd-sec" aria-labelledby="pd-mo"><h2 id="pd-mo">Estimate your mortgage</h2><div class="mort" id="mort" data-price="' + x.pr + '">' +
+      '<div class="seg" role="group" aria-label="Buyer status"><button type="button" data-res="nat" aria-pressed="false">UAE national</button><button type="button" data-res="res" aria-pressed="true">UAE resident</button><button type="button" data-res="non" aria-pressed="false">Non-resident</button></div>' +
+      '<div class="mort-g"><div class="mort-in"><div class="inp"><label for="mo-p">Property price (AED)</label><input id="mo-p" inputmode="numeric" value="' + fmt(x.pr) + '"></div>' +
+      '<div class="inp"><label for="mo-d">Down payment (%)</label><input id="mo-d" type="number" min="0" max="100" step="1" value="20"><small id="mo-dn"></small></div>' +
+      '<div class="inp"><label for="mo-r">Interest rate (% a year)</label><input id="mo-r" type="number" min="0" max="20" step="0.01" value="4.5"><small>Example rate, not a quote. Use your bank\'s figure.</small></div>' +
+      '<div class="inp"><label for="mo-t">Term (years)</label><input id="mo-t" type="number" min="1" max="25" step="1" value="25"><small>UAE maximum: 25 years.</small></div></div>' +
+      '<div class="mort-out" aria-live="polite"><p>Monthly payment</p><b id="mo-m"></b><dl><div><dt>Loan amount</dt><dd id="mo-l"></dd></div><div><dt>Down payment</dt><dd id="mo-dp"></dd></div></dl>' +
+      '<button type="button" class="btn light block" data-wa="' + esc('mortgage advice for ' + x.ref) + '">' + ico('wa') + 'Get mortgage advice</button><p class="fine">Indicative only, before fees. Not a mortgage offer.</p></div></div></div></section>';
+  }
+  function wireMort() {
+    var m = $('#mort'); if (!m) return;
+    var res = 'res', num = function (id) { return Number(String($(id).value).replace(/[^0-9.]/g, '')) || 0; };
+    var minDown = function (pr) { return res === 'nat' ? (pr > 5e6 ? 25 : 15) : res === 'res' ? (pr > 5e6 ? 30 : 20) : null; };
+    function calc() {
+      var pr = num('#mo-p'), md = minDown(pr), d = Math.max(num('#mo-d'), md || 0), r = num('#mo-r') / 1200, n = Math.min(25, Math.max(1, num('#mo-t'))) * 12, loan = pr * (1 - d / 100);
+      var pay = r ? loan * r / (1 - Math.pow(1 + r, -n)) : loan / n;
+      $('#mo-dn').textContent = md != null ? 'Minimum for a first home: ' + md + '% (UAE Central Bank).' : 'Set by each bank for non-residents; ask us.';
+      $('#mo-m').textContent = pr ? AED(Math.round(pay)) : '—'; $('#mo-l').textContent = AED(Math.round(loan)); $('#mo-dp').textContent = AED(Math.round(pr * d / 100)) + ' (' + d + '%)';
+    }
+    $$('[data-res]', m).forEach(function (b) { b.addEventListener('click', function () { res = b.dataset.res; $$('[data-res]', m).forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); var md = minDown(num('#mo-p')); if (md != null) $('#mo-d').value = md; calc(); }); });
+    $$('input', m).forEach(function (i) { i.addEventListener('input', calc); });
+    $('#mo-d').addEventListener('change', function () { var md = minDown(num('#mo-p')); if (md != null && num('#mo-d') < md) $('#mo-d').value = md; calc(); });
+    calc();
   }
   function mapVB(a) { var c = A.GEO.comm[a]; if (!c) return '60 80 980 640'; var w = 520, h = 300; return (c.c[0] - w / 2) + ' ' + (c.c[1] - h / 2) + ' ' + w + ' ' + h; }
   function related(x) {
@@ -1108,6 +1247,9 @@
      ============================================================ */
   document.addEventListener('click', function (e) {
     var t = e.target, b;
+    if ((b = t.closest('[data-pcnav]'))) { e.preventDefault(); pcStep(b); return; }
+    if ((b = t.closest('#mt-menu'))) { $('#hdr-menu').click(); return; }
+    if ((b = t.closest('#mt-sl'))) { $('#hdr-sl').click(); return; }
     if ((b = t.closest('[data-sl]'))) { e.preventDefault(); toggleSL(b.dataset.sl, b); return; }
     if ((b = t.closest('[data-wa]'))) { e.preventDefault(); wa(b.dataset.wa); return; }
     if ((b = t.closest('[data-call]'))) { e.preventDefault(); call(b.dataset.call); return; }
@@ -1150,6 +1292,7 @@
     else if (page === 'property') { renderProperty(route.arg || propId); $$('#sp-state button').forEach(function (b) { b.setAttribute('aria-pressed', Number(b.dataset.prop) === propId); }); }
     else renderArea();
     $$('#sp-permit button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.permit === permitMode); });
+    splitHeads(main); splitHeads($('#ft'));
     onScroll(); setSLCount(); notes(page);
     requestAnimationFrame(function () { refitMaps(); if (G) ScrollTrigger.refresh(); });
     document.title = { home: 'Al Aliah International · Abu Dhabi property', search: 'Search · Al Aliah', property: T(byId(propId)) + ' · Al Aliah', area: 'Yas Island · Al Aliah' }[page] + ' (specimen)';
@@ -1175,7 +1318,8 @@
 
   var NOTES = {
     home: '<h2>Homepage</h2><p>Immersive. The page moves the visitor from discover to compare to understand to contact: hero search, purpose tiles, homes with contact on every card, a curated selection, areas, off-plan compared on numbers, investment goals, developers through projects, then advice and contact.</p>' +
-      '<h3>4-motion rule, where it applies</h3><ul><li><b>Hero:</b> hide the intro plate (logo) · reveal three photo panels, then the full photo · react: tabs and fields arrive in order · move: side panels compress into the centre frame, which grows to full bleed. About 3.4 s, plays once per session, any key, tap or scroll skips it. On scroll the photo compresses into a frame.</li><li><b>Areas:</b> hide: other panels compress and desaturate · reveal: the active area\'s name, counts and actions · react: hover, focus or tap · move: panel width (900 ms) and image crop (1.4 s). Mobile: a swipe deck; the centred card is active.</li><li><b>Cards:</b> hide: nothing essential (contact stays visible) · reveal: "View property" · react: shortlist, hover, focus · move: a slow photo crop and the arrow.</li><li><b>Selection:</b> the list drives the image; new photos wipe in.</li><li><b>Mega menu:</b> the panel unrolls (280 ms); hovering a list item swaps the featured photo.</li></ul>' +
+      '<h3>Revised from the live references (8 Oct)</h3><p>See docs/stage-03-3-v2-reference-study.md for what was observed directly.</p>' +
+      '<h3>4-motion rule, where it applies</h3><ul><li><b>Hero</b> (from 11 Tanjung\'s plate loader, re-expressed): hide: a white plate with a real load counter (photo + fonts) · reveal: the photo, as the plate opens outward from a crimson redline (1.1 s, cubic-bezier(.5,0,0,1)) · react: headline words rise out of their own masks (1 s, 50 ms stagger), then the search settles from blur · move: the photo settles from 1.12×. Once per session; any key, tap or wheel skips it. The search never waits for scroll.</li><li><b>Hero on scroll:</b> the hero stays pinned and the next section slides over it while the photo darkens (the 11 Tanjung handoff, square-edged).</li><li><b>Section headings:</b> word-by-word mask reveal on entry, CSS only.</li><li><b>Areas</b> (11 Tanjung facilities logic): entrance from the right, blurred 16 px, 100 ms stagger · active panel takes about a third (750 ms) · its caption un-blurs and rises (500 ms after 300 ms). One panel stays open at rest so information shows without hover. Mobile: swipe deck (11 Tanjung\'s mobile stack hides captions, which fails a property site).</li><li><b>Off-plan featured band</b> (OIA\'s Featured Projects, with numbers): the chosen project wipes in (1 s) and its sheet lines rise.</li><li><b>Cards:</b> browse photos in place (buttons on hover/focus, swipe in vertical lists).</li></ul>' +
       '<h3>Real data choices</h3><ul><li>The hero photo is our own listing (Yas villa), credited and linked: the hero is a property.</li><li>All photos are agent photos up to 1,600 px wide (most 1,280). Full-bleed use softens at 1,920 px and on retina screens; commissioned photography (Q2) fixes this, not the layout.</li><li>Developer renders are always labelled. The Bayz 102 renders and the BRABUS-branded Brabus Island renders are withheld.</li><li>Developers: all 17 staging logos, made monochrome. Only two developer-project links are verified (Binghatti → Aquarise, Danube → Bayz 102); both are Dubai. No Abu Dhabi developer link exists yet.</li><li>Investment goals use real listings and plans. No yields or growth figures: none are sourced.</li></ul>' +
       '<h3>Open questions</h3><ul><li>Intro length: 3.4 s once per session. Shorter?</li><li>Homepage repetition: with 11 Abu Dhabi listings, the same homes appear in several sections.</li><li>Dubai prominence: featured developers are both Dubai, while Abu Dhabi leads the brand.</li></ul>',
     search: '<h2>Search / Buy</h2><p>Functional: native scroll, CSS-speed feedback (≤ 250 ms), no cinematic motion.</p><ul><li>Filters show counts that respect the other filters; zero options stay visible but quiet.</li><li>Active filters become removable chips. The empty state names each filter and what removing it would return. Try 5+ bedrooms with Under AED 1M.</li><li>List and map: hover or focus a card and its community lights on the map; hover a price pin and its cards light; click a pin to select and see a preview.</li><li>Shortlist (heart) on every card, kept on this device; the header heart opens the shortlist as a search.</li><li>Compare up to three homes: price, price per sq ft, space, status and payment plan side by side.</li><li>WhatsApp and Call on every card, never hidden behind hover.</li><li>Mobile: a sticky bar with Filters, a full filter sheet with a live "Show N homes" button, and a floating List / Map switch.</li></ul><h3>Data limits</h3><ul><li>No listing has coordinates: pins sit at community level (Q3). Production uses MapLibre (D-006).</li><li>Dubai projects appear under Off-Plan as project cards, without a map.</li></ul>',

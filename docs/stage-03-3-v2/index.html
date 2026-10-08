@@ -50,6 +50,7 @@
   <div class="sp-g" id="sp-state" role="group" aria-label="Listing" hidden>
     <button type="button" data-prop="31521">Ready villa · rent</button>
     <button type="button" data-prop="31094">Off-plan · sale</button>
+    <button type="button" data-prop="31495">Ready villa · sale</button>
     <button type="button" data-prop="31013">Sparse (AA-1004)</button>
   </div>
   <div class="sp-g" id="sp-permit" role="group" aria-label="Permit block" hidden>
@@ -92,6 +93,7 @@
       </nav>
       <div class="hdr-act">
         <button type="button" class="hdr-sl" id="hdr-sl" aria-label="Shortlist, 0 homes"><svg class="i"><use href="#i-heart"/></svg><span class="n" id="sl-n">0</span></button>
+        <a class="hdr-list" href="#home" data-scroll="advice">List your property</a>
         <button type="button" class="hdr-wa" data-wa="general"><svg class="i"><use href="#i-wa"/></svg><span>WhatsApp</span></button>
         <button type="button" class="btn hdr-cta" data-enquire="general">Contact</button>
         <button type="button" class="hdr-menu" id="hdr-menu" aria-haspopup="dialog"><svg class="i"><use href="#i-menu"/></svg><span>Menu</span></button>
@@ -104,6 +106,15 @@
   <main id="main" tabindex="-1"></main>
 
   <footer class="ft" id="ft"></footer>
+
+  <!-- Mobile quick bar (home, search, area); the property page has its own contact bar -->
+  <nav class="mtab" id="mtab" aria-label="Quick links">
+    <a href="#search/sale"><svg class="i"><use href="#i-search"/></svg><span>Search</span></a>
+    <a href="#search/offplan"><svg class="i"><use href="#i-grid"/></svg><span>Off-Plan</span></a>
+    <button type="button" id="mt-sl"><svg class="i"><use href="#i-heart"/></svg><span>Shortlist</span><b class="n zero" id="mt-n">0</b></button>
+    <button type="button" class="wa" data-wa="general"><svg class="i"><use href="#i-wa"/></svg><span>WhatsApp</span></button>
+    <button type="button" id="mt-menu"><svg class="i"><use href="#i-menu"/></svg><span>Menu</span></button>
+  </nav>
 </div>
 </div>
 
